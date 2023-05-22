@@ -5,7 +5,6 @@ class test_case_generator():
     
     def __init__(self) -> None:
         import sys
-        super.__init__
         self.sep_token = '\t'
         self.new_line_token = '<enter>'
         self.space_token = '<space>'
@@ -16,17 +15,13 @@ class test_case_generator():
         self.variable_dict = {}
         self.derivation_dict = {}
         
-        sys.setrecursionlimit(1000000000)
+        sys.setrecursionlimit(2000000000)
 
 
         
     def generate(self, grammer: str, constraints: list):
         self.make_derivate_dict(grammer)
         self.make_constraints_dict(constraints)
-
-        # print(self.derivation_dict)
-
-        
         result = self.derivate(self.start_token)
     
         # print(result)
@@ -56,8 +51,7 @@ class test_case_generator():
         next_token = self.random.choice(next_token).split(' ')
                 
         for token in next_token:
-            # print(token)
-            
+                        
             #case1 token is terminal
             if self.is_terminal(token):
                 if token == 'ε': continue
@@ -134,22 +128,14 @@ class test_case_generator():
             for target in dict_list.split('|'):
                 target = target.strip()
                 if self.re.match(r'\[[^-]-[^-]\]', target):
-                    if target == '[a-z]':
-                        self.derivation_dict[dict_key].extend(string.ascii_lowercase)
-                    elif target == '[A-Z]':
-                        self.derivation_dict[dict_key].extend(string.ascii_uppercase)
-                    elif target == '[0-9]':
-                        self.derivation_dict[dict_key].extend(string.digits)
-                    else:
-                        start, end = target.split('-')
-                        start = start[1:]
-                        end = end[:-1]
-                        start = ord(start)
-                        end = ord(end)
-                        self.derivation_dict[dict_key].extend([chr(x) for x in range(start, end+1)])
+                    start, end = target.split('-')
+                    start = start[1:]
+                    end = end[:-1]
+                    start = ord(start)
+                    end = ord(end)
+                    self.derivation_dict[dict_key].extend([chr(x) for x in range(start, end+1)])
                 else:
                     self.derivation_dict[dict_key].append(target)
-        print(self.derivation_dict)
     
     
     def make_constraints_dict(self, constraints:list):
@@ -210,7 +196,7 @@ class test_case_generator():
         
 if __name__ == '__main__':
     
-    test_grammer = '\t'.join(['<S> -> [N]', '[N] -> <enter> <T_N>', '<T_i> -> C_i <T_i-1>', 'C_i -> [a-d] | [A-D] | [1-5]', '<T_1> -> ε'])
+    test_grammer = '\t'.join(['<S> -> [N]', '[N] -> <enter> <T_N>', '<T_i> -> C_i <T_i-1>', 'C_i -> [a-z] | [A-D] | [1-5]', '<T_1> -> ε'])
     test_const = ['1 <= N <= 50', '1 < M < 10']
 
     generator = test_case_generator()

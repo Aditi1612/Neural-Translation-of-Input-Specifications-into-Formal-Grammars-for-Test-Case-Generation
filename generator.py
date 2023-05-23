@@ -17,7 +17,7 @@ class test_case_generator():
 
         sys.setrecursionlimit(2000000000)
 
-    def generate(self, grammer: list, constraints: list):
+    def __call__(self, grammer: list, constraints: list) -> str:
         self.make_derivate_dict(grammer)
         self.make_constraints_dict(constraints)
         result = self.derivate(self.start_token)
@@ -240,6 +240,6 @@ if __name__ == '__main__':
     # test_const = ['1 <= M <= 16', 'M <= N <= 16', 'a <= b']
 
     generator = test_case_generator()
-    res = generated_test_case = generator.generate(test_grammer, test_const)
+    res = generator(test_grammer, test_const)
     print(res)
     

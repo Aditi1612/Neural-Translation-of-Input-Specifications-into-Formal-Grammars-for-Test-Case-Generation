@@ -176,6 +176,7 @@ class test_case_generator():
                                         'start': start.strip(), 'end': end.strip(),
                                         'include1': include_list[0] == '<=', 
                                         'include2': include_list[1] == '<=',
+                                        'permutation': False, 
                                         'type': 'range'
                                         }
                 
@@ -185,6 +186,7 @@ class test_case_generator():
                     self.const_dict[variable1] = {
                                         'target': variable2,
                                         'include': self.re.findall(r'<=?', const)[0] == '<=',
+                                        'permutation': False, 
                                         'type': 'compare'
                                         }
             elif self.re.fullmatch(r'[^=]* != [^=]*', const):

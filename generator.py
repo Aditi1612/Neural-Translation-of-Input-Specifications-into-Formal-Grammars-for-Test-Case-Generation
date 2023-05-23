@@ -61,18 +61,43 @@ class test_case_generator():
                 
                 # a_i
                 if self.re.match(r'[^_]*_[^_]*', token):
-                    derivate = self.random.choice(self.derivation_dict[token.split('_')[0] + '_i'])
-                    token = token.split('_')[0] + f'_{curr_count}'
-                    self.variable_dict[token] = derivate
-                    return_str = f'{return_str}{derivate}'
-                    continue
+                    counted_token = token.split('_')[0] + f'_{curr_count}'
+                    
+                    if token not in self.variable_dict or token.split('_')[0] + '_1' in self.variable_dict[token]:
+                            self.variable_dict[token] = {}
+                    
+                    if token in self.derivation_dict:
+                        derivate = self.random.choice(self.derivation_dict[token.split('_')[0] + '_i'])
+                        
+                        if token in self.const_dict and self.const_dict[token]['permutation']:
+                            while token in self.variable_dict and derivate in self.variable_dict[token].values():
+                                derivate = self.random.choice(self.derivation_dict[token.split('_')[0] + '_i'])
+                        
+                        self.variable_dict[token][counted_token] = derivate
+                        return_str = f'{return_str}{derivate}'
+                        continue
+                    
+                    else:
+                        start, end = self.get_range(variable=token)
+                        generated = self.random.randint(start, end)
+                        
+                        if token in self.const_dict and self.const_dict[token]['permutation']:
+                            while token in self.variable_dict and generated in self.variable_dict[token].values():
+                                generated = self.random.randint(start, end)
+                        self.variable_dict[token][counted_token] = generated
+                        return_str = f'{return_str}{generated}'
+                        continue
                 
                 if token in self.const_dict and self.const_dict[token]['type'] == 'range':
                     start, end = self.get_range(token)
                     generated = self.random.randint(start, end)
                     self.variable_dict[token] = generated
                     # print(self.variable_dict)
+                    
+                    # case: M -> <T_i>
                     if token in self.derivation_dict:
+                        # print(token)
+                        # self.variable_dict[token] = {}
                         return_str += self.derivate(self.random.choice(self.derivation_dict[token]))
                         continue
                     return_str = f'{return_str}{generated}'
@@ -103,6 +128,7 @@ class test_case_generator():
         return return_str
     
     def get_range(self, variable):
+        # print(variable)
         curr_token_const = self.const_dict[variable]
         include1 = curr_token_const['include1']
         include2 = curr_token_const['include2']
@@ -153,8 +179,7 @@ class test_case_generator():
                                         'type': 'range'
                                         }
                 
-            else:
-                if self.re.fullmatch(r'[^<]* <=? [^<]*', const):
+            elif self.re.fullmatch(r'[^<]* <=? [^<]*', const):
                     variable1, variable2 = self.re.split(r'<=?', const)
                     variable1, variable2 = variable1.strip(), variable2.strip()
                     self.const_dict[variable1] = {
@@ -162,6 +187,11 @@ class test_case_generator():
                                         'include': self.re.findall(r'<=?', const)[0] == '<=',
                                         'type': 'compare'
                                         }
+            elif self.re.fullmatch(r'[^=]* != [^=]*', const):
+                variable1, variable2 = const.split(' != ')
+                # self.const_dict[variable1] = {'type': 'permutation'}
+                self.const_dict[variable1]['permutation'] = True
+                ...
         # print(self.const_dict)
         
         '''
@@ -201,8 +231,8 @@ class test_case_generator():
         
 if __name__ == '__main__':
     
-    test_grammer = ['<S> -> [N]', '[N] -> <enter> <T_N>', '<T_i> -> M <enter> <T_i-1>', 'M -> <L_M>', '<L_i> -> C_i <L_i-1>', 'C_i -> [a-z] | [A-D] | [1-5]', '<T_0> -> ε', '<L_0> -> ε']
-    test_const = ['1 <= N <= 50', '1 < M < 10']
+    test_grammer = ['<S> -> [N]', '[N] -> <enter> <T_N>', '<T_i> -> M <enter> <T_i-1>', 'M -> <L_M>', '<L_i> -> C_i <space> <L_i-1>', '<T_0> -> ε', '<L_0> -> ε'] # 'C_i -> [a-z]', 
+    test_const = ['1 <= N <= 50', '1 < M < 10', '1 <= C_i <= M', 'C_i != C_j']
     
     # test_grammer = ['<S> -> M <space> N']
     # test_const = ['1 <= M <= 16', 'M <= N <= 16', 'a <= b']

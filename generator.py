@@ -15,6 +15,8 @@ class test_case_generator():
         self.const_dict = {}
         self.variable_dict = {}
         self.derivation_dict = {}
+        self.permutation_variable = []
+        self.compare_dict = {}
 
         sys.setrecursionlimit(2**31 - 1)
 
@@ -52,20 +54,22 @@ class test_case_generator():
                 
                 del derivation_queue[0]
                 continue
-                
-                    
+             
             elif not self.RE_NONTERMINAL.fullmatch(curr_variable):
                 
                 if self.re.match(r'.*_.*', curr_variable):
                     variable, counter = curr_variable.split('_')
                     variable += '_i'
-                    start, end = self.get_range(variable)
-                    generated = self.random.randint(start, end)
+                    counter = int(counter)
                     
                     if variable not in self.variable_dict or curr_variable in self.variable_dict[variable]:
                         self.variable_dict[variable] = {}
-                                        
-                    while self.const_dict[variable]['permutation'] and generated in self.variable_dict[variable].values():
+                    
+                    start, end = self.get_range(variable, counter)
+                    
+                    generated = self.random.randint(start, end)
+                    
+                    while variable in self.permutation_variable and generated in self.variable_dict[variable].values():
                         generated = self.random.randint(start, end)
                     
                     self.variable_dict[variable][curr_variable] = generated
@@ -80,8 +84,6 @@ class test_case_generator():
                 
                 del derivation_queue[0]
                 continue
-            
-            
             
             if self.re.match(r'<[^_]*_[^_]*>', curr_variable):
                 nonterminal , counter = curr_variable.split('_')
@@ -180,7 +182,7 @@ class test_case_generator():
                         return_str = f'{return_str}{generated}'
                         continue
                 
-                if token in self.const_dict and self.const_dict[token]['type'] == 'range':
+                if token in self.const_dict:
                     start, end = self.get_range(token)
                     generated = self.random.randint(start, end)
                     self.variable_dict[token] = generated
@@ -219,7 +221,7 @@ class test_case_generator():
             return_str += self.derivate(token)
         return return_str
     
-    def get_range(self, variable, counter=None):
+    def get_range(self, variable, counter=None) -> (int, int):
         # print(variable)
         curr_token_const = self.const_dict[variable]
         include1 = curr_token_const['include1']
@@ -232,13 +234,23 @@ class test_case_generator():
                 start = self.variable_dict[start][start.split('_')[0] + f'_{counter}']
             else:
                 start = self.variable_dict[start]
-            
-        start = int(start) + (0 if include1 else 1)
+        
+        start = int(start)
+        
+        if variable in self.compare_dict and variable in self.variable_dict:
+            if len(self.variable_dict[variable]) != 0:
+                target = variable.split('_')[0] + f'_{counter-1}'
+                start = self.variable_dict[variable][target]
+                start += 0 if self.compare_dict[variable]['include'] else 1
+        else:
+            start += 0 if include1 else 1
         end = curr_token_const['end']
         if end in self.variable_dict:
             end = self.variable_dict[end]
-        end = int(end) - (0 if include2 else 1)
-        return (start, end)
+        end = int(end)
+        end -= 0 if include2 else 1
+        
+        return start, end
     
     def is_terminal(self, token):
        return not self.RE_NONTERMINAL.fullmatch(token)
@@ -311,22 +323,19 @@ class test_case_generator():
                                         'start': start.strip(), 'end': end.strip(),
                                         'include1': include_list[0] == '<=', 
                                         'include2': include_list[1] == '<=',
-                                        'permutation': False, 
-                                        'type': 'range'
                                         }
                 
             elif self.re.fullmatch(r'[^<]*<=?[^<]*', const):
                     variable1, variable2 = self.re.split(r'<=?', const)
                     variable1, variable2 = variable1.strip(), variable2.strip()
-                    self.const_dict[variable1] = {
+                    
+                    self.compare_dict[variable1] = {
                                         'target': variable2,
                                         'include': self.re.findall(r'<=?', const)[0] == '<=',
-                                        'permutation': False, 
-                                        'type': 'compare'
                                         }
             elif self.re.fullmatch(r'[^=]*!=[^=]*', const):
                 variable1, variable2 = const.split(' != ')
-                self.const_dict[variable1]['permutation'] = True
+                self.permutation_variable.append(variable1)
         # print(self.const_dict)
         
         '''

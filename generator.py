@@ -64,9 +64,7 @@ class test_case_generator():
                     
                     if variable not in self.variable_dict or curr_variable in self.variable_dict[variable]:
                         self.variable_dict[variable] = {}
-                        
-                    if 
-                    
+                                        
                     while self.const_dict[variable]['permutation'] and generated in self.variable_dict[variable].values():
                         generated = self.random.randint(start, end)
                     

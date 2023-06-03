@@ -6,25 +6,119 @@ class test_case_generator():
     def __init__(self) -> None:
         import sys
         self.sep_token = '\t'
-        self.new_line_token = '<enter>'
-        self.space_token = '<space>'
+        self.new_line_token = '<n>'
+        self.space_token = '<s>'
         self.start_token = '<S>'
         self.derivate_token = '->'
-        self.RE_NONTERMINAL = self.re.compile(r'(<[^<> ]*>)')
+        self.RE_NONTERMINAL = self.re.compile(r'(<[^<]*>)')
+        self.RE_STRING = self.re.compile(r'\[[^\[]*\]\{.*\}')
         self.const_dict = {}
         self.variable_dict = {}
         self.derivation_dict = {}
 
-        sys.setrecursionlimit(2000000000)
+        sys.setrecursionlimit(2**31 - 1)
 
     def __call__(self, grammer: list, constraints: list) -> str:
+        self.__init__()
         self.make_derivate_dict(grammer)
         self.make_constraints_dict(constraints)
-        result = self.derivate(self.start_token)
+        print(self.derivation_dict)
+        test_case = self.derivate()
         print(self.variable_dict)
-        return result
+        return test_case
+        # return result
           
-    def derivate(self, curr_variable):
+    def derivate(self):
+        test_case = ''
+        
+        derivation_queue = [self.start_token]
+        
+        while derivation_queue:
+            curr_variable = derivation_queue[0]
+            
+            if curr_variable == self.new_line_token:
+                test_case += '\n'
+                del derivation_queue[0]
+                continue
+            
+            if curr_variable == self.space_token:
+                test_case += ' '
+                del derivation_queue[0]
+                continue
+            
+            if self.RE_STRING.fullmatch(curr_variable):
+                generated = self.get_string(curr_variable)
+                test_case += generated
+                
+                del derivation_queue[0]
+                continue
+                
+                    
+            elif not self.RE_NONTERMINAL.fullmatch(curr_variable):
+                
+                if self.re.match(r'.*_.*', curr_variable):
+                    variable, counter = curr_variable.split('_')
+                    variable += '_i'
+                    start, end = self.get_range(variable)
+                    generated = self.random.randint(start, end)
+                    
+                    if variable not in self.variable_dict or curr_variable in self.variable_dict[variable]:
+                        self.variable_dict[variable] = {}
+                        
+                    if 
+                    
+                    while self.const_dict[variable]['permutation'] and generated in self.variable_dict[variable].values():
+                        generated = self.random.randint(start, end)
+                    
+                    self.variable_dict[variable][curr_variable] = generated
+                else:
+                    if self.re.match(r'\[[^\[]*\]', curr_variable):
+                        curr_variable = curr_variable[1:-1]
+                    start, end = self.get_range(curr_variable)
+                    generated = self.random.randint(start, end)
+                    self.variable_dict[curr_variable] = generated
+                                
+                test_case = f'{test_case}{generated}'
+                
+                del derivation_queue[0]
+                continue
+            
+            
+            
+            if self.re.match(r'<[^_]*_[^_]*>', curr_variable):
+                nonterminal , counter = curr_variable.split('_')
+                if not counter[:-1].isdigit():
+                    counter = self.variable_dict[counter[:-1]]
+                    counter = f'{counter}>'
+                    curr_variable = nonterminal + '_' + counter
+                
+                if curr_variable in self.derivation_dict:
+                    counter = int(counter[:-1])
+                else:
+                    curr_variable = nonterminal + '_i>'
+                    counter = int(counter[:-1])
+            
+            next_variable = self.random.choice(self.derivation_dict[curr_variable])
+            curr_list = []
+            
+            for variable in next_variable.split(' '):
+                if self.re.match(r'<.*_i-1>', variable):
+                    
+                    nonterminal = variable.split('_')[0]
+                    variable = f'{nonterminal}_{counter-1}>'
+                elif self.re.fullmatch(r'[^_<]*_.*', variable):
+                    nonterminal = variable.split('_')[0]
+                    variable = f'{nonterminal}_{counter}'
+                curr_list.append(variable)
+                
+            del derivation_queue[0]
+            
+            curr_list.extend(derivation_queue)
+            derivation_queue = curr_list
+        
+        return test_case
+          
+    def derivate_old(self, curr_variable):
         return_str = ''
         if curr_variable == self.space_token:
             return ' '
@@ -78,7 +172,7 @@ class test_case_generator():
                         continue
                     
                     else:
-                        start, end = self.get_range(variable=token)
+                        start, end = self.get_range(variable=token, counter=curr_count)
                         generated = self.random.randint(start, end)
                         
                         if token in self.const_dict and self.const_dict[token]['permutation']:
@@ -127,7 +221,7 @@ class test_case_generator():
             return_str += self.derivate(token)
         return return_str
     
-    def get_range(self, variable):
+    def get_range(self, variable, counter=None):
         # print(variable)
         curr_token_const = self.const_dict[variable]
         include1 = curr_token_const['include1']
@@ -136,8 +230,11 @@ class test_case_generator():
         start = curr_token_const['start']
         
         if start in self.variable_dict:
-            start = self.variable_dict[start]
-            # print(start)
+            if counter != None:
+                start = self.variable_dict[start][start.split('_')[0] + f'_{counter}']
+            else:
+                start = self.variable_dict[start]
+            
         start = int(start) + (0 if include1 else 1)
         end = curr_token_const['end']
         if end in self.variable_dict:
@@ -147,14 +244,54 @@ class test_case_generator():
     
     def is_terminal(self, token):
        return not self.RE_NONTERMINAL.fullmatch(token)
+   
+    def get_string(self, variable):
+        '''
+        * string 만들어서 return하고
+        * variable_dict에 list 넣기
+        '''
+        
+        return_str = ''
+        
+        variable_range, string_len = variable.split(']{')
+        variable_range = variable_range[1:]
+        string_len = string_len[:-1]
+        
+        if string_len in self.variable_dict:
+            string_len = int(self.variable_dict[string_len])
+        else:
+            start, end = self.get_range(string_len)
+            string_len = self.random.randint(start, end)
+        
+        if variable in self.derivation_dict:
+            variable_list = self.derivation_dict[variable]
+        else:
+            variable_list = []
+            start, end = variable_range.split('-')
+            start = ord(start)
+            end = ord(end)+1
+            for ch in range(start, end):
+                variable_list.append(chr(ch))
+            self.derivation_dict[variable] = variable_list
+
+        for _ in range(string_len):
+            return_str += self.random.choice(variable_list)
+
+        return return_str
+   
 
     def make_derivate_dict(self, grammer: list):
-        # grammer_lst = grammer.split(self.sep_token)
+        for token in grammer:
+            left_hand, right_hand = token.split(self.derivate_token)
+            self.derivation_dict[left_hand] = []
+            for token in right_hand.split(' | '):
+                self.derivation_dict[left_hand].append(token)
+
+    def make_derivate_dict_old(self, grammer: list):
         for token in grammer:
             dict_key, dict_list = token.split(self.derivate_token)
-            dict_key = dict_key.strip()
             self.derivation_dict[dict_key] = []
-            for target in dict_list.split('|'):
+            for target in dict_list.split(' | '):
                 target = target.strip()
                 if self.re.match(r'\[[^-]-[^-]\]', target):
                     start, end = target.split('-')
@@ -169,7 +306,7 @@ class test_case_generator():
     
     def make_constraints_dict(self, constraints:list):
         for const in constraints:
-            if self.re.fullmatch(r'[^<]* <=? [^<]* <=? [^<]*', const):
+            if self.re.fullmatch(r'[^<]*<=?[^<]*<=?[^<]*', const):
                 start, variable, end = self.re.split(r'<=?', const)
                 include_list = self.re.findall(r'<=?', const)
                 self.const_dict[variable.strip()] = {
@@ -180,7 +317,7 @@ class test_case_generator():
                                         'type': 'range'
                                         }
                 
-            elif self.re.fullmatch(r'[^<]* <=? [^<]*', const):
+            elif self.re.fullmatch(r'[^<]*<=?[^<]*', const):
                     variable1, variable2 = self.re.split(r'<=?', const)
                     variable1, variable2 = variable1.strip(), variable2.strip()
                     self.const_dict[variable1] = {
@@ -189,11 +326,9 @@ class test_case_generator():
                                         'permutation': False, 
                                         'type': 'compare'
                                         }
-            elif self.re.fullmatch(r'[^=]* != [^=]*', const):
+            elif self.re.fullmatch(r'[^=]*!=[^=]*', const):
                 variable1, variable2 = const.split(' != ')
-                # self.const_dict[variable1] = {'type': 'permutation'}
                 self.const_dict[variable1]['permutation'] = True
-                ...
         # print(self.const_dict)
         
         '''
@@ -240,6 +375,7 @@ if __name__ == '__main__':
     # test_const = ['1 <= M <= 16', 'M <= N <= 16', 'a <= b']
 
     generator = test_case_generator()
-    res = generator(test_grammer, test_const)
-    print(res)
+    generator.get_string('[a-z]{S}')
+    # res = generator(test_grammer, test_const)
+    # print(res)
     

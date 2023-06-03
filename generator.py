@@ -267,6 +267,17 @@ class test_case_generator():
         end = curr_token_const['end']
         if end in self.variable_dict:
             end = self.variable_dict[end]
+        
+        elif '^' in end:
+            if '*' in end:
+                num, end = end.split('*')
+                base, exp = end.split('^')
+                res = int(num) * int(base) ** int(exp)
+            else:
+                base, exp = end.split('^')
+                res = int(base) ** int(exp)
+            end = res
+        
         end = int(end)
         # constraint가 "variable < end"의 형태이면
         # "variable <= end-1"과 같다

@@ -21,20 +21,19 @@ class test_case_generator():
         self.__init__()
         self.make_derivate_dict(grammer)
         self.make_constraints_dict(constraints)
-        print(self.derivation_dict)
         test_case = self.derivate()
-        print(self.variable_dict)
         return test_case
         # return result
           
     def derivate(self):
         test_case = ''
-        
         derivation_queue = [self.start_token]
         
+        # 모든 variable이 test case를 생성할 때 까지
         while derivation_queue:
             curr_variable = derivation_queue[0]
             
+            # 공백, 개행문자 생성
             if curr_variable == self.new_line_token:
                 test_case += '\n'
                 del derivation_queue[0]
@@ -45,20 +44,24 @@ class test_case_generator():
                 del derivation_queue[0]
                 continue
             
+            # string 생성
             if self.RE_STRING.fullmatch(curr_variable):
                 generated = self.get_string(curr_variable)
                 test_case += generated
                 
                 del derivation_queue[0]
                 continue
-             
+            
+            # 기타 terminal 생성
             elif not self.RE_NONTERMINAL.fullmatch(curr_variable):
                 
+                # a_i 형태
                 if self.re.match(r'.*_.*', curr_variable):
                     variable, counter = curr_variable.split('_')
                     variable += '_i'
                     counter = int(counter)
                     
+                    # a_i 형태의 terminal을 처음 인식하거나 a_1을 생성할 때
                     if variable not in self.variable_dict or curr_variable in self.variable_dict[variable]:
                         self.variable_dict[variable] = {}
                     
@@ -66,56 +69,69 @@ class test_case_generator():
                     
                     generated = self.random.randint(start, end)
                     
+                    # 순열일 경우에 이전에 생성되지 않은 정수 생성
                     while variable in self.permutation_variable and generated in self.variable_dict[variable].values():
                         generated = self.random.randint(start, end)
                     
+                    # 생성된 것 저장
                     self.variable_dict[variable][curr_variable] = generated
                 else:
+                    # N, [N]의 형태
                     if self.re.match(r'\[[^\[]*\]', curr_variable):
                         curr_variable = curr_variable[1:-1]
                     start, end = self.get_range(curr_variable)
                     generated = self.random.randint(start, end)
                     self.variable_dict[curr_variable] = generated
-                                
+
+                # 생성된 결과물 최종 반환될 test_case에 더하기
                 test_case = f'{test_case}{generated}'
                 
+                # derivateion이 완료된 variable 제거
                 del derivation_queue[0]
                 continue
             
+            # <T_i> 형태
             if self.re.match(r'<[^_]*_[^_]*>', curr_variable):
                 nonterminal , counter = curr_variable.split('_')
+                # <T_N>
                 if not counter[:-1].isdigit():
                     counter = self.variable_dict[counter[:-1]]
                     counter = f'{counter}>'
                     curr_variable = nonterminal + '_' + counter
-                
+                # <T_1> 등의 상황
                 if curr_variable in self.derivation_dict:
                     counter = int(counter[:-1])
                 else:
                     curr_variable = nonterminal + '_i>'
                     counter = int(counter[:-1])
             
+            # derivate
             next_variable = self.random.choice(self.derivation_dict[curr_variable])
             curr_list = []
             
             for variable in next_variable.split(' '):
+                # <T_i-1>이나 a_i가 생성되었을 때 counter가 필요함
                 if self.re.match(r'<.*_i-1>', variable):
-                    
                     nonterminal = variable.split('_')[0]
                     variable = f'{nonterminal}_{counter-1}>'
                 elif self.re.fullmatch(r'[^_<]*_.*', variable):
                     nonterminal = variable.split('_')[0]
                     variable = f'{nonterminal}_{counter}'
                 curr_list.append(variable)
-                
+            
+            # derivation이 진행된 이후 완료된 token 제거
             del derivation_queue[0]
             
+            # DFS로 진행하기 위해 제거된 variable에서 생성된 variable들을 queue의 앞에 배치함
             curr_list.extend(derivation_queue)
             derivation_queue = curr_list
         
         return test_case
           
     def derivate_old(self, curr_variable):
+        '''
+        * 이전 grammer에 대한 derivate 함수
+        '''
         return_str = ''
         if curr_variable == self.space_token:
             return ' '
@@ -219,6 +235,9 @@ class test_case_generator():
         return return_str
     
     def get_range(self, variable, counter=None):
+        '''
+        * terminal variable이 생성할 정수의 범위를 반환하는 함수
+        '''
         # print(variable)
         curr_token_const = self.const_dict[variable]
         include1 = curr_token_const['include1']
@@ -233,18 +252,24 @@ class test_case_generator():
                 start = self.variable_dict[start]
         
         start = int(start)
-        
+        # variable의 constraints가 a_i < a_i+1의 형태라면
+        # a_i가 생성할 정수의 범위는 a_i-1 <= a_i <= end이다
         if variable in self.compare_dict and variable in self.variable_dict:
             if len(self.variable_dict[variable]) != 0:
                 target = variable.split('_')[0] + f'_{counter-1}'
                 start = self.variable_dict[variable][target]
                 start += 0 if self.compare_dict[variable]['include'] else 1
         else:
+            # constraint가 "start < variable"의 형태이면
+            # "start+1 <= variable"과 같다
             start += 0 if include1 else 1
+            
         end = curr_token_const['end']
         if end in self.variable_dict:
             end = self.variable_dict[end]
         end = int(end)
+        # constraint가 "variable < end"의 형태이면
+        # "variable <= end-1"과 같다
         end -= 0 if include2 else 1
         
         return start, end
@@ -257,7 +282,6 @@ class test_case_generator():
         * string 만들어서 return하고
         * variable_dict에 list 넣기
         '''
-        
         return_str = ''
         
         variable_range, string_len = variable.split(']{')
@@ -309,7 +333,6 @@ class test_case_generator():
                     self.derivation_dict[dict_key].extend([chr(x) for x in range(start, end+1)])
                 else:
                     self.derivation_dict[dict_key].append(target)
-        # print(self.derivation_dict)
     
     def make_constraints_dict(self, constraints:list):
         for const in constraints:
@@ -333,7 +356,6 @@ class test_case_generator():
             elif self.re.fullmatch(r'[^=]*!=[^=]*', const):
                 variable1, variable2 = const.split(' != ')
                 self.permutation_variable.append(variable1)
-        # print(self.const_dict)
         
         '''
             # case 1: <= N <=

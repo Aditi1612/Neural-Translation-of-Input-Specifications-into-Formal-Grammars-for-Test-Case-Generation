@@ -4,7 +4,6 @@ class test_case_generator():
     import random
     
     def __init__(self) -> None:
-        import sys
         self.sep_token = '\t'
         self.new_line_token = '<n>'
         self.space_token = '<s>'
@@ -17,8 +16,6 @@ class test_case_generator():
         self.derivation_dict = {}
         self.permutation_variable = []
         self.compare_dict = {}
-
-        sys.setrecursionlimit(2**31 - 1)
 
     def __call__(self, grammer: list, constraints: list) -> str:
         self.__init__()
@@ -221,7 +218,7 @@ class test_case_generator():
             return_str += self.derivate(token)
         return return_str
     
-    def get_range(self, variable, counter=None) -> (int, int):
+    def get_range(self, variable, counter=None):
         # print(variable)
         curr_token_const = self.const_dict[variable]
         include1 = curr_token_const['include1']
@@ -322,7 +319,7 @@ class test_case_generator():
                 self.const_dict[variable.strip()] = {
                                         'start': start.strip(), 'end': end.strip(),
                                         'include1': include_list[0] == '<=', 
-                                        'include2': include_list[1] == '<=',
+                                        'include2': include_list[1] == '<='
                                         }
                 
             elif self.re.fullmatch(r'[^<]*<=?[^<]*', const):
@@ -331,7 +328,7 @@ class test_case_generator():
                     
                     self.compare_dict[variable1] = {
                                         'target': variable2,
-                                        'include': self.re.findall(r'<=?', const)[0] == '<=',
+                                        'include': self.re.findall(r'<=?', const)[0] == '<='
                                         }
             elif self.re.fullmatch(r'[^=]*!=[^=]*', const):
                 variable1, variable2 = const.split(' != ')

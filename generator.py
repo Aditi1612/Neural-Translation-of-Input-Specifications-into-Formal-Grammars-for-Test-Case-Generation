@@ -244,12 +244,18 @@ class test_case_generator():
         include2 = curr_token_const['include2']
         
         start = curr_token_const['start']
-        
         if start in self.variable_dict:
             if counter != None:
                 start = self.variable_dict[start][start.split('_')[0] + f'_{counter}']
             else:
                 start = self.variable_dict[start]
+        elif '^' in start:
+            num = 1
+            if '*' in start:
+                num, start = start.split('*')
+            base, exp = start.split('^')
+            res = int(num) * int(base) ** int(exp)
+            start = res
         
         start = int(start)
         # variable의 constraints가 a_i < a_i+1의 형태라면

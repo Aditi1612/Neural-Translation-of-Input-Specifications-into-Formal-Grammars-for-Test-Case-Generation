@@ -261,31 +261,10 @@ class test_case_generator():
         start = int(start)
         # variable의 constraints가 a_i < a_i+1의 형태라면
         # a_i가 생성할 정수의 범위는 a_i-1 <= a_i <= end이다
-        if variable in self.compare_dict and variable in self.variable_dict:
-            if self.compare_dict[variable]['type'] == 'same_variable':
-                if len(self.variable_dict[variable]) != 0:
-                    target = variable.split('_')[0] + f'_{counter-1}'
-                    start = self.variable_dict[variable][target]
-                    start += 0 if self.compare_dict[variable]['include'] else 1
-                else:
-                    start += 0 if include1 else 1
-            else:
-                target = self.compare_dict[variable]['target']
-                if self.re.match(r'.*_.*', target):
-                    symbol = target.split('_')[0]
-                    symbol += f'_{counter}'
-                    start = self.variable_dict[target][symbol]
-                    start += 0 if self.compare_dict[variable]['include'] else 1
-
-                else:
-                    start = self.variable_dict[target]
-                    start += 0 if self.compare_dict[variable]['include'] else 1
-                    ...
-                ...
-        else:
+        
             # constraint가 "start < variable"의 형태이면
             # "start+1 <= variable"과 같다
-            start += 0 if include1 else 1
+        start += 0 if include1 else 1
             
         end = curr_token_const['end']
         if end in self.variable_dict:
@@ -306,7 +285,31 @@ class test_case_generator():
         # "variable <= end-1"과 같다
         end -= 0 if include2 else 1
         
-        return start, end
+        derivate_range = [start, end]
+        
+        if variable in self.compare_dict and variable in self.variable_dict:
+            range_index = 0 if self.compare_dict[variable]['symbol'] == '<' else 1
+            
+            if self.compare_dict[variable]['type'] == 'same_variable':
+                if len(self.variable_dict[variable]) != 0:
+                    target = variable.split('_')[0] + f'_{counter-1}'
+                    derivate_range[range_index] = self.variable_dict[variable][target]
+                    derivate_range[range_index] += 0 if self.compare_dict[variable]['include'] else 1
+                else:
+                    derivate_range[range_index] += 0 if include1 else 1
+            else:
+                target = self.compare_dict[variable]['target']
+                if self.re.match(r'.*_.*', target):
+                    symbol = target.split('_')[0]
+                    symbol += f'_{counter}'
+                    derivate_range[range_index] = self.variable_dict[target][symbol]
+                    derivate_range[range_index] += 0 if self.compare_dict[variable]['include'] else 1
+
+                else:
+                    derivate_range[range_index] = self.variable_dict[target]
+                    derivate_range[range_index] += 0 if self.compare_dict[variable]['include'] else 1
+        
+        return derivate_range[0], derivate_range[1]
     
     def is_terminal(self, token):
        return not self.RE_NONTERMINAL.fullmatch(token)
@@ -379,20 +382,23 @@ class test_case_generator():
                                         'include2': include_list[1] == '<='
                                         }
                 
-            elif self.re.fullmatch(r'[^<]*<=?[^<]*', const):
-                    variable1, variable2 = self.re.split(r'<=?', const)
+            elif self.re.fullmatch(r'[^<>]*[<>]=?[^<>]*', const):
+                    variable1, variable2 = self.re.split(r'[<>]=?', const)
                     variable1, variable2 = variable1.strip(), variable2.strip()
+                    compare_symbol = self.re.findall(r'[<>]=?', const)[0]
                     
                     if variable1.split('_')[0] == variable2.split('_')[0]:
                         self.compare_dict[variable1] = {
                                             'target': variable2,
-                                            'include': self.re.findall(r'<=?', const)[0] == '<=',
+                                            'symbol': compare_symbol[0],
+                                            'include': '=' in compare_symbol,
                                             'type': 'same_variable'
                                             }
                     else:
                         self.compare_dict[variable2] = {
                                             'target': variable1,
-                                            'include': self.re.findall(r'<=?', const)[0] == '<=',
+                                            'symbol': compare_symbol[0],
+                                            'include': '=' in compare_symbol,
                                             'type': 'different_variable'
                                             }
                         

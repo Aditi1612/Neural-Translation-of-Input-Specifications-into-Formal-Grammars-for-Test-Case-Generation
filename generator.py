@@ -373,7 +373,8 @@ class test_case_generator():
                 for ch in range(start, end):
                     variable_list.append(chr(ch))
                 if idx == 1: variable_range = variable_range[3:]
-                else: variable_range = variable_range[:idx-1] + variable_range[idx+2]
+                # elif 
+                else: variable_range = variable_range[:idx-1] + variable_range[idx+2:]
             for ch in variable_range:
                 variable_list.append(ch)
             self.derivation_dict[variable] = variable_list

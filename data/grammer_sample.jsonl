@@ -9,4 +9,4 @@
 {"name": "1099_A", "grammer": ["<S>->w <s> h <n> u1 <s> d1 <n> u2 <s> d2"], "constraints": ["0<=w<=100", "1<=h<=100", "0<=u1<=100", "1<=d1<=h","0<=u2<=100", "1<=d2<=h","d1 ≠ d2"]}
 {"name": "p02756 - 15", "grammer": ["<S>->[a-z]{S} <n> [Q] <n> <T_Q>", "<T_i>-><T_i-1> <n> <Quary_i>", "<T_1>-><Quary_i>", "<Quary_i>->1 | 2 <s> <F_i> <s> <C_i>", "<F_i>->1 | 2", "<C_i>->[a-z]{1}"], "constraints": ["1<=S<=10", "1<=Q<=2*10^3"]}
 {"name": "additon_test", "grammer": ["<S>->[N] <s> M <n> <T_N>", "<T_i>-><T_i-1> <n> a_i", "<T_1>->a_i"], "constraints": ["1<=N<=100", "2<=M<=10", "1<=a_i<=M-1"]}
-{"name": "get_string_test", "grammer": ["<S>->[.#]{10}"], "constraints": []}
+{"name": "get_string_test", "grammer": ["<S>->[.#a-z]{10}"], "constraints": []}

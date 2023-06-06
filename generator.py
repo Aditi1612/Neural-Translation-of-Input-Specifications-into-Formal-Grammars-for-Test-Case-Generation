@@ -318,7 +318,7 @@ class test_case_generator():
         
         if variable in self.compare_dict:
             range_index = 0 if self.compare_dict[variable]['symbol'] == '<' else 1
-            print('i', range_index)
+            # print('i', range_index)
             if self.compare_dict[variable]['type'] == 'same_variable':
                 if len(self.variable_dict[variable]) != 0:
                     target = variable.split('_')[0] + f'_{counter-1}'

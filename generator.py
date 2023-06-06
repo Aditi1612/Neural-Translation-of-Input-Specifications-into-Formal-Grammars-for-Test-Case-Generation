@@ -29,6 +29,8 @@ class test_case_generator():
         test_case = ''
         derivation_queue = [self.start_token]
         
+        # print(derivation_queue)
+        
         # 모든 variable이 test case를 생성할 때 까지
         while derivation_queue:
             curr_variable = derivation_queue[0]
@@ -37,11 +39,13 @@ class test_case_generator():
             if curr_variable == self.new_line_token:
                 test_case += '\n'
                 del derivation_queue[0]
+                
                 continue
             
             if curr_variable == self.space_token:
                 test_case += ' '
                 del derivation_queue[0]
+                
                 continue
             
             # string 생성
@@ -50,13 +54,16 @@ class test_case_generator():
                 test_case += generated
                 
                 del derivation_queue[0]
+                
                 continue
+            
             
             # 기타 terminal 생성
             elif not self.RE_NONTERMINAL.fullmatch(curr_variable):
                 
                 # a_i 형태
                 if self.re.match(r'.*_.*', curr_variable):
+                    
                     variable, counter = curr_variable.split('_')
                     variable += '_i'
                     counter = int(counter)
@@ -79,6 +86,13 @@ class test_case_generator():
                     # N, [N]의 형태
                     if self.re.match(r'\[[^\[]*\]', curr_variable):
                         curr_variable = curr_variable[1:-1]
+                    
+                    if curr_variable not in self.derivation_dict and curr_variable not in self.const_dict:
+                        
+                        test_case += curr_variable
+                        del derivation_queue[0]
+                        continue
+                        
                     start, end = self.get_range(curr_variable)
                     generated = self.random.randint(start, end)
                     self.variable_dict[curr_variable] = generated
@@ -114,6 +128,9 @@ class test_case_generator():
                 if self.re.match(r'<.*_i-1>', variable):
                     nonterminal = variable.split('_')[0]
                     variable = f'{nonterminal}_{counter-1}>'
+                elif self.re.match(r'<.*_i>', variable):
+                    nonterminal = variable.split('_')[0]
+                    variable = f'{nonterminal}_{counter}>'    
                 elif self.re.fullmatch(r'[^_<]*_.*', variable):
                     nonterminal = variable.split('_')[0]
                     variable = f'{nonterminal}_{counter}'
@@ -242,12 +259,12 @@ class test_case_generator():
         curr_token_const = self.const_dict[variable]
         include1 = curr_token_const['include1']
         include2 = curr_token_const['include2']
-        
-        start = curr_token_const['start']
+        addition = 0
+        start, addition = self.get_addition(curr_token_const['start'])
         if start in self.variable_dict:
             if counter != None:
                 start = self.variable_dict[start][start.split('_')[0] + f'_{counter}']
-                print(start)
+                # print(start)
             else:
                 start = self.variable_dict[start]
         elif '^' in start:
@@ -258,15 +275,16 @@ class test_case_generator():
             res = int(num) * int(base) ** int(exp)
             start = res
         
-        start = int(start)
+        start = int(start) + addition
         # variable의 constraints가 a_i < a_i+1의 형태라면
         # a_i가 생성할 정수의 범위는 a_i-1 <= a_i <= end이다
         
-            # constraint가 "start < variable"의 형태이면
-            # "start+1 <= variable"과 같다
+        # constraint가 "start < variable"의 형태이면
+        # "start+1 <= variable"과 같다
         start += 0 if include1 else 1
             
-        end = curr_token_const['end']
+        end, addition = self.get_addition(curr_token_const['end'])
+
         if end in self.variable_dict:
             end = self.variable_dict[end]
         
@@ -280,7 +298,7 @@ class test_case_generator():
                 res = int(base) ** int(exp)
             end = res
         
-        end = int(end)
+        end = int(end) + addition
         # constraint가 "variable < end"의 형태이면
         # "variable <= end-1"과 같다
         end -= 0 if include2 else 1
@@ -314,6 +332,17 @@ class test_case_generator():
     def is_terminal(self, token):
        return not self.RE_NONTERMINAL.fullmatch(token)
    
+    def get_addition(self, token):
+        
+        if self.re.match(r'[^+]+\+[0-9]+', token):
+            token, addition = token.split('+')
+            return token, int(addition)
+        elif self.re.match(r'[^-]+-[0-9]+', token):
+            token, addition = token.split('-')
+            return token, int(addition) * -1
+        else:
+            return token, 0
+   
     def get_string(self, variable):
         '''
         * string 만들어서 return하고
@@ -327,6 +356,8 @@ class test_case_generator():
         
         if string_len in self.variable_dict:
             string_len = int(self.variable_dict[string_len])
+        elif string_len.isnumeric():
+            string_len = int(string_len)
         else:
             start, end = self.get_range(string_len)
             string_len = self.random.randint(start, end)
@@ -386,7 +417,18 @@ class test_case_generator():
                     variable1, variable2 = self.re.split(r'[<>]=?', const)
                     variable1, variable2 = variable1.strip(), variable2.strip()
                     compare_symbol = self.re.findall(r'[<>]=?', const)[0]
-                    
+                    if '=' not in compare_symbol:
+                        v1_const = self.const_dict[variable1]
+                        v2_const = self.const_dict[variable2]
+                        
+                        if compare_symbol == '<':
+                            if v1_const['end'] == v2_const['end']:
+                                self.const_dict[variable1]['include2'] = False
+                        else:
+                            if v1_const['start'] == v2_const['start']:
+                                self.const_dict[variable1]['include1'] = False
+                        
+                        
                     if variable1.split('_')[0] == variable2.split('_')[0]:
                         self.compare_dict[variable1] = {
                                             'target': variable2,

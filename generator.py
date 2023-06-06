@@ -251,6 +251,17 @@ class test_case_generator():
             return_str += self.derivate(token)
         return return_str
     
+    def get_addition(self, token):
+        
+        if self.re.match(r'[^+]+\+[0-9]+', token):
+            token, addition = token.split('+')
+            return token, int(addition)
+        elif self.re.match(r'[^-]+-[0-9]+', token):
+            token, addition = token.split('-')
+            return token, int(addition) * -1
+        else:
+            return token, 0
+           
     def get_range(self, variable, counter=None):
         '''
         * terminal variable이 생성할 정수의 범위를 반환하는 함수
@@ -328,21 +339,7 @@ class test_case_generator():
                     derivate_range[range_index] += 0 if self.compare_dict[variable]['include'] else 1
         
         return derivate_range[0], derivate_range[1]
-    
-    def is_terminal(self, token):
-       return not self.RE_NONTERMINAL.fullmatch(token)
-   
-    def get_addition(self, token):
-        
-        if self.re.match(r'[^+]+\+[0-9]+', token):
-            token, addition = token.split('+')
-            return token, int(addition)
-        elif self.re.match(r'[^-]+-[0-9]+', token):
-            token, addition = token.split('-')
-            return token, int(addition) * -1
-        else:
-            return token, 0
-   
+
     def get_string(self, variable):
         '''
         * string 만들어서 return하고
@@ -366,18 +363,28 @@ class test_case_generator():
             variable_list = self.derivation_dict[variable]
         else:
             variable_list = []
-            start, end = variable_range.split('-')
-            start = ord(start)
-            end = ord(end)+1
-            for ch in range(start, end):
-                variable_list.append(chr(ch))
+            while '-' in variable_range:
+                idx = variable_range.find('-')
+                char_range = variable_range[idx-1:idx+2]
+                
+                start, end = char_range.split('-')
+                start = ord(start)
+                end = ord(end)+1
+                for ch in range(start, end):
+                    variable_list.append(chr(ch))
+                if idx == 1: variable_range = variable_range[3:]
+                else: variable_range = variable_range[:idx-1] + variable_range[idx+2]
+            for ch in variable_range:
+                variable_list.append(ch)
             self.derivation_dict[variable] = variable_list
 
         for _ in range(string_len):
             return_str += self.random.choice(variable_list)
 
         return return_str
-   
+ 
+    def is_terminal(self, token):
+       return not self.RE_NONTERMINAL.fullmatch(token)
 
     def make_derivate_dict(self, grammer: list):
         for token in grammer:

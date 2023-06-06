@@ -316,9 +316,9 @@ class test_case_generator():
         
         derivate_range = [start, end]
         
-        if variable in self.compare_dict and variable in self.variable_dict:
+        if variable in self.compare_dict:
             range_index = 0 if self.compare_dict[variable]['symbol'] == '<' else 1
-            
+            print('i', range_index)
             if self.compare_dict[variable]['type'] == 'same_variable':
                 if len(self.variable_dict[variable]) != 0:
                     target = variable.split('_')[0] + f'_{counter-1}'
@@ -333,11 +333,10 @@ class test_case_generator():
                     symbol += f'_{counter}'
                     derivate_range[range_index] = self.variable_dict[target][symbol]
                     derivate_range[range_index] += 0 if self.compare_dict[variable]['include'] else 1
-
                 else:
                     derivate_range[range_index] = self.variable_dict[target]
                     derivate_range[range_index] += 0 if self.compare_dict[variable]['include'] else 1
-        
+
         return derivate_range[0], derivate_range[1]
 
     def get_string(self, variable):
@@ -453,7 +452,7 @@ class test_case_generator():
                                             }
                         
             elif self.re.fullmatch(r'[^=]*!=[^=]*', const):
-                variable1, variable2 = const.split(' != ')
+                variable1, variable2 = const.split('!=')
                 self.permutation_variable.append(variable1)
         
         '''

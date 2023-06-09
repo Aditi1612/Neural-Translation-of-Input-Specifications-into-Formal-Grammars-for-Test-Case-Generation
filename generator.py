@@ -21,6 +21,8 @@ class test_case_generator():
         self.__init__()
         self.make_derivate_dict(grammer)
         self.make_constraints_dict(constraints)
+        print(self.const_dict)
+        print(self.compare_dict)
         test_case = self.derivate()
         return test_case
         # return result
@@ -411,45 +413,67 @@ class test_case_generator():
     
     def make_constraints_dict(self, constraints:list):
         for const in constraints:
-            if self.re.fullmatch(r'[^<]*<=?[^<]*<=?[^<]*', const):
-                start, variable, end = self.re.split(r'<=?', const)
-                include_list = self.re.findall(r'<=?', const)
-                self.const_dict[variable.strip()] = {
-                                        'start': start.strip(), 'end': end.strip(),
-                                        'include1': include_list[0] == '<=', 
-                                        'include2': include_list[1] == '<='
-                                        }
+            if self.re.match(r'[^<]*<=?[^<]*<=?[^<]*', const):
+                
+                variables = self.re.split(r'[<>]=?', const)
+                
+                start, end = variables[0], variables[-1]
+                
+                del variables[0]
+                del variables[-1]
+                
+                compare_symbols = self.re.findall(r'[<>]=?', const)
+                
+                for variable in variables:
+                    # start, variable, end = self.re.split(r'<=?', const)
+                    self.const_dict[variable.strip()] = {
+                        'start': start.strip(), 'end': end.strip(),
+                        'include1': compare_symbols[0] == '<=', 
+                        'include2': compare_symbols[-1] == '<='
+                    }
+                del compare_symbols[0]
+                del compare_symbols[-1]
+                
+                if len(variables) > 1:
+                    for i in range(len(variables)-1):
+                        self.compare_dict[variables[i+1]] = {
+                            'target': variables[i],
+                            'symbol': compare_symbols[i][0],
+                            'include': '=' in compare_symbols[i],
+                            'type': 'different_variable'
+                        }
                 
             elif self.re.fullmatch(r'[^<>]*[<>]=?[^<>]*', const):
-                    variable1, variable2 = self.re.split(r'[<>]=?', const)
-                    variable1, variable2 = variable1.strip(), variable2.strip()
-                    compare_symbol = self.re.findall(r'[<>]=?', const)[0]
-                    if '=' not in compare_symbol:
-                        v1_const = self.const_dict[variable1]
-                        v2_const = self.const_dict[variable2]
-                        
-                        if compare_symbol == '<':
-                            if v1_const['end'] == v2_const['end']:
-                                self.const_dict[variable1]['include2'] = False
-                        else:
-                            if v1_const['start'] == v2_const['start']:
-                                self.const_dict[variable1]['include1'] = False
-                        
-                        
-                    if variable1.split('_')[0] == variable2.split('_')[0]:
-                        self.compare_dict[variable1] = {
-                                            'target': variable2,
-                                            'symbol': compare_symbol[0],
-                                            'include': '=' in compare_symbol,
-                                            'type': 'same_variable'
-                                            }
+                
+                variable1, variable2 = self.re.split(r'[<>]=?', const)
+                variable1, variable2 = variable1.strip(), variable2.strip()
+                compare_symbol = self.re.findall(r'[<>]=?', const)[0]
+                if '=' not in compare_symbol:
+                    v1_const = self.const_dict[variable1]
+                    v2_const = self.const_dict[variable2]
+                    
+                    if compare_symbol == '<':
+                        if v1_const['end'] == v2_const['end']:
+                            self.const_dict[variable1]['include2'] = False
                     else:
-                        self.compare_dict[variable2] = {
-                                            'target': variable1,
-                                            'symbol': compare_symbol[0],
-                                            'include': '=' in compare_symbol,
-                                            'type': 'different_variable'
-                                            }
+                        if v1_const['start'] == v2_const['start']:
+                            self.const_dict[variable1]['include1'] = False
+                    
+                    
+                if variable1.split('_')[0] == variable2.split('_')[0]:
+                    self.compare_dict[variable1] = {
+                                        'target': variable2,
+                                        'symbol': compare_symbol[0],
+                                        'include': '=' in compare_symbol,
+                                        'type': 'same_variable'
+                                        }
+                else:
+                    self.compare_dict[variable2] = {
+                                        'target': variable1,
+                                        'symbol': compare_symbol[0],
+                                        'include': '=' in compare_symbol,
+                                        'type': 'different_variable'
+                                        }
                         
             elif self.re.fullmatch(r'[^=]*!=[^=]*', const):
                 variable1, variable2 = const.split('!=')

@@ -11,7 +11,7 @@ This repo provides the source code & data of our work.
 
 ## Abstract
 
-> Paste here the abstract.
+> We aim to automatically generate a formal grammar that precisely describes the logical specification of test cases for programming problems. Generating high-quality test cases is a necessary step for evaluating the codes written by programmers as low-quality test cases easily fail to discriminate incorrect codes from correct ``solutions" that exactly satisfy the requirements posed in programming problem descriptions. However, it is known to be highly technical to write a good test case from a given problem description without understanding the educational purpose of the problem and the logical restrictions specified in the description.
 
 
 

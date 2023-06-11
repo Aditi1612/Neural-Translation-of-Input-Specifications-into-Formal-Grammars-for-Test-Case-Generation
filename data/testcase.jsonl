@@ -1,130 +1,131 @@
 {"name": "p02703 - 1036", "grammer": ["<S>->N <s> [M]", "[M]-><s> S <n> <T_M>", "<T_i>->U_i <s> V_i <s> A_i <s> B_i <n> <T_i-1>", "<T_0>-><L_N>", "<L_i>->C_i <s> D_i <n> <L_i-1>", "<L_0>->ε"], "constraints": ["2<=N<=50", "N<M<=100", "0<=S<=1000000000", "1<=A_i<=50", "1<=B_i<=1000000000", "1<=C_i<=1000000000", "1<=D_i<=1000000000", "1<=U_i<N", "U_i<V_i<=N"]}
-{"name": "p03370 - 1035", "grammer": ["<S>->[N] <s> X ", "[N]-><n> <T_N>", "<T_i>->m_i <n> <T_i-1>", "<T_0>->ε"], "constraints": ["2<=N<=100" , "1<=m_i<=1000"]}
-{"name": "p03338 - 1034", "grammer": ["<S>->[N]", "[N]-><n> S"], "constraints": ["2<=N<=100", "S == N"]}
-{"name": "1326_D1 - 1033", "grammer": ["<S>->[N]", "[N]-><n> <T_N>", "<T_i>->s <n> <T_i-1>", "<T_0>->ε"], "constraints": ["1<=N<=1000"]}
+{"name": "p03370 - 1035", "grammer": ["<S>->[N] <s> X <T_N>", "<T_i>-><T_i-1> <n> m_i", "<T_1>->m_i"], "constraints": ["2<=N<=100" , "1<=m_i<=1000", "m_1 + m_2 + ... + m_N<=X<=10^5"]}
+{"name": "p03338 - 1034", "grammer": ["<S>->N <n> S", "S->[a-z]{N}"], "constraints": ["2<=N<=100"]}
+{"name": "1326_D1 - 1033", "grammer": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> s_i", "<T_1>->s_i", "s_i->[a-z]"], "constraints": ["1<=N<=1000"]}
 {"name": "p02915 - 1030", "grammer": ["<S>->N"], "constraints": ["1<=N<=9"]}
-{"name": "1209_A -1031", "grammer": ["<S>->[N]", "[N]-><n> <T_N>", "<T_i>->a_i <s> <T_i-1>", "<T_0>->ε"], "constraints": ["1<=N<=100", "1<=a_i<=100"]}
-{"name": "1296_D - 1029", "grammer": ["<S>->[N]", "[N]->a <s> b <s> k <n> <T_i>" , "<T_i>->h_i <s> <T_i-1>", "<T_0>->ε"], "constraints": ["1<=h_i<=10000000000"]}
-{"name": "1245_A - 1028", "grammer": ["<S>->[N]", "[N]-><n> <T_N> ", "<T_i>->a_i <s> b_i <n> <T_i-1>", "<T_0>->ε" ], "constraints": ["1<=a<=10000", "1<=b<=10000", "1<=N<=100"]}
-{"name": "p02631 - 1027", "grammer": ["<S>->[N]", "[N]-><n> <T_N>", "<T_i>->a_i <s> <T_i-1>", "<T_0>->ε"], "constraints": ["2<=N<=200000", "0<=a_i<=1000000000"]}
-{"name": "p04019 - 1026", "grammer": ["<S>->M", "M-><T_M>", "<T_i>->C <T_i-1>", "C->N | W | S | E", "<T_0>->ε"], "constraints": ["1<=M<=1000"]}
-{"name": "922_A - 1025", "grammer": ["<S>->x <s> y"], "constraints": ["0<=x<=1000000000", "0<=x<=1000000000"]}
-{"name": "1197_B - 1023", "grammer": ["<S>->[N]", "[N]-><n> <T_N>", "<T_i>->a_i <s> <T_i-1>", "<T_0>->ε"], "constraints": ["1<=a_i<=N", "3<=N<=2*10^5"]}
-{"name": "1139_B - 1022", "grammer": ["<S>->[N]", "[N]-><n> <T_N>", "<T_i>->a_i <s> <T_i-1>", "<T_0>->ε"], "constraints": ["1<=N<=2*10^5", "1<=a_i<=10^6"]}
+{"name": "1209_A -1031", "grammer": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_i"], "constraints": ["1<=N<=100", "1<=a_i<=100"]}
+{"name": "1296_D - 1029", "grammer": ["<S>->[n] <s> a <s> b <s> k <n> <T_n>", "<T_i>-><T_i-1> <s> h_i", "<T_1>->h_i"], "constraints": ["1<=n<=2*10^5", "1<=a<=10^9", "1<=b<=10^9", "1<=k<=10^9", "1<=h_i<=10^9"]}
+{"name": "1245_A - 1028", "grammer": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <s> a_i <s> b_i", "<T_1>->a_i <s> b_i"], "constraints": ["1<=a<=10^4", "1<=b<=10^4", "1<=t<=100"]}
+{"name": "p02631 - 1027", "grammer": ["<S>->[N] <n> <T_i>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_i"], "constraints": ["2<=N<=200000", "0<=a_i<=10^9", "N is even"]}
+{"name": "p04019 - 1026", "grammer": ["<S>->S", "S->N | W | S | E{1,1000}"], "constraints": []}
+{"name": "922_A - 1025", "grammer": ["<S>->x <s> y"], "constraints": ["0<=x<=10^9", "0<=x<=10^9"]}
+{"name": "1197_B - 1023", "grammer": ["<S>->[n] <n> <T_n>", "<T_i>-<T_i-1> <s> a_i", "<T_1>-a_i"], "constraints": ["3<=N<=2*10^5", "1<=a_i<=N"]}
+{"name": "1139_B - 1022", "grammer": ["<S>->[N] <n> <T_N>", "<T_i>-<T_i-1> <s> a_i", "<T_1>-a_i"], "constraints": ["1<=n<=2*10^5", "1<=a_i<=10^9"]}
 {"name": "p03834 - 1020", "grammer": ["<S>->s"], "constraints": []}
-{"name": "p03959 - 1021", "grammer": ["<S>->[N] <n> <T_N>", "<T_i>->t_i <s> <T_i-1> <L_N>", "<L_i>->a_i <s> <L_i-1>", "<L_0>->ε"], "constraints": ["1<=N<=100000", "1<=T_i<=100000000", "1<=A_i<=1000000000"]}
-{"name": "34_A - 1019", "grammer": ["<S> _> [N] <n> <T_N>", "<T_i>->a_i <s> <T_i-1>", "<T_0>->ε"], "constraints": ["2<=n<=100", "1<=a_i<=1000"]}
-{"name": "841_A - 1018", "grammer": ["<S>->[N] k <n> <T_N>", "<T_i>->s_i <T_i-1>", "<T_0>->ε"], "constraints": ["1<=n<=100", "1<=k<=100" ]}
-{"name": "1391_C - 1017", "grammer": ["<S>->N"], "constraints": ["3<=N<=1000000"]}
-{"name": "1201_B - 1016", "grammer": ["<S>->[N] <n> <T_N>", "<T_i>->a_i <s> <T_i-1>", "<T_0>->ε"], "constraints": ["2<=n<=100000", "1<=a_i<=1000000000"]}
-{"name": "1016_A - 1015", "grammer": ["<S>->[N] <s> M  <n> <T_N>", "<T_i>->a_i <s> <T_i-1>", "<T_0>->ε"], "constraints": ["1<=n<=200000", "1<=m<=1000000000", "1<=a_i<=1000000000"]}
-{"name": "p04006 - 1014", "grammer": ["<S>->[N] <s> x <n> <T_N>", "<T_i>->a_i <s> <T_i-1>", " <T_0>->ε"], "constraints": ["2<=N<=20000", "1<=a_i<=1000000000", "1<=x<=1000000000"]}
+{"name": "p03959 - 1021", "grammer": ["<S>->[N] <n> <T_N> <n> <L_N>", "<T_i>-><T_i-1> <s> T_i", "<T_1>->T_i", "<L_i>-><L_i-1> <s> A_i", "<L_1>->A_i"], "constraints": ["1<=N<=10^5", "1<=T_i<=10^9", "1<=A_i<=10^9", "T_i<=T_{i+1}","1<=i<=(N - 1)", "A_i>=A_{i+1}", "1<=i<=(N - 1)"]}
+{"name": "34_A - 1019", "grammer": ["<S>->[n] <n> <T_n>", "<T_i>-<T_i-1> <s> a_i", "<T_1>-a_i"], "constraints": ["2<=n<=100", "1<=a_i<=1000"]}
+{"name": "841_A - 1018", "grammer": ["<S>->[n] <s> k <n> <T_n>", "<T_i>-<T_i-1> s_i", "<T_1>-s_i", "s_i->[a-z]"], "constraints": ["1<=n<=100", "1<=k<=100"]}
+{"name": "1391_C - 1017", "grammer": ["<S>->N"], "constraints": ["3<=N<=10^6"]}
+{"name": "1201_B - 1016", "grammer": ["<S>->[n] <s> m <n> <T_n>", "<T_i>-<T_i-1>a_i", "<T_1>-a_i"], "constraints": ["2<=n<=10^5", "1<=a_i<=10^9", "i!=j"]}
+{"name": "1016_A - 1015", "grammer": ["<S>->[n] <n> <T_n>", "<T_i>-<T_i-1> <s> a_i", "<T_1>-a_i"], "constraints": ["1<=n<2*10^5", "1<=m<=10^9", "1<=a_i<=10^9"]}
+{"name": "p04006 - 1014", "grammer": ["<S>->[N] <s> s <n> <T_N>", "<T_i>-<T_i-1> <s> a_i", "<T_1>-a_i"], "constraints": ["2<=N<=2000", "1<=a_i<=10^9", "1<=x<=10^9"]}
 {"name": "p02552 - 1013", "grammer": ["<S>->x"], "constraints": ["0<=x<=1"]}
-{"name": "p02271 - 1008", "grammer": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <s> a_i","<T_1>->a_i" ], "constraints": ["n<=20", "q<=200", "1<=M_i<=2000"]}
-{"name": "466_C - 1007", "grammer": ["<S>->[N] <n> <T_N>", <T_i>-><T_i-1> <s> a_i", "<T_1>->a_i"], "constraints": ["1<=n<=500000"]}
-{"name": "1398_C - 1006", "grammer": ["<S>->[T] <n> <T_T>", "<T_i>->[N] <n> <T_N>", ], "constraints": []}{"name": "393_A - 1005", "grammer": ["<S>->[N]"], "constraints": []}
+{"name": "p02271 - 1008", "grammer": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <s> A_i","<T_1>->A_i <n> q <n> <L_q>", "<L_i>-><L_i-1> <s> M_i", "<L_1>->M_i"], "constraints": ["n<=20", "q<=200", "1<=A_i<=2000", "1<=M_i<=2000"]}
+{"name": "466_C - 1007", "grammer": ["<S>->[N] <n> <T_N>", <T_i>-><T_i-1> <s> a_i", "<T_1>->a_i"], "constraints": ["1<=n<=5*10^5", "2<=i<=j<=(n-1)", "-10^9<=a_i<=10^9"]}
+**{"name": "1398_C - 1006", "grammer": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> a_i <n> ", ], "constraints": []}
+{"name": "393_A - 1005", "grammer": ["<S>->s", "s->[a-z]{100}"], "constraints": []}
 {"name": "p03547 - 1004", "grammer": ["<S>->X <s> Y", "X->[A-F]{1}", "Y->[A-F]{1}"], "constraints": []} 
-{"name": "938_A - 1002", "grammer": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_i"], "constraints": ["1<=n<=100"]} 
+{"name": "938_A - 1002", "grammer": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_i", "a_i->[a-z]{n}"], "constraints": ["1<=n<=100"]} 
 {"name": "102_B - 1001", "grammer": ["<S>->N"], "constraints": ["0<=n<=10100000"]} 
-{"name": "p03502 - 995", "grammer": ["<S>->N"], "constraints": ["1<=N<=10000000"]} 
+{"name": "p03502 - 995", "grammer": ["<S>->N"], "constraints": ["1<=N<=10^8"]} 
 {"name": "p03773 - 996 ", "grammer": ["<S>->A <s> B"], "constraints": ["0<=A<=23", "0<=B<=23"]} 
-{"name": "p02851 - 997", "grammer": ["<S>->[N] <s> K <n> <T_N>", "<T_i>-><T_i-1><s> a_i", "<T_1>->a_i"], "constraints": ["1<=N<=200000", "1<=K<=100000000", "1<=a_i<=1000000000"]} 
+{"name": "p02851 - 997", "grammer": ["<S>->[N] <s> K <n> <T_N>", "<T_i>-><T_i-1> <s> A_i", "<T_1>->A_i"], "constraints": ["1<=N<=2*10^5", "1<=K<=10^9", "1<=A_i<=10^9"]} 
 {"name": "513_A  - 998", "grammer": ["<S>->n1 <s> n2 <s> k1 <s> k2", "n1->[1-50]", "n2->[1-50]", "k1->[1-50]", "k2->[1-50]"], "constraints": []} 
-{"name": "1047_B - 994", "grammer": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> x_i <s> y_i", "<T_1>->x_i <s> y_i"], "constraints": ["1<=N<=100000", "1<=x_i<=1000000000", "1<=y_i<=100000000"]} 
-{"name": "p03480 - 993", "grammer": ["<S>->N", "N->[0-1]"], "constraints": []} 
+{"name": "1047_B - 994", "grammer": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <n> x_i <s> y_i", "<T_1>->x_i <s> y_i"], "constraints": ["1<=n<=10^5", "1<=x_i<=10^9", "1<=y_i<=10^9"]} 
+{"name": "p03480 - 993", "grammer": ["<S>->S", "S->0 | 1{1,10^5}"], "constraints": []} 
 {"name": "p03631 - 992", "grammer": ["<S>->N"], "constraints": ["100<=N<=999"]} 
 {"name": "p02927 - 991", "grammer": ["<S>->M <s> D"], "constraints": ["1<=M<=100", "1<=D<=99"]} 
-{"name": "1131_A - 990", "grammer": ["<S>->w_1 <s> h_1 <s> w_2 <s> h_2"], "constraints": ["1<=w_1<=100000000","1<=w_2<=100000000","1<=h_2<=100000000","1<=h_1<=100000000"]} 
-{"name": "p02621 - 985", "grammer": ["<S>->N"], "constraints": ["1<=N<=10"]} 
-{"name": "p02728 - 987", "grammer": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> a_i <s> b_i", <T_1>-><a_i <s> b_i"], "constraints": ["2<=N<=200000", "1<=a_i<=N", "1<=b_i<=N"]} 
+{"name": "1131_A - 990", "grammer": ["<S>->w_1 <s> h_1 <s> w_2 <s> h_2"], "constraints": ["1<=w_1<=10^8","1<=w_2<=10^8","1<=h_2<=10^8","1<=h_1<=10^8", "w_1>=w_2"]} 
+{"name": "p02621 - 985", "grammer": ["<S>->a"], "constraints": ["1<=a<=10"]} 
+**(N-1){"name": "p02728 - 987", "grammer": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> a_i <s> b_i", <T_1>-><a_i <s> b_i"], "constraints": ["2<=N<=200000", "1<=a_i<=N", "1<=b_i<=N"]} 
 {"name": "p02734 - 988", "grammer": ["<S>->[N] <s> S <n> <T_N>","<T_i>-><T_i-1> <s> a_i", "<T_1>->a_i"], "constraints": ["1<=N<=3000", "1<=S<=3000", "1<=A_i<=3000"]} 
-{"name": "p02680 - ", "grammer": ["<S>->[N] <s> [M] <n> <T_N> <n> <L_M>", "<T_i>-><T_i-1> <n> A_i <s> B_i <s> C_i", "<T_1>->A_i <s> B_i <s> C_i" , "<L_i>-><L_i-1> <n> D_i <s> E_i <s> F_i", "<L_1>->D_i <s> E_i <s> F_i"], "constraints": ["1<=N<=10000", "1<=M<=1000", "-10^9<=A_i<=10^9", "-10^9<=B_i<=10^9", "-10^9<=C_i<=10^9", "-10^9<=D_i<=10^9", "-10^9<=E_i<=10^9","-10^9<=F_i<=10^9","A_i<B_i", "E_i<F_i"]} 
+{"name": "p02680 - 989", "grammer": ["<S>->[N] <s> [M] <n> <T_N> <n> <L_M>", "<T_i>-><T_i-1> <n> A_i <s> B_i <s> C_i", "<T_1>->A_i <s> B_i <s> C_i" , "<L_i>-><L_i-1> <n> D_i <s> E_i <s> F_i", "<L_1>->D_i <s> E_i <s> F_i"], "constraints": ["1<=N<=1000", "1<=M<=1000", "-10^9<=A_i<=10^9", "-10^9<=B_i<=10^9", "-10^9<=C_i<=10^9", "-10^9<=D_i<=10^9", "-10^9<=E_i<=10^9", "-10^9<=F_i<=10^9", "A_i<B_i", "E_i<F_i"]} 
 {"name": "755_A - 982", "grammer": ["<S>->N"], "constraints": ["1<=N<=1000"]} 
 {"name": "p03288 - 984", "grammer": ["<S>->R"], "constraints": ["0<=R<=4208"]} 
-{"name": "1203_C - 981", "grammer": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_i"], "constraints": ["1<=N<=400000", "1<=a_i<=100000000000"]} 
-{"name": "p03447 - 980", "grammer": ["<S>->X <n> A <n> B <n>"], "constraints": ["1<=A<=1000", "1<=B<=1000", "(A + B)<=X<=10000"]} 
-{"name": "p03569 - 975", "grammer": ["<S>->s", "s->[a-z]"], "constraints": []} 
-{"name": "898_A - 978", "grammer": ["<S>->N"], "constraints": ["0<=N<=1000000000"]} 
-{"name": "1073_A - 979", "grammer": ["<S>->[N] <T_N>","<T_i>-><T_i-1> a_i", "<T_1>->a_i"], "constraints": ["1<=N<=1000"]} 
-{"name": "1038_A - 977", "grammer": ["<S>->[N] <s> k <n> <T_N>","<T_i>-><T_i-1> a_i", "<T_1>->a_i", "a_i->[A-]"], "constraints": ["1<=N<=100000", "1<=k<=26"]} 
-{"name": "p02605 - 976", "grammer": ["<S>->[N] <T_N>","<T_i>-><T_i-1> X_i <s> Y_i <s> U_i <n>", "<T_1>->X_i <s> Y_i <s> U_i", "U_i->U| R|D|L"], "constraints": ["1<=N<=200000", "0<=X_i<=200000", "0<=Y_i<=200000"]} 
+{"name": "1203_C - 981", "grammer": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_i"], "constraints": ["1<=N<=4*10^", "1<=a_i<=10^12"]} 
+{"name": "p03447 - 980", "grammer": ["<S>->X <n> A <n> B <n>"], "constraints": ["1<=A<=1000", "1<=B<=1000", "(A+B)<=X<=10000"]} 
+{"name": "p03569 - 975", "grammer": ["<S>->s", "s->[a-z]{1,10^5}"], "constraints": []} 
+{"name": "898_A - 978", "grammer": ["<S>->n"], "constraints": ["0<=n<=1000000000"]} 
+{"name": "1073_A - 979", "grammer": ["<S>->[n] <T_n>","<T_i>-><T_i-1> a_i", "<T_1>->a_i", "a_i->[a-z]"], "constraints": ["1<=n<=1000"]} 
+**{"name": "1038_A - 977", "grammer": ["<S>->[n] <s> k <n> <T_n>","<T_i>-><T_i-1> a_i", "<T_1>->a_i", "a_i->[A-]"], "constraints": ["1<=N<=100000", "1<=k<=26"]} 
+{"name": "p02605 - 976", "grammer": ["<S>->[N] <T_N>","<T_i>-><T_i-1> <n> X_i <s> Y_i <s> U_i", "<T_1>->X_i <s> Y_i <s> U_i", "U_i->U | R | D | L"], "constraints": ["1<=N<=200000", "0<=X_i<=200000", "0<=Y_i<=200000"]} 
 {"name": "p03605 - 974", "grammer": ["<S>->N"], "constraints": ["10 <=N<=99"]} 
-{"name": "461_A - 972", "grammer": ["<S>->[N] <n> <T_N>","<T_i>-><T_i-1> a_i", "<T_1>->a_i"], "constraints": ["1<=N<=300000", "1<=a_i<=1000000"]} 
-{"name": "915_A - 970", "grammer": ["<S>->[N] <s> k <n> <T_N>","<T_i>-><T_i-1> a_i <s>", "<T_1>->a_i"], "constraints": ["1<=a_i<=100", "1<=N<=100", "1<=k<=100"]} 
-{"name": "764_A - 971", "grammer": ["<S>->n <s> m <s> z"], "constraints": ["1<=n<=10000", "1<=m<=10000", "1<=z<=10000"]} 
-{"name": "p03470 - 965", "grammer": ["<S>->[N] <n> <T_N>","<T_i>-><T_i-1> a_i <n>", "<T_1>->a_i"], "constraints": ["1<=N<=100", "1<=d_i<=100"]} 
-{"name": "p03369 - 967", "grammer": ["<S>->N", "N->o|x"], "constraints": []} 
-{"name": "p03836 - 960", "grammer": ["<S>->sx <s> sy <s> tx <s> ty"], "constraints": ["-1000<=sx<=1000", "-1000<tx<=1000", "-1000<=sy<=1000", -1000<ty<=1000]} 
-{"name": "p02886 - 961", "grammer": ["<S>->[N] <n> <T_N>","<T_i>-><T_i-1> d_i", "<T_1>->d_i"], "constraints": ["2<=N<=50", "0<=d_i<=100"]} 
+{"name": "461_A - 972", "grammer": ["<S>->[N] <n> <T_N>","<T_i>-><T_i-1> a_i", "<T_1>->a_i"], "constraints": ["1<=N<=3*10^5", "1<=a_i<=10^6"]} 
+{"name": "915_A - 970", "grammer": ["<S>->[N] <s> k <n> <T_N>","<T_i>-><T_i-1> a_i <s>", "<T_1>->a_i"], "constraints": ["1<=a_i<=100", "1<=N<=100", "1<=k<=100", "1<=a_i<=100"]} 
+{"name": "764_A - 971", "grammer": ["<S>->n <s> m <s> z"], "constraints": ["1<=n<=10^4", "1<=m<=10^4", "1<=z<=10^4"]} 
+{"name": "p03470 - 965", "grammer": ["<S>->[N] <n> <T_N>","<T_i>-><T_i-1> d_i <n>", "<T_1>->d_i"], "constraints": ["1<=N<=100", "1<=d_i<=100"]} 
+{"name": "p03369 - 967", "grammer": ["<S>->S", "S->o | x{3}"], "constraints": []} 
+{"name": "p03836 - 960", "grammer": ["<S>->sx <s> sy <s> tx <s> ty"], "constraints": ["-1000<=sx<=1000", "-1000<tx<=1000", "-1000<=sy<=1000", "-1000<ty<=1000"]} 
+{"name": "p02886 - 961", "grammer": ["<S>->[N] <n> <T_N>","<T_i>-><T_i-1> <s> d_i", "<T_1>->d_i"], "constraints": ["2<=N<=50", "0<=d_i<=100"]} 
 {"name": "701_A - 959", "grammer": ["<S>->[N] <n> <T_N>","<T_i>-><T_i-1> a_i", "<T_1>->a_i"], "constraints": ["2<=N<=100", "1<=a_i<=100"]} 
 {"name": "501_A - 957", "grammer": ["<S>->a <s> b <s> c <s> d"], "constraints": ["250<=a<=3500","250<=b<=3500", "0<=c<=180", "0<=d<=180"]} 
-{"name": "p04000 - 958", "grammer": ["<S>->H <s> W <s> [N] <n> <T_N>", "<T_i>-> <T_i-1> <n> a_i <s> b_i", "<T_1>->a_i <s> b_i"], "constraints": ["3<=H<=1000000000", "3<=W<=100000000", "1<=a_i<=H", "1<=b_i<=W","(a_i, b_i) != (a_j, b_j)"]} 
-{"name": "1272_B - 956", "grammer": ["<S>->[N] <n> <T_N>", <T_i>-><T_i-1> <n> q_i", "<T_1>->q_i", "q_i->L|R|U|D"], "constraints": []} 
-{"name": "672_A - 955", "grammer": ["<S>->N"], "constraints": ["1<=N<=1000"]} 
-{"name": "118_B - 950", "grammer": ["<S>->N"], "constraints": ["2<=n<=9"]} 
-{"name": "p03265 - 951", "grammer": ["<S>->x_1 <s> y_1 <s> x_2 <s> y_2"], "constraints": ["-100<=x_1<=100", "-100<=y1<=100", "-100<=y_1<=100", "-100<=y_1<=100"]} 
+{"name": "p04000 - 958", "grammer": ["<S>->H <s> W <s> [N] <n> <T_N>", "<T_i>-><T_i-1> <n> a_i <s> b_i", "<T_1>->a_i <s> b_i"], "constraints": ["3<=H<=10^9", "3<=W<=10^9", "1<=a_i<=H", "1<=b_i<=W","(a_i, b_i) != (a_j, b_j)", "i!=j", "0<=N<=min(10^5,(H*W))"]} 
+{"name": "1272_B - 956", "grammer": ["<S>->[N] <n> <T_N>", <T_i>-><T_i-1> <n> s_i", "<T_1>->s_i", "s_i->L | R | U | D{1,10^5}"], "constraints": []} 
+{"name": "672_A - 955", "grammer": ["<S>->n"], "constraints": ["1<=n<=1000"]} 
+{"name": "118_B - 950", "grammer": ["<S>->n"], "constraints": ["2<=n<=9"]} 
+{"name": "p03265 - 951", "grammer": ["<S>->x_1 <s> y_1 <s> x_2 <s> y_2"], "constraints": ["-100<=x_1<=100", "-100<=y1<=100", "-100<=y_1<=100", "-100<=y_1<=100", "(x_1,y_1)!=(x_2,y_2)"]} 
 {"name": "p03407 - 952 ", "grammer": ["<S>->A <s> B <s> C"], "constraints": ["1<=A<=500", "1<=B<=500", "1<=C<=1000"]} 
 {"name": "912_A - 954", "grammer": ["<S>->A <s> B <n> x <s> y <s> z"], "constraints": ["0<=A<=10^9", "0<=B<=10^9", "0<=x<=10^9", "0<=y<=10^9", "0<=z<=10^9"]} 
-{"name": "1418_B - 953", "grammer": [], "constraints": []} 
-{"name": "p02419 - 945", "grammer": [], "constraints": []} 
+**{"name": "1418_B - 953", "grammer": [""], "constraints": []} 
+**{"name": "p02419 - 945", "grammer": [], "constraints": []} 
 {"name": "378_A - 946", "grammer": ["<S>->a <s> b"], "constraints": ["1<=a<=6", "1<=b<=6"]} 
-{"name": "1407_B - 947", "grammer": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <s> <L_n>", "<T_1>->n] <s> <L_n>", "<L_i>-><L_i-1> <s> a_i", "<L_1>-> a_i"], "constraints": ["1<=n <=10^3", "1<=a_i<=10^3"]} 
-{"name": "1248_A - 949", "grammer": [""], "constraints": ["1<=t<=1000", "1<=n<=10^5", "0<=p_i<=10^9","1<=m<=10^5","0<=q_i<=10^9"]} 
+{"name": "1407_B - 947", "grammer": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <s> <L_n>", "<T_1>->n] <s> <L_n>", "<L_i>-><L_i-1> <s> a_i", "<L_1>-> a_i"], "constraints": ["1<=t<=10^3", "1<=n <=10^3", "1<=a_i<=10^3"]} 
+**{"name": "1248_A - 949", "grammer": [""], "constraints": ["1<=t<=1000", "1<=n<=10^5", "0<=p_i<=10^9","1<=m<=10^5","0<=q_i<=10^9"]} 
 {"name": "p03325 - 948", "grammer": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_i"], "constraints": ["1<=N<=10000", "1<=a_i<=10^9"]} 
 {"name": "1270_B - 940", "grammer": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <s> <L_n>", "<T_1>->[n] <s> <L_n>", "<L_i>-><L_i-1> <s> a_i", "<L_1>-> a_i"], "constraints": ["1<=t<=10000", "2<=n<=2*10^5", "0<=a_i<=10^9"]} 
-{"name": "p03125 - 941", "grammer": ["<S>->A <s> B"], "constraints": ["1<=A<=20", "1<=B<=20"]} 
+{"name": "p03125 - 941", "grammer": ["<S>->A <s> B"], "constraints": ["1<=A<=B<=20"]} 
 {"name": "p03719 - 942", "grammer": ["<S>->A <s> B <s> C"], "constraints": ["-100<=A<=100", "-100<=B<=100", "-100<=C<=100"]} 
-{"name": "p03101 - 943", "grammer": ["<S>->H <s> W <n> h <s> w"], "constraints": [" 1<=H<=20", " 1<=W<=20", "1<=h<=H", "1<=w<=W"]} 
-{"name": "349_A - 944", "grammer": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_i"], "constraints": ["1<=n<=10^5"]} 
+{"name": "p03101 - 943", "grammer": ["<S>->H <s> W <n> h <s> w"], "constraints": ["1<=H<=20", "1<=W<=20", "1<=h<=H", "1<=w<=W"]} 
+{"name": "349_A - 944", "grammer": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_i", "a_i->25 | 50 | 100"], "constraints": ["1<=n<=10^5"]} 
 {"name": "950_A - 939", "grammer": ["<S>->l <s> r <s> a"], "constraints": ["0<=l<=100", "0<=r<=100", "0<=a<=100"]} 
-{"name": "903_A - 938", "grammer": ["<S>->[N] <n> <T_N>",<T_i>-><T_i-1> <n> x_i", "<T_1>->x_i"], "constraints": ["1<=n<=100", "1<=x_i<=100"]} 
+{"name": "903_A - 938", "grammer": ["<S>->[n] <n> <T_n>",<T_i>-><T_i-1> <n> x_i", "<T_1>->x_i"], "constraints": ["1<=n<=100", "1<=x_i<=100"]} 
 {"name": "770_A - 937", "grammer": ["<S>->n <s> k"], "constraints": ["2<=n<=100", "2<=k<=min(n, 26)"]} 
 {"name": "1350_B - 936", "grammer": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <s> <L_n>", "<T_1>->[n] <s> <L_n>", "<L_i>-><L_i-1> <s> s_i", "<L_1>-> s_i"], "constraints": ["1<=t<=100", "1<=n<=100000", "1<=s_i<=10^9"]} 
-{"name": "313_B - 935", "grammer": [], "constraints": []} 
-{"name": "1099_A - 930", "grammer": ["<S>->w <s> h <s> u_1 <n> d_1 <s> u_2 <n> d_2"], "constraints": ["0<=w<=100", "1<=h<=100", "0<=u_1<=100", "1<=d_1<=h","0<=u_2<=100", "1<=d_2<=h","d_1 ≠ d_2"]} 
-{"name": "1355_D - 931", "grammer": ["<S>->N <s> S"], "constraints": ["1<=N<=S", "N<=S<=10^6"]} 
-{"name": "p03705 - 932", "grammer": ["<S>->N <s> A "], "constraints": ["1<=N<=10^9", "1<=A<=10^9", "1<=B<=10^9"]} 
+{"name": "313_B - 935", "grammer": ["S->n <n> [m] <n> <T_m>", "<T_i>-><T_i-1> <n> l_i <s> r_i", "<T_1>->l_i <s> r_i", "n->. | #{n}"], "constraints": ["1<=n<=10^5","1<=m<=10^5","1<=l_i<=r_i<=n"]} 
+{"name": "1099_A - 930", "grammer": ["<S>->w <s> h <s> u_1 <n> d_1 <s> u_2 <n> d_2"], "constraints": ["0<=w<=100", "1<=h<=100", "0<=u_1<=100", "1<=d_1<=h","0<=u_2<=100", "1<=d_2<=h","d_1!=d_2"]} 
+{"name": "1355_D - 931", "grammer": ["<S>->N <s> S"], "constraints": ["1<=N<=S<=10^6"]} 
+{"name": "p03705 - 932", "grammer": ["<S>->N <s> A <s> B"], "constraints": ["1<=N<=10^9", "1<=A<=10^9", "1<=B<=10^9"]} 
 {"name": "p02257 - 933", "grammer": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> a_i", "<T_1>->a_i"], "constraints": ["1<=N<=10000", "2<=a_i<=10^8"]} 
-{"name": "p03054 - 934", "grammer": ["<S>->H <s> N <n> s_r <s> s_c <n> S <n> T", "S-> L|R|U|D", "T-> L|R|U|D"], "constraints": ["2<=H<=2 * 10^5", "2<=W<=2 * 10^5", "2<=N<=2*10^5","1<=s_r<=H", "1<=s_c<=W"]} 
+{"name": "p03054 - 934", "grammer": ["<S>->H <s> N <n> s_r <s> s_c <n> S <n> T", "S-> L |R |U | D{N}", "T-> L | R | U | D{N}"], "constraints": ["2<=H<=2 * 10^5", "2<=W<=2 * 10^5", "2<=N<=2*10^5","1<=s_r<=H", "1<=s_c<=W"]} 
 {"name": "1133_C - 925", "grammer": ["<S>->[N] <n> <T_N>", "<T_i>-> <T_i-1> <s> a_i", "<T_1>->a_i"], "constraints": ["1<=n<=2 *10^5", "1<=a_i<=10^9"]} 
-{"name": "p03523", "grammer": ["<S>->M", "M-><T_M>", "<T_i>-><T_i-1> C", "C->[A-Z]"], "constraints": ["1<=M<=50"]} 
-{"name": "709_A", "grammer": ["<S>->[n] <s> b <s> d <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_i"], "constraints": ["1<=n<=100000", "1<=b<=1000000","1<=d<=1000000"]} 
-{"name": "1138_A", "grammer": ["<S>->[n] <n> <T_N>", "<T_i>-> <T_i-1> <s> t_i", "<T_1>->t_i"], "constraints": ["2<=n<=100000", "1<=t_i<=2"]} 
-{"name": "p03720", "grammer": ["<S>->N <s> [M] <T_M>", "<T_i>-><T_i-1> <n> a_i <s> b_i", "<T_1>->a_i <s> b_i"], "constraints": ["2<=N<=50","2<=M<=50","1<=a_i<=N", "1<=b_i<=N","a_i ≠ b_i"]} 
-{"name": "1266_B", "grammer": ["<S>->[t] <n> <T_t>", "<T_i>-> <T_i-1> <s> x_i", "<T_1>->x_i"], "constraints": ["1<=t<=1000", "1<=x_i<=10^18"]} 
-{"name": "1157_C1", "grammer": ["<S>->[n] <n> <T_n>", "<T_i>-> <T_i-1> <s> a_i", "<T_1>->a_i"], "constraints": ["1<=n<=2*10^5", "1<=a_i<=n"]} 
-{"name": "1029_B", "grammer": ["<S>->[n] <n> <T_N>", "<T_i>-> <T_i-1> <s> a_i", "<T_1>->a_i"], "constraints": ["1<=n<=2*10^5", "1<=a_i<=10^9"]} 
-{"name": "439_A", "grammer": ["<S>->[n] <s> d <n> <T_N>", "<T_i>-> <T_i-1> <s> t_i", "<T_1>->t_i"], "constraints": ["1<=n<=100", "1 <=d<=10000", "1<=t_i<=100"]} 
-{"name": "1417_B", "grammer": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <s> T <L_n>", "<T_1>->[n] <s> T <L_n>","<L_i>-><L_i-1> <s> a_i","<L_1>-> a_i"], "constraints": ["1<=n<=10^5", "0<=T<=10^9", "0<=a_i<=10^9"]} 
-{"name": "1159_A", "grammer": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> s_i","s_i-> -|+"], "constraints": ["1<=n<=100"]} 
-{"name": "1130_A", "grammer": ["<S>->[n] <n> <T_n>", "<T_i>-> <T_i-1> <s> a_i", "<T_1>->a_i"], "constraints": ["1<=n<=100","-10^3<=a_i<=10^3"]} 
-{"name": "p03852", "grammer": ["<S>->c", "c->[a-z]"], "constraints": []} 
-{"name": "1110_A", "grammer": ["<S>-> b <s> [k] <n> <T_k>", "<T_i>-><T_i-1> <s> a_i","<T_1>->a_i"], "constraints": ["2<=b<=100", "1<=k<=10^5", "0<=a_i<=b"]} 
-{"name": "p03798", "grammer": ["<S>-> [N] <n> <T_N>","<T_i>-><T_i-1> s", "<T_1>->s", "s->o|x"], "constraints": ["3<=N<=10^5"]} 
-{"name": "733_A", "grammer": ["<S>-> s","s->A | E | I | O | U | Y"], "constraints": ["0<=s<=100"]} 
-{"name": "1372_C", "grammer": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <L_n>", "<T_1>->[n] <L_n>","<L_i>-><L_i-1> <s> a_i","<L_1>-> a_i"], "constraints": ["1<=t<=100","1<=n<=2*10^5","1<=a_i<=n"]} 
-{"name": "p02401 - 912", "grammer": [], "constraints": []} 
-{"name": "115_A", "grammer": ["<S>->[n] <n> <T_n>","<T_i>-><T_i-1> <n> p_i", "<T_1>->p_i>"], "constraints": ["1<=n<=2000","1<=p_i<=n"]} 
-{"name": "p03273", "grammer": [""], "constraints": []} 
-{"name": "p03294", "grammer": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> a_i", "<T_1>->a_i"], "constraints": ["2<=N<=3000", "2<=a_i<=10^5"]} 
-{"name": "1428_C", "grammer": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> s_i", "<T_1>->s_i", "s_i->A|B"], "constraints": ["1<=t<=20000"]} 
-{"name": "1285_C", "grammer": ["<S>->X"], "constraints": ["1<=X<=10^12"]} 
-{"name": "p03346", "grammer": ["<S>->[N] <n> <T_N>","<T_i>-><T_i-1> <n> p_i", "<T_1>->p_i>"], "constraints": ["1<=N<=2*10^5", "1<=p_i<=N"]} 
-{"name": "p02745", "grammer": ["<S>->a <n> b <n> c","a->[a-z]|?","b->[a-z]|?","c->[a-z]|?"], "constraints": [""]} 
-{"name": "550_C", "grammer": ["<S>->n", "n->1"], "constraints": []} 
-{"name": "p03110", "grammer": ["<S>-> [N] <n> <T_N>","<T_i>-><T_i-1> <n> x_i <s> u_i", "<T_1>->x_i <s> u_i","u_i->JPY|BTC"], "constraints": ["2<=N<=10",]} 
-{"name": "p03345", "grammer": ["<S>->A <s> B <s> C <s> K"], "constraints": ["1<=A<=10^9", "1<=B<=10^9", "1<=C<=10^9", "1<=K<=10^18"]} 
-{"name": "p03425", "grammer": ["<S>->[N] <n> <T_N>","<T_i>-><T_i-1> <n> S_i", "<T_1>->S_i>","S_i->"[A-Z]"], "constraints": ["1<=N<=10^5"]} 
-{"name": "p02409", "grammer": ["<S>->[N] <n> <T_N>","<T_i>-><T_i-1> <n> b <s> f <s> r <s> v", "<T_1>->b <s> f <s> r <s> v"], "constraints": ["1<=N<=9"]} 
-{"name": "1269_A", "grammer": ["<S>->n"], "constraints": ["1<=n<=10^7"]} 
-{"name": "p03651", "grammer": ["<S>->[N]  K <n> <T_N>","<T_i>-><T_i-1> <s> A_i", "<T_1>->A_i>"], "constraints": ["1<=N<=10^5", "1<=A_i<=10^9","1<=K<=10^9"]} 
-{"name": "1380_B", "grammer": ["<S>->[t] <n> <T_t>","<T_i>-><T_i-1> <n> S_i", "<T_1>->S_i>","S_i->"R|S|P"], "constraints": ["1<=t<=1000"]} 
-{"name": "798_A", "grammer": ["<S>->M", "M-><T_M>", "<T_i>-><T_i-1> C", "C->[a-z]"], "constraints": ["1<=M<=15"]} 
-{"name": "515_A", "grammer": ["<S>->a <s> b <s> s"], "constraints": ["- 10^9<=a<=10^9", "- 10^9<=b<=10^9", "1<=s<=2*10^9"]} 
-{"name": "478_B", "grammer": ["<S>->n <s> m"], "constraints": ["1<=m<=10^9", "1<=n<=10^9"]} 
-{"name": "1324_D", "grammer": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <n> a_i <s> <L_n>", "<T_1>->a_i <L_n>","<L_i>-><L_i-1> <s> b_i","<L_1>-> b_i"], "constraints": ["2<=n<=2*10^5", "1<=a_i<=10^9", "1<=b_i<=10^9"]} 
-{"name": "1144_C", "grammer": ["<S>->[n] <n> <T_n>","<T_i>-><T_i-1> <s> a_i", "<T_1>->a_i>"], "constraints": ["1<=n<=2*10^5", "0<=a_i<=2*10^5"]} 
-{"name": "p03752", "grammer": ["<S>->[N]  K <n> <T_N>","<T_i>-><T_i-1> <s> a_i", "<T_1>->a_i>"], "constraints": ["1<=K<=15", "1<=N<=15", "1<=a_i<=10^9"]} 
+{"name": "p03523 - 926", "grammer": ["<S>->S", "S->[A-Z]{1,50}"], "constraints": []} 
+{"name": "709_A - 927", "grammer": ["<S>->[n] <s> b <s> d <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_i"], "constraints": ["1<=n<=100000", "1<=b<=1000000","1<=d<=1000000"]} 
+{"name": "1138_A - 928", "grammer": ["<S>->[n] <n> <T_N>", "<T_i>-> <T_i-1> <s> t_i", "<T_1>->t_i"], "constraints": ["2<=n<=100000", "1<=t_i<=2"]} 
+{"name": "p03720 - 929", "grammer": ["<S>->N <s> [M] <T_M>", "<T_i>-><T_i-1> <n> a_i <s> b_i", "<T_1>->a_i <s> b_i"], "constraints": ["2<=N<=50","2<=M<=50","1<=a_i<=N", "1<=b_i<=N","a_i!=b_i"]} 
+{"name": "1266_B - 920", "grammer": ["<S>->[t] <n> <T_t>", "<T_i>-> <T_i-1> <s> x_i", "<T_1>->x_i"], "constraints": ["1<=t<=1000", "1<=x_i<=10^18"]} 
+{"name": "1157_C1 - 921", "grammer": ["<S>->[n] <n> <T_n>", "<T_i>-> <T_i-1> <s> a_i", "<T_1>->a_i"], "constraints": ["1<=n<=2*10^5", "1<=a_i<=n"]} 
+{"name": "1029_B - 922", "grammer": ["<S>->[n] <n> <T_N>", "<T_i>-> <T_i-1> <s> a_i", "<T_1>->a_i"], "constraints": ["1<=n<=2*10^5", "1<=a_i<=10^9"]} 
+{"name": "439_A - 923", "grammer": ["<S>->[n] <s> d <n> <T_N>", "<T_i>-> <T_i-1> <s> t_i", "<T_1>->t_i"], "constraints": ["1<=n<=100", "1<=d<=10000", "1<=t_i<=100"]} 
+{"name": "1417_B - 924", "grammer": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <s> T <L_n>", "<T_1>->[n] <s> T <L_n>","<L_i>-><L_i-1> <s> a_i","<L_1>-> a_i"], "constraints": ["1<=t<=1000", "1<=n<=10^5", "0<=T<=10^9", "0<=a_i<=10^9"]} 
+{"name": "1159_A - 915", "grammer": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> s_i","s_i-> - | +"], "constraints": ["1<=n<=100"]} 
+{"name": "1130_A - 916", "grammer": ["<S>->[n] <n> <T_n>", "<T_i>-> <T_i-1> <s> a_i", "<T_1>->a_i"], "constraints": ["1<=n<=100","-10^3<=a_i<=10^3"]} 
+{"name": "p03852 - 917", "grammer": ["<S>->c", "c->[a-z]"], "constraints": []} 
+{"name": "1110_A - 919", "grammer": ["<S>-> b <s> [k] <n> <T_k>", "<T_i>-><T_i-1> <s> a_i","<T_1>->a_i"], "constraints": ["2<=b<=100", "1<=k<=10^5", "0<=a_i<=b"]} 
+{"name": "p03798 - 918", "grammer": ["<S>-> [N] <n> <T_N>","<T_i>-><T_i-1> s", "<T_1>->s", "s->o | x{N}"], "constraints": ["3<=N<=10^5"]} 
+{"name": "733_A - 910", "grammer": ["<S>-> s","s->A | E | I | O | U | Y{1,100}"], "constraints": []} 
+{"name": "1372_C - 911", "grammer": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <L_n>", "<T_1>->[n] <L_n>","<L_i>-><L_i-1> <s> a_i","<L_1>-> a_i"], "constraints": ["1<=t<=100","1<=n<=2*10^5","1<=a_i<=n"]} 
+**{"name": "p02401 - 912", "grammer": [], "constraints": []} 
+** or pi =-1{"name": "115_A - 913", "grammer": ["<S>->[n] <n> <T_n>","<T_i>-><T_i-1> <n> p_i", "<T_1>->p_i>"], "constraints": ["1<=n<=2000","1<=p_i<=n"]} 
+**{"name": "p03273 - 914", "grammer": [""], "constraints": []} 
+{"name": "p03294 - 905", "grammer": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> a_i", "<T_1>->a_i"], "constraints": ["2<=N<=3000", "2<=a_i<=10^5"]} 
+**const{"name": "1428_C - 906", "grammer": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> s_i", "<T_1>->s_i", "s_i->A | B"], "constraints": ["1<=t<=20000"]} 
+{"name": "1285_C - 907", "grammer": ["<S>->X"], "constraints": ["1<=X<=10^12"]} 
+{"name": "p03346 - 908", "grammer": ["<S>->[N] <n> <T_N>","<T_i>-><T_i-1> <n> p_i", "<T_1>->p_i>"], "constraints": ["1<=N<=2*10^5", "1<=p_i<=N"]} 
+{"name": "p02745 - 900", "grammer": ["<S>->a <n> b <n> c","a->[a-z] | ? {1,2000}", "b->[a-z] | ?{1,2000}", "c->[a-z] | ?{1,2000}"], "constraints": [""]} 
+{"name": "550_C - 901", "grammer": ["<S>->n", "n->1{1,100}"], "constraints": []} 
+{"name": "p03110 - 902", "grammer": ["<S>-> [N] <n> <T_N>","<T_i>-><T_i-1> <n> x_i <s> u_i", "<T_1>->x_i <s> u_i", "u_i->JPY |BTC"], "constraints": ["2<=N<=10", "1<=x_i<=10^8"]} 
+{"name": "p03345 - 903", "grammer": ["<S>->A <s> B <s> C <s> K"], "constraints": ["1<=A<=10^9", "1<=B<=10^9", "1<=C<=10^9", "1<=K<=10^18"]} 
+{"name": "p03425 - 904", "grammer": ["<S>->[N] <n> <T_N>","<T_i>-><T_i-1> <n> S_i", "<T_1>->S_i>","S_i->"[A-Z]{1,10}"], "constraints": ["1<=N<=10^5", "S_i!=S_j", "i!=j"]} 
+** no constraints{"name": "p02409 - 895", "grammer": ["<S>->[N] <n> <T_N>","<T_i>-><T_i-1> <n> b <s> f <s> r <s> v", "<T_1>->b <s> f <s> r <s> v"], "constraints": ["1<=N<=9"]} 
+{"name": "1269_A - 896", "grammer": ["<S>->n"], "constraints": ["1<=n<=10^7"]} 
+{"name": "p03651 - 899", "grammer": ["<S>->[N]  K <n> <T_N>","<T_i>-><T_i-1> <s> A_i", "<T_1>->A_i>"], "constraints": ["1<=N<=10^5", "1<=A_i<=10^9","1<=K<=10^9"]} 
+**length not specified{"name": "1380_B - 898", "grammer": ["<S>->[t] <n> <T_t>","<T_i>-><T_i-1> <n> S_i", "<T_1>->S_i>","S_i->"R | S | P"], "constraints": ["1<=t<=1000"]} 
+{"name": "798_A - 897", "grammer": ["<S>->s", "s->[a-z]{1,15}"], "constraints": [""]} 
+{"name": "515_A - 894", "grammer": ["<S>->a <s> b <s> s"], "constraints": ["- 10^9<=a<=10^9", "- 10^9<=b<=10^9", "1<=s<=2*10^9"]} 
+{"name": "478_B - 893", "grammer": ["<S>->n <s> m"], "constraints": ["1<=m<=n<=10^9"]} 
+{"name": "1324_D - 890", "grammer": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <n> a_i <s> <L_n>", "<T_1>->a_i <L_n>","<L_i>-><L_i-1> <s> b_i","<L_1>-> b_i"], "constraints": ["2<=n<=2*10^5", "1<=a_i<=10^9", "1<=b_i<=10^9"]} 
+{"name": "1144_C - 891", "grammer": ["<S>->[n] <n> <T_n>","<T_i>-><T_i-1> <s> a_i", "<T_1>->a_i>"], "constraints": ["1<=n<=2*10^5", "0<=a_i<=2*10^5"]} 
+{"name": "p03752 - ", "grammer": ["<S>->[N]  K <n> <T_N>","<T_i>-><T_i-1> <s> a_i", "<T_1>->a_i>"], "constraints": ["1<=K<=15", "1<=N<=15", "1<=a_i<=10^9"]} 
 {"name": ""1208_A, "grammer": ["<S>->[N] <n> <T_N>","<T_i>-><T_i-1> <n> a <s> b <s> n", "<T_1>->a <s> b <s> n"], "constraints": ["1<=T<=10^3", "0<=a<=10^9", "0<=b<=10^9", "0<=n<=10^9"]} 
 {"name": "1305_A", "grammer": ["<S>->[t] <n> <T_n>", "<T_i>-><T_i-1> <n> a_i <s> <L_n>", "<T_1>->a_i <L_n>","<L_i>-><L_i-1> <s> b_i","<L_1>-> b_i"], "constraints": ["1<=t<=100"]} 
 {"name": "768_A - 870", "grammer": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1->a_i"], "constraints": ["1<=n<=10^5", "0<=a_i<=10^9"]} 
@@ -262,26 +263,26 @@
 *g{"name": "433_B", "grammer": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> v_i", "<T_1>->v_i <n> m <n> <L_m>", "<L_i>-><L_i-1> <n> type <s> l <s> r", "<L_1>->type <s> l <s> r"], "constraints": ["1<=n<=10^5", "1<=v_i<=10^9", "1<=l<=r", "l<=r<=n", "1<=type<=2"]}
 {"name": "3_A - 1103", "grammer": ["<S>->s1 <s> s2","s1->[a-h][1-8]", "s2->[a-h][1-8]"], "constraints": []}
 {"name": "1025_A - 1104", "grammer": ["<S>->[n] <s> m <s> k <n> <T_n>", "<T_i>-><T_i-1> s_i", "<T_1>->s_i", "s_i->[a-z]"], "constraints": ["1<=n<=10^5"]}
-{"name": "1225_B1 - 1032", "grammer": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <s> k <s> d  <L_n>", "<T_1>->[n] <s> k <s> d <L_n>", "<L_i>-><L_i-1> <s> a_i", "<L_1>->a_i"], "constraints": ["1<=t<=100", "1<=k<=100", "1<=n<=100", "1<=d<=n", "1<=a_i <=k"]}
+{"name": "1225_B1 - 1032", "grammer": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <s> k <s> d  <L_n>", "<T_1>->[n] <s> k <s> d <L_n>", "<L_i>-><L_i-1> <s> a_i", "<L_1>->a_i"], "constraints": ["1<=t<=100", "1<=k<=100", "1<=n<=100", "1<=d<=n", "1<=a_i<=k"]}
 {"name": "1236_D - 1029", "grammer": ["<S>->[n] <s> a <s> b <s> k <n> <T_n>", "<T_i>-><T_i-1> <s> h_i", "<T_1>->h_i"], "constraints": ["1<=n<=2*10^5", "1<=a<=10^9", "1<=b<=10^9", "1<=k<=10^9", "1<=h_i<=10^9"]}
 *{"name": "p03449 - 1012", "grammer": ["<S>->[N] <n> <T_N> <n> <L_N>", "<T_i>_<T_i-1> <s> A_1_i", "<T_1>->A_1_i", "<L_i>-><L_i-1> <s> A_2_i", "<L_1>->A_2_i"], "constraints": ["1<=N<=100", "1<=A_{i, j}<=100", "1<=i<=2", "1<=j<=N"]}
-{"name": "p03844 - 1011", "grammer": ["<S>-> A <s> op <s> B","op->+|-"], "constraints": ["1<=A<=10^9", "1<=B<=10^9"]}
-{"name": "1379_A -1010", "grammer": ["<S>->[T] <n> <T_T>", "<T_i>-><T_i-1> <n> [n] <L_n>", "<T_1>->[n] <L_n>", "<L_i>-><L_i-1> s_i", "<L_1>->s_i", "s_i->[a-z]|?"], "constraints": ["1<=T<=5000", "7<=n<=50"]}
-{"name": "1399_A - 999", "grammer": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <L_n>", "<T_1>->[n] <L_n>", "<L_i>-><L_i-1> s_i", "<L_1>->s_i", "s_i->0|1"], "constraints": ["1<=t<=2*10^4", "1<=n<=2*10^5"]}
+{"name": "p03844 - 1011", "grammer": ["<S>-> A <s> op <s> B","op->+ | -"], "constraints": ["1<=A<=10^9", "1<=B<=10^9"]}
+{"name": "1379_A -1010", "grammer": ["<S>->[T] <n> <T_T>", "<T_i>-><T_i-1> <n> [n] <L_n>", "<T_1>->[n] <L_n>", "<L_i>-><L_i-1> s_i", "<L_1>->s_i", "s_i->[a-z] | ?"], "constraints": ["1<=T<=5000", "7<=n<=50", "1<=i<=(n - m + 1)"]}
+{"name": "1399_A - 999", "grammer": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <L_n>", "<T_1>->[n] <L_n>", "<L_i>-><L_i-1> s_i", "<L_1>->s_i", "s_i->0 | 1"], "constraints": ["1<=t<=2*10^4", "1<=n<=2*10^5"]}
 {"name": "1157_B - 983", "grammer": ["<S>->[n] <n> <T_n> <n> f0 <s> f1 <s> f2 <s> f3 <s> f4 <s> f5 <s> f6 <s> f7 <s> f8", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_i", "a_i->[1-9]"], "constraints": ["1<=n<=2*10^5", "1<=f_i<=9"]}
 *M_i_j{"name": "1220_B - 1095", "grammer": [], "constraints": []}
 {"name": "1194_A - 1096", "grammer": ["<S>->[T] <n> <T_T>", "<T_i>-><T_i-1> <n> n <s> x", "<T_1>->n <s> x"], "constraints": ["1<=T<=100", "1<=x<n", "x<n<=10^9"]}
 *a!=b{"name": "931_A - 1097", "grammer": ["<S>->a <n> b"], "constraints": ["1<=a<=1000", "1<=b<=1000", "a!=b"]}
 {"name": "887_A - 1098", "grammer": ["<S>->n","n->0|1"], "constraints": ["1<=n<=100"]}
 {"name": "p02798 - 1099", "grammer": ["<S>->[n] <n> <T_n> <n> <L_n>", "<T_i>-><T_i-1> <s> A_i", "<T_1>->A_i", "<L_i>-><L_i-1> <s> B_i", "<L_1>->B_i"], "constraints": ["1<=N<=18", "1<=A_i<=50", "1<=B_i<=50", "1<=i<=N"]}
-{"name": "", "grammer": [], "constraints": []}
-{"name": "", "grammer": [], "constraints": []}
-{"name": "", "grammer": [], "constraints": []}
-{"name": "", "grammer": [], "constraints": []}
-{"name": "", "grammer": [], "constraints": []}
-{"name": "", "grammer": [], "constraints": []}
-{"name": "", "grammer": [], "constraints": []}
-{"name": "", "grammer": [], "constraints": []}
+{"name": "897_A - 1024", "grammer": ["<S>->[n] <s> [m] <n> <T_n> <n> l <s> r <s> c1 <s> c2", "<T_i>-><T_i-1> s_i", "<T_1>->s_i", "s_i->[a-z]"], "constraints": ["1<=n<=100", "1<=m<=100"]}
+{"name": "1201_A - 966", "grammer": ["<S>->[n] <s> [m] <n> <T_n> <n> <L_m>", "<T_i>-><T_i-1> <n> s_i", "<T_1>->s_i", "<L_i>-><L_i-1> <s> a_i", "<L_1>->a_i", "s_i->A | B | C | D |E{m}"], "constraints": ["1<=n<=1000", "1<=m<=1000", "1<=a_i<=1000"]}
+{"name": "p02976 - 969", "grammer": ["<S>->N <s> [M] <n> <T_M>", "<T_i>-><T_i-1> <n> A_i <s> B_i)", "<T_1>->A_i <s> B_i"], "constraints": ["2<=N<=10^5", "(N-1)<=M<=10^5", "1<=A_i<=N", "1<=B_i<=N", "1<=i<=M"]}
+{"name": "p03354 - 968", "grammer": ["<S>->[N] <s> [M] <n> <T_N> <n> <L_M>", "<T_j>-><T_j-1> <s> p_j", "<T_1>->p_j", "<L_j>-><L_j-1> <n> x_j <s> <y_j>", "<L_1>->x_j <s> y_j"], "constraints": ["2<=N<=10^5", "1<=M<=10^5", "1<=p_i<=N", "1<=x_j<=N", "1<=y_j<=N", "x_j!=y_j", "i!=j"]}
+{"name": "p03774 - 962", "grammer": ["<S>->[N] <s> [M] <n> <T_N> <n> <L_M>", "<T_i>-><T_i-1> <n> a_i <s> b_i", "<T_1>->a_i <s> b_i", "<L_j>-><L_j-1> <n> c_j <s> d_j", "<L_1>->c_j <s> d_j"], "constraints": ["1<=N<=50", "1<=M<=50", "-10^8<=a_i<=10^8", "-10^8<=b_i<=10^8", "-10^8<=c_j<=10^8", "-10^8<=d_j<=10^8"]}
+{"name": "877_A - 963", "grammer": ["<S>->S", "S->[a-z] | [A-Z] | -{1,100}"], "constraints": []}
+{"name": "1256_A - 909", "grammer": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> s_i", "<T_1>->s_i", "s_i->a |b | c [?]"], "constraints": []}
+{"name": "265_A - 892", "grammer": ["<S>->s <n> t", "s->R | G | B{1,50}", "t->R | G | B{1,50}"], "constraints": []}
 {"name": "", "grammer": [], "constraints": []}
 {"name": "", "grammer": [], "constraints": []}
 {"name": "", "grammer": [], "constraints": []}

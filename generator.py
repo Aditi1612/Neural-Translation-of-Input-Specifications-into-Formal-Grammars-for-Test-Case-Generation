@@ -317,25 +317,9 @@ class test_case_generator():
         for token in grammer:
             left_hand, right_hand = token.split(self.derivate_token)
             self.derivation_dict[left_hand] = []
-            for token in right_hand.split(' | '):
+            for token in right_hand.split('|'):
                 self.derivation_dict[left_hand].append(token)
 
-    def make_derivate_dict_old(self, grammer: list):
-        for token in grammer:
-            dict_key, dict_list = token.split(self.derivate_token)
-            self.derivation_dict[dict_key] = []
-            for target in dict_list.split(' | '):
-                target = target.strip()
-                if self.re.match(r'\[[^-]-[^-]\]', target):
-                    start, end = target.split('-')
-                    start = start[1:]
-                    end = end[:-1]
-                    start = ord(start)
-                    end = ord(end)
-                    self.derivation_dict[dict_key].extend([chr(x) for x in range(start, end+1)])
-                else:
-                    self.derivation_dict[dict_key].append(target)
-    
     def make_constraints_dict(self, constraints:list):
         for const in constraints:
             if self.re.match(r'[^<]*<=?[^<]*<=?[^<]*', const):

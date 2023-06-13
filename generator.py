@@ -9,6 +9,7 @@ class test_case_generator():
         self.space_token = '<s>'
         self.start_token = '<S>'
         self.derivate_token = '->'
+        self.blink_token = 'ε'
         
         self.RE_INTEGER = self.re.compile(r'-?[0-9]+ *')
         self.RE_NONTERMINAL = self.re.compile(r'(<[^<]*>)')
@@ -52,6 +53,9 @@ class test_case_generator():
                 del derivation_queue[0]
                 
                 continue
+            if curr_variable == self.blink_token:
+                del derivation_queue[0]
+                continue
             
             # string 생성
             if self.RE_STRING.fullmatch(curr_variable):
@@ -72,6 +76,8 @@ class test_case_generator():
                     variable, counter = curr_variable.split('_')
                     variable += '_i'
                     counter = int(counter)
+                    if counter < 0:
+                        raise Exception(f"Error10: counter have negative value")
                     
                     # a_i 형태의 terminal을 처음 인식하거나 a_1을 생성할 때
                     if variable not in self.variable_dict or curr_variable in self.variable_dict[variable]:
@@ -130,7 +136,8 @@ class test_case_generator():
                 else:
                     curr_variable = nonterminal + '_i>'
                     counter = int(counter[:-1])
-            
+            if counter < 0:
+                raise Exception(f"Error10: counter have negative value")
             # derivate
             next_variable = self.random.choice(self.derivation_dict[curr_variable])
             curr_list = []

@@ -1,196 +1,406 @@
-from typing import Any
-
 
 class discriminator():
     
     import re
+    import random
     
     def __init__(self) -> None:
         
-        self.new_line_token = '<enter>'
-        self.space_token = '<space>'
+        self.sep_token = '\t'
+        self.new_line_token = '<n>'
+        self.space_token = '<s>'
         self.start_token = '<S>'
         self.derivate_token = '->'
-        self.RE_NONTERMINAL = self.re.compile(r'(<[^<> ]*>)')
+        self.blink_token = 'ε'
+        
+        self.RE_INTEGER = self.re.compile(r'-?[0-9]+ *')
+        self.RE_NONTERMINAL = self.re.compile(r'(<[^<]*>)')
+        self.RE_STRING = self.re.compile(r'\[[^\[]*\]\{.*\}')
+        
         self.const_dict = {}
         self.variable_dict = {}
         self.derivation_dict = {}
-        self.shape_dict = {}
+        self.permutation_variable = []
+        self.compare_dict = {}
         
-        import sys
-        sys.setrecursionlimit(2000000000)
+        self.derivation_queue = [self.start_token]
         
-        pass
-    
     
 
     def __call__(self, grammer: list, constraints: list, test_case: str) -> bool:
         self.__init__()
         self.make_derivate_dict(grammer)
         self.make_constraints_dict(constraints)
-        self.predict()
-        
-        line_num = 0
-        # first_line = ''
-        
-        first_line = self.derivation_dict[self.start_token][0]
-        
-        if self.start_token in self.shape_dict:
-            # test_case = test_case.split()
-            # shape = self.re.split(f' {self.space_token} | {self.new_line_token} ', first_line)
-            
-            # for variable, value in zip(shape, test_case):
-            #     if self.re.fullmatch(r'\[.*\]', variable):
-            #         variable = variable[1:-1]
-            #     self.variable_dict[variable] = value
-            #     line_num = int(value)
-            
-            # # print(self.variable_dict)
-            self.parsing(test_case)
-            return
-        
-        
-        while self.new_line_token not in first_line :
-            tmp = ''
-            
-            for token in first_line.split(' '):
-                if self.is_terminal(token):
-                    tmp += token + ' '
-                elif self.re.fullmatch(r'\[[^\[]*\]', token):
-                    tmp += token + ' ' + self.derivation_dict[token][0] + ' '
-                else:
-                    tmp += token + ' '
-            
-            first_line = tmp
-        
-        first_line, next_line =  first_line.split(f' {self.new_line_token} ')
-        first_line = first_line.strip()
-        next_line = next_line.strip()
-        print('n', next_line)
-        
-        test_case_first_line = test_case.split('\n')[0]
-        first_line = first_line.split(f' {self.space_token} ')
-
-        for variable, value in zip(first_line, test_case_first_line.split()):
-            print('v', variable)
-            if self.re.fullmatch(r'\[.*\]', variable):
-                variable = variable[1:-1]
-            self.variable_dict[variable] = value
-        
-        print(self.variable_dict)
-        
-        self.parsing('\n'.join(test_case.split('\n')[1:]), '[N]', next_line)
-        
+        test_case = test_case.strip()
+        return self.parsing(test_case)
         
     pass
     
-    def parsing(self, test_case, line_num_token=None, start_token=None) -> bool:
-        if line_num_token == None:
-            curr = self.derivation_dict[self.start_token][0]
-            curr = curr.replace(f' {self.new_line_token} ', '\n').replace(f' {self.space_token} ', ' ')
-            curr = curr.split()
-            curr_line = test_case.split()
-            
-            for variable, value in zip(curr, curr_line):
-                self.variable_dict[variable] = value
-            
-            print(self.variable_dict)
+    def parsing(self, test_case):
+        # self.derivation_queue = [self.start_token]
+        # print(1)
+        
+        while self.derivation_queue:
+            curr_variable = self.derivation_queue[0]
+            # print(self.derivation_queue)
             
             
-            return True
-        
-        line_num = int(self.variable_dict[line_num_token[1:-1]])
-        if self.re.fullmatch(r'<[^[_]*_[^[_]*>', start_token):
-            start_token = start_token.split('_')[0] + '_i>'
-        
-        
-        for _ in range(line_num):
-            curr = self.derivation_dict[start_token][0]
-            curr_line = test_case.split('\n')[0].strip()
-            # test_case = '\n'.join(test_case.split('\n')[1:])
-            for token in curr.split(' '):
-                if token == self.new_line_token:
-                    curr_line = test_case.split('\n')[0].strip()
-                    test_case = '\n'.join(test_case.split('\n')[1:])
-                    continue
-                if token in self.shape_dict:
-                    shape = self.shape_dict[token]
-                    if shape == 'string':
-                        self.variable_dict[token] = len(curr_line)
-                        ...
-                    elif shape == 'space':
-                        self.variable_dict[token] = len(curr_line.split(' '))
-                        ...
-                    else:
-                        ...
-                    print('-------------')
-                    print(token)
-                    print(self.variable_dict)
-                    print(curr_line)
-                    print('-------------')
-
-        return False
-        
-
-    def predict(self):
-        
-        # case 1
-        if len(self.derivation_dict.keys()) == 1:
-            self.shape_dict[self.start_token] = 'single_line'
-            return
-
-        for target in self.derivation_dict:
-            next = self.derivation_dict[target][0]
-            
-            if self.is_temp_variable(target):
-                next = next.split('_')[0] + '_i>'
-                next = self.derivation_dict[next][0]
-                self.shape_dict[target] = self.get_shape(next)
+            if curr_variable == self.start_token:
+                self.derivation_queue = self.derivation_dict[curr_variable][0].split(' ')
+                continue
+            if curr_variable == self.blink_token:
+                del self.derivation_queue[0]
+                continue
+            if self.RE_STRING.fullmatch(curr_variable):
+                curr_sep = self.get_sep_token()
+                if curr_sep == -1:
+                    raise Exception(f"Error1: can't find seperate token\n\t{curr_variable}")
+                    print(1)
+                    
+                    return False
                 
-            elif self.re.fullmatch(r'\[[^\[]*\]', target):
-                next = next.split(' ')[-1]
-                next = next.split('_')[0] + '_i>'
-                next = self.derivation_dict[next][0]
-                self.shape_dict[target] = self.get_shape(next)
+                test_case = test_case.split(curr_sep)
+                curr_token = test_case[0]
+                test_case = curr_sep.join(test_case[1:])
+                
+                str_len = len(curr_token)
+                len_var = curr_variable.split(']{')[1][:-1]
+                if len_var in self.const_dict:
+                    start, end = self.get_range(len_var)
+                    if not start <= str_len <= end:
+                        # print('21')
+                        raise Exception(f"Error2-1: length of string is out of range\n\texpected: {start}<=len<={end}\n\treal: {str_len}")
+                        return False
+                    if len_var in self.variable_dict:
+                        # 새롭게 만들어주기?
+                        if self.variable_dict[len_var] != str_len:
+                            excepted = self.variable_dict[len_var]
+                            raise Exception(f"Error2-2: length of string is defferent\n\texpected: {excepted}\n\treal: {str_len}")
+                            print('22')
+                            return False
+                    else:
+                        self.variable_dict[len_var] = str_len
+                    curr_variable = curr_variable.split('{')[0] + '{'
+                    curr_variable = f'{curr_variable}{str_len}' + '}'
+                elif ',' in len_var:
+                    start, end = len_var.split(',')
+                    start = self.get_value(start)
+                    end = self.get_value(end)
+                    curr_variable = curr_variable.split('{')[0] + '{'
+                    curr_variable = f'{curr_variable}{start},{end}' + '}'
+                    
+                if not self.re.match(curr_variable, curr_token):
+                    
+                    raise Exception(f"Error2: string_dose not matched\n\tvariable: {curr_variable}\n\ttest case value: {curr_token}")
+                    print(2)
+                    print(curr_token)
+                    print(curr_variable)
+                    return False
+                
+                del self.derivation_queue[:2]
+                continue
+            
+            # 기타 terminal 생성
+            elif not self.RE_NONTERMINAL.fullmatch(curr_variable):
+                curr_sep = self.get_sep_token()
+                if curr_sep == -1: 
+                    # print(3)
+                    # print(self.derivation_queue)
+                    raise Exception(f"Error3: Invalid value - can't find seperate token\n\t{self.derivation_queue}\n\t{test_case}")
+                    return False
+                
+                test_case = test_case.split(curr_sep)
+                curr_token = test_case[0]
+                test_case = curr_sep.join(test_case[1:])
+                
+                del self.derivation_queue[:2]
+                
+                # a_i 형태
+                if self.re.match(r'.*_.*', curr_variable):
+                    # print('c', curr_variable)
+                    variable, counter = curr_variable.split('_')
+                    variable += '_i'
+                    counter = int(counter)
+                    
+                    if curr_variable in self.derivation_dict:
+                        if curr_token not in self.derivation_dict[curr_variable]: 
+                            derivate_list = self.derivation_dict[curr_variable]
+                            # print(4)
+                            raise Exception(f"Error4: Invalid derivation\n\t{curr_token} not in {derivate_list}")
+                            return False
+                    else:
+                        start, end = self.get_range(variable, counter)
+                        # print(test_case)
+                        if not start <= int(curr_token) <= end:
+                            # print(5)
+                            raise Exception(f"Error5: Number is out of value\n\texpectd: {start}-{end}\n\treal   : {curr_token}")
+                            return False
+                    
+                    continue
+                    
+                elif curr_variable in self.derivation_dict:
+                    if curr_token not in self.derivation_dict[curr_variable]:
+                        # print(6)
+                        derivate_list = self.derivation_dict[curr_variable]
+                        raise Exception(f"Error6: Invalid derivation\n\t{curr_token} not in {derivate_list}")
+                        
+                        return False
+                    
+                    continue
+                else:
+                    # N, [N]의 형태
+                    if self.re.match(r'\[[^\[]*\]', curr_variable):
+                        curr_variable = curr_variable[1:-1]
+                    
+                    if curr_variable not in self.const_dict:
+                        
+                        if curr_variable in self.derivation_dict:
+                            if curr_token not in self.derivation_dict[curr_variable]:
+                                derivate_list = self.derivation_dict[curr_variable]
+                                raise Exception(f"Error7: Invalid derivation\b\t{curr_variable} not in {derivate_list}")
+                        
+                        elif not curr_variable == curr_token: 
+                            # print(7)
+                            
+                            raise Exception(f"Error8: Invalid value\n\texpectd: {curr_token}\n\treal   : {curr_variable}")
+                            
+                            return False
+                        else:
+                            # 여기 구현
+                            ...
+                        
+                        continue
+                        
+                        
+                    start, end = self.get_range(curr_variable)
+                    if not start <= int(curr_token) <= end: 
+                        # print(8)
+                        raise Exception(f"Error9: variable is out of range\n\texpected: {start}<=len<={end}\n\treal: {curr_token}")
+                        return False
+                    self.variable_dict[curr_variable] = int(curr_token)
+                
+                continue
+            
+            # <T_i> 형태
+            if self.re.match(r'<[^_]*_[^_]*>', curr_variable):
+                nonterminal , counter = curr_variable.split('_')
+                # <T_N>
+                if ',' in counter:
+                    
+                    ...
+                if not self.RE_INTEGER.fullmatch(counter[:-1]):
+                    # print(self.variable_dict)
+                    # print(curr_variable)
+                    counter = self.variable_dict[counter[:-1]]
+                    counter = f'{counter}>'
+                    curr_variable = nonterminal + '_' + counter
+                # <T_1> 등의 상황
+                if curr_variable in self.derivation_dict:
+                    counter = int(counter[:-1])
+                else:
+                    curr_variable = nonterminal + '_i>'
+                    counter = int(counter[:-1])
+            if counter < 0:
+                raise Exception(f"Error10: counter have negative value")
+            # derivate
+            next_variable = self.random.choice(self.derivation_dict[curr_variable])
+            curr_list = []
+            
+            for variable in next_variable.split(' '):
+                # <T_i-1>이나 a_i가 생성되었을 때 counter가 필요함
+                if self.re.match(r'<.*_i-1>', variable):
+                    nonterminal = variable.split('_')[0]
+                    variable = f'{nonterminal}_{counter-1}>'
+                elif self.re.match(r'<.*_i>', variable):
+                    nonterminal = variable.split('_')[0]
+                    variable = f'{nonterminal}_{counter}>'    
+                elif self.re.fullmatch(r'[^_<]*_.*', variable):
+                    nonterminal = variable.split('_')[0]
+                    variable = f'{nonterminal}_{counter}'
+                curr_list.append(variable)
+            
+            # derivation이 진행된 이후 완료된 token 제거
+            del self.derivation_queue[0]
+            
+            # DFS로 진행하기 위해 제거된 variable에서 생성된 variable들을 queue의 앞에 배치함
+            curr_list.extend(self.derivation_queue)
+            self.derivation_queue = curr_list
         
-        # return ''
+        test_case = test_case.replace(' ','').replace('\n','')
+        
+        if test_case == '': return True
+        
+        raise Exception("Error9: not finish")
+        
+        return test_case == ''
         
     
-    def get_shape(self, token:str) -> str:
-        if self.space_token in token:
-            return 'space'
-        elif self.new_line_token in token:
-            return 'newline'
-        else: return 'string'
+    def get_sep_token(self):
+        if len(self.derivation_queue) <= 1:
+            return '___'
+        if self.derivation_queue[1] == self.new_line_token:
+            return '\n'
+        elif self.derivation_queue[1] == self.space_token:
+            return ' '
+        else: return -1
         
+    def get_addition(self, token):
         
+        if self.re.match(r'[^+]+\+[0-9]+', token):
+            token, addition = token.split('+')
+            return token, int(addition)
+        elif self.re.match(r'[^-]+-[0-9]+', token):
+            token, addition = token.split('-')
+            return token, int(addition) * -1
+        else:
+            return token, 0
+           
+    def get_range(self, variable, counter=None):
+        '''
+        * terminal variable이 생성할 정수의 범위를 반환하는 함수
+        '''
+        # print(variable)
+        curr_token_const = self.const_dict[variable]
+        include1 = curr_token_const['include1']
+        include2 = curr_token_const['include2']
+        addition = 0
+        start, addition = self.get_addition(curr_token_const['start'])
+        if start in self.variable_dict:
+            if counter != None:
+                start = self.variable_dict[start][start.split('_')[0] + f'_{counter}']
+                # print(start)
+            else:
+                start = self.variable_dict[start]
+        else: start = self.get_value(start)
+        
+        start = int(start) + addition
+        
+        start += 0 if include1 else 1
+            
+        end, addition = self.get_addition(curr_token_const['end'])
+
+        end = self.get_value(end)
+        
+        end = end + addition
+        # constraint가 "variable < end"의 형태이면
+        # "variable <= end-1"과 같다
+        end -= 0 if include2 else 1
+        
+        derivate_range = [start, end]
+        
+        if variable in self.compare_dict:
+            range_index = 0 if self.compare_dict[variable]['symbol'] == '<' else 1
+            # print('i', range_index)
+            if self.compare_dict[variable]['type'] == 'same_variable':
+                if len(self.variable_dict[variable]) != 0:
+                    target = variable.split('_')[0] + f'_{counter-1}'
+                    derivate_range[range_index] = self.variable_dict[variable][target]
+                    derivate_range[range_index] += 0 if self.compare_dict[variable]['include'] else 1
+                else:
+                    derivate_range[range_index] += 0 if include1 else 1
+            else:
+                target = self.compare_dict[variable]['target']
+                if self.re.match(r'.*_.*', target):
+                    symbol = target.split('_')[0]
+                    symbol += f'_{counter}'
+                    derivate_range[range_index] = self.variable_dict[target][symbol]
+                    derivate_range[range_index] += 0 if self.compare_dict[variable]['include'] else 1
+                else:
+                    derivate_range[range_index] = self.variable_dict[target]
+                    derivate_range[range_index] += 0 if self.compare_dict[variable]['include'] else 1
+
+        return derivate_range[0], derivate_range[1]
+
+    def get_string(self, variable):
+        '''
+        * string 만들어서 return하고
+        * variable_dict에 list 넣기
+        '''
+        return_str = ''
+        
+        variable_range, string_len = variable.split(']{')
+        variable_range = variable_range[1:]
+        string_len = string_len[:-1]
+        
+        if string_len in self.variable_dict:
+            string_len = int(self.variable_dict[string_len])
+        elif ',' in string_len:
+            start, end = string_len.split(',')
+            string_len = self.random.randint(self.get_value(start), self.get_value(end))
+        elif self.RE_INTEGER.fullmatch(string_len):
+            string_len = int(string_len)
+        else:
+            start, end = self.get_range(string_len)
+            variable = string_len
+            string_len = self.random.randint(start, end)
+            self.variable_dict[variable] = string_len
+        
+        if variable in self.derivation_dict:
+            variable_list = self.derivation_dict[variable]
+        else:
+            variable_list = []
+            while '-' in variable_range:
+                idx = variable_range.find('-')
+                char_range = variable_range[idx-1:idx+2]
+                
+                start, end = char_range.split('-')
+                start = ord(start)
+                end = ord(end)+1
+                for ch in range(start, end):
+                    variable_list.append(chr(ch))
+                if idx == 1: variable_range = variable_range[3:]
+                # elif 
+                else: variable_range = variable_range[:idx-1] + variable_range[idx+2:]
+            for ch in variable_range:
+                variable_list.append(ch)
+            self.derivation_dict[variable] = variable_list
+
+        for _ in range(string_len):
+            return_str += self.random.choice(variable_list)
+
+        return return_str
     
-    
-    def is_temp_variable(self, token):
-        if self.re.fullmatch(r'<[^<]*>', token): return False
-        if self.re.fullmatch(r'\[[^\[]*\]', token): return False
-        if token in self.derivation_dict:
-            next_tokens = self.derivation_dict[token]
-            if len(next_tokens) == 1 and self.re.fullmatch(r'<[^<]*>', next_tokens[0]): return True
-        return False
-    
+    def get_value(self, num):
+        if num in self.variable_dict:
+            return self.variable_dict[num]
+        
+        elif 'min' in num:
+            num = self.re.findall(r'\(.*,.*\)', num)[0]
+            a, b = self.get_value(num.split(',')[0][1:]), self.get_value(num.split(',')[1][:-1])
+            return min(a,b)
+            
+        elif 'max' in num:
+            num = self.re.findall(r'\(.*,.*\)', num)[0]
+            a, b = self.get_value(num.split(',')[0][1:]), self.get_value(num.split(',')[1][:-1])
+            return max(a,b)
+        
+        elif '^' in num:
+            if '*' in num:
+                bias, num = num.split('*')
+                base, exp = num.split('^')
+                res = int(bias) * int(base) ** int(exp)
+            else:
+                base, exp = num.split('^')
+                res = int(base) ** int(exp)
+            return res
+        else:
+            return int(num)
+ 
     def is_terminal(self, token):
-        if self.re.fullmatch(r'<[^<]*>', token): return False
-        if self.re.fullmatch(r'\[[^\[]*\]', token): return False
-        if token in self.derivation_dict:
-            next_tokens = self.derivation_dict[token]
-            for next in next_tokens:
-                if self.re.match(r'<[^<]*>', next): return False
-        return True
-    
-    
+       return not self.RE_NONTERMINAL.fullmatch(token)
+
     def make_derivate_dict(self, grammer: list):
-        # grammer_lst = grammer.split(self.sep_token)
+        for token in grammer:
+            left_hand, right_hand = token.split(self.derivate_token)
+            self.derivation_dict[left_hand] = []
+            for token in right_hand.split(' | '):
+                self.derivation_dict[left_hand].append(token)
+
+    def make_derivate_dict_old(self, grammer: list):
         for token in grammer:
             dict_key, dict_list = token.split(self.derivate_token)
-            dict_key = dict_key.strip()
             self.derivation_dict[dict_key] = []
-            for target in dict_list.split('|'):
+            for target in dict_list.split(' | '):
                 target = target.strip()
                 if self.re.match(r'\[[^-]-[^-]\]', target):
                     start, end = target.split('-')
@@ -201,48 +411,139 @@ class discriminator():
                     self.derivation_dict[dict_key].extend([chr(x) for x in range(start, end+1)])
                 else:
                     self.derivation_dict[dict_key].append(target)
-        # print(self.derivation_dict)
     
     def make_constraints_dict(self, constraints:list):
         for const in constraints:
-            if self.re.fullmatch(r'[^<]* <=? [^<]* <=? [^<]*', const):
-                start, variable, end = self.re.split(r'<=?', const)
-                include_list = self.re.findall(r'<=?', const)
-                self.const_dict[variable.strip()] = {
-                                        'start': start.strip(), 'end': end.strip(),
-                                        'include1': include_list[0] == '<=', 
-                                        'include2': include_list[1] == '<=',
-                                        'permutation': False, 
-                                        'type': 'range'
-                                        }
+            if self.re.match(r'[^<]*<=?[^<]*<=?[^<]*', const):
                 
-            elif self.re.fullmatch(r'[^<]* <=? [^<]*', const):
-                    variable1, variable2 = self.re.split(r'<=?', const)
-                    variable1, variable2 = variable1.strip(), variable2.strip()
-                    self.const_dict[variable1] = {
+                variables = self.re.split(r'[<>]=?', const)
+                
+                start, end = variables[0], variables[-1]
+                
+                del variables[0]
+                del variables[-1]
+                
+                compare_symbols = self.re.findall(r'[<>]=?', const)
+                
+                for variable in variables:
+                    # start, variable, end = self.re.split(r'<=?', const)
+                    self.const_dict[variable.strip()] = {
+                        'start': start.strip(), 'end': end.strip(),
+                        'include1': compare_symbols[0] == '<=', 
+                        'include2': compare_symbols[-1] == '<='
+                    }
+                del compare_symbols[0]
+                del compare_symbols[-1]
+                
+                if len(variables) > 1:
+                    for i in range(len(variables)-1):
+                        self.compare_dict[variables[i+1]] = {
+                            'target': variables[i],
+                            'symbol': compare_symbols[i][0],
+                            'include': '=' in compare_symbols[i],
+                            'type': 'different_variable'
+                        }
+                
+            elif self.re.fullmatch(r'[^<>]*[<>]=?[^<>]*', const):
+                
+                variable1, variable2 = self.re.split(r'[<>]=?', const)
+                variable1, variable2 = variable1.strip(), variable2.strip()
+                compare_symbol = self.re.findall(r'[<>]=?', const)[0]
+                if '=' not in compare_symbol:
+                    v1_const = self.const_dict[variable1]
+                    v2_const = self.const_dict[variable2]
+                    
+                    if compare_symbol == '<':
+                        if v1_const['end'] == v2_const['end']:
+                            self.const_dict[variable1]['include2'] = False
+                    else:
+                        if v1_const['start'] == v2_const['start']:
+                            self.const_dict[variable1]['include1'] = False
+                    
+                    
+                if variable1.split('_')[0] == variable2.split('_')[0]:
+                    self.compare_dict[variable1] = {
                                         'target': variable2,
-                                        'include': self.re.findall(r'<=?', const)[0] == '<=',
-                                        'permutation': False, 
-                                        'type': 'compare'
+                                        'symbol': compare_symbol[0],
+                                        'include': '=' in compare_symbol,
+                                        'type': 'same_variable'
                                         }
-            elif self.re.fullmatch(r'[^=]* != [^=]*', const):
-                variable1, variable2 = const.split(' != ')
-                # self.const_dict[variable1] = {'type': 'permutation'}
-                self.const_dict[variable1]['permutation'] = True
-                ...
-        # print(self.const_dict)
+                else:
+                    self.compare_dict[variable2] = {
+                                        'target': variable1,
+                                        'symbol': compare_symbol[0],
+                                        'include': '=' in compare_symbol,
+                                        'type': 'different_variable'
+                                        }
+                        
+            elif self.re.fullmatch(r'[^=]*!=[^=]*', const):
+                variable1, variable2 = const.split('!=')
+                self.permutation_variable.append(variable1)
+        
  
     
 if __name__ == '__main__':
-    test_grammer = ['<S> -> [N]', '[N] -> <enter> <T_N>', '<T_i> -> M <enter> <T_i-1>', 'M -> <L_M>', '<L_i> -> C_i <space> <L_i-1>', '<T_0> -> ε', '<L_0> -> ε']
-    test_const = ['1 <= N <= 50', '1 < M < 10', '1 <= C_i <= M', 'C_i != C_j']
-    test_case = '6\n23 16 11 21 22 2 13 9 10 19 24 18 14 12 3 4 7 8 15 5 25 6 17 20 1 \n6 2 1 5 4 3 \n6 5 11 3 29 2 26 17 14 13 9 12 18 16 15 25 21 30 4 27 7 23 22 20 10 24 8 1 28 19 \n20 15 12 9 10 8 21 19 13 14 5 7 6 1 16 2 11 17 4 3 18 \n8 33 28 32 3 35 34 29 13 25 24 12 16 5 4 30 6 7 11 19 22 9 20 17 26 31 18 21 10 1 23 15 14 27 2 \n28 31 17 11 22 30 12 23 14 18 26 15 1 19 21 16 8 5 29 20 10 3 7 13 2 6 9 24 4 27 25 \n'
-    # test_grammer = ['<S> -> M <space> N']
-    # test_const = ['1 <= M <= 16', 'M <= N <= 16', 'a <= b']
-
+    import sys
+    import jsonlines
+    
+    file_name = sys.argv[1]
+    error_file = f"result_{file_name}_error_list.txt"
+    path_file = f"result_{file_name}_pass_list.txt"
+    error_reason_file = f"result_{file_name}_error_reason.txt"
+    
     discriminator = discriminator()
-    res = discriminator(test_grammer, test_const, test_case)
     
-    print(res)
+    with open(path_file, 'w', encoding='utf-8') as write_file:
+        write_file.write('')
+                
+    with open(error_file, 'w', encoding='utf-8') as write_file:
+        write_file.write('')
+                
+    with open(error_reason_file, 'w', encoding='utf-8') as write_file:
+        write_file.write('')
     
+    
+    with jsonlines.open(f'data/{file_name}.jsonl') as f:
+        for p_idx, problem in enumerate(f, 1):
+            print(p_idx)
+
+            name, idx = problem['name'].split(' - ')
+            grammer = problem['grammer']
+            const = problem['constraints']
+            test_case = problem['public_tests']['input'][0]
+            try:
+                res = discriminator(grammer, const, test_case)
+                
+                with open(path_file, 'a', encoding='utf-8') as write_file:
+                    write_file.write(f'{name}, {idx}\n')
+                
+            except Exception as e:
+                with open(error_file, 'a', encoding='utf-8') as write_file:
+                    write_file.write(f'{name}, {idx}\n')
+                    
+                with open(error_reason_file, 'a', encoding='utf-8') as write_file:
+                    write_file.write(f'{idx} {name}:\n' + test_case + ('' if test_case[-1] == '\n' else '\n'))
+                    write_file.write('\t' + str(e) + '\n\n')
+                
+    
+    
+    # "name" =  "71_A - 1"
+    test_grammer =  ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> [a-z]{1,10^2}", "<T_1>->[a-z]{1,10^2}"]
+    test_const = ["1<=N<=100"]
+    # "public_tests": "input": 
+    test_cases = ["4\nword\nlocalization\ninternationalization\npneumonoultramicroscopicsilicovolcanoconiosis\n","26\na\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz\n", "10\ngyartjdxxlcl\nfzsck\nuidwu\nxbymclornemdmtj\nilppyoapitawgje\ncibzc\ndrgbeu\nhezplmsdekhhbo\nfeuzlrimbqbytdu\nkgdco\n", "5\nabcdefgh\nabcdefghi\nabcdefghij\nabcdefghijk\nabcdefghijklm\n", "20\nlkpmx\nkovxmxorlgwaomlswjxlpnbvltfv\nhykasjxqyjrmybejnmeumzha\ntuevlumpqbbhbww\nqgqsphvrmupxxc\ntrissbaf\nqfgrlinkzvzqdryckaizutd\nzzqtoaxkvwoscyx\noswytrlnhpjvvnwookx\nlpuzqgec\ngyzqfwxggtvpjhzmzmdw\nrlxjgmvdftvrmvbdwudra\nvsntnjpepnvdaxiporggmglhagv\nxlvcqkqgcrbgtgglj\nlyxwxbiszyhlsrgzeedzprbmcpduvq\nyrmqqvrkqskqukzqrwukpsifgtdc\nxpuohcsjhhuhvr\nvvlfrlxpvqejngwrbfbpmqeirxlw\nsvmasocxdvadmaxtrpakysmeaympy\nyuflqboqfdt\n", "3\nnjfngnrurunrgunrunvurn\njfvnjfdnvjdbfvsbdubruvbubvkdb\nksdnvidnviudbvibd\n", "1\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij\n", "100\nm\nz\ns\nv\nd\nr\nv\ny\ny\ne\np\nt\nc\na\nn\nm\np\ng\ni\nj\nc\na\nb\nq\ne\nn\nv\no\nk\nx\nf\ni\nl\na\nq\nr\nu\nb\ns\nl\nc\nl\ne\nv\nj\nm\nx\nb\na\nq\nb\na\nf\nj\nv\nm\nq\nc\nt\nt\nn\nx\no\ny\nr\nu\nh\nm\nj\np\nj\nq\nz\ns\nj\no\ng\nc\nm\nn\no\nm\nr\no\ns\nt\nh\nr\np\nk\nb\nz\ng\no\nc\nc\nz\nz\ng\nr\n", "1\na\n", "1\ntcyctkktcctrcyvbyiuhihhhgyvyvyvyvjvytchjckt\n", "24\nyou\nare\nregistered\nfor\npractice\nyou\ncan\nsolve\nproblems\nunofficially\nresults\ncan\nbe\nfound\nin\nthe\ncontest\nstatus\nand\nin\nthe\nbottom\nof\nstandings\n"]
+    
+    # test_grammer = ["<S>->[01]{S} <n> [01]{S}"]
+    # test_const = ["1<=S<=100"]
+    
+    # "output": ["word\nl10n\ni18n\np43s\n"] 
+    # "private_tests": {"input": ["26\na\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz\n", "10\ngyartjdxxlcl\nfzsck\nuidwu\nxbymclornemdmtj\nilppyoapitawgje\ncibzc\ndrgbeu\nhezplmsdekhhbo\nfeuzlrimbqbytdu\nkgdco\n", "5\nabcdefgh\nabcdefghi\nabcdefghij\nabcdefghijk\nabcdefghijklm\n", "20\nlkpmx\nkovxmxorlgwaomlswjxlpnbvltfv\nhykasjxqyjrmybejnmeumzha\ntuevlumpqbbhbww\nqgqsphvrmupxxc\ntrissbaf\nqfgrlinkzvzqdryckaizutd\nzzqtoaxkvwoscyx\noswytrlnhpjvvnwookx\nlpuzqgec\ngyzqfwxggtvpjhzmzmdw\nrlxjgmvdftvrmvbdwudra\nvsntnjpepnvdaxiporggmglhagv\nxlvcqkqgcrbgtgglj\nlyxwxbiszyhlsrgzeedzprbmcpduvq\nyrmqqvrkqskqukzqrwukpsifgtdc\nxpuohcsjhhuhvr\nvvlfrlxpvqejngwrbfbpmqeirxlw\nsvmasocxdvadmaxtrpakysmeaympy\nyuflqboqfdt\n", "3\nnjfngnrurunrgunrunvurn\njfvnjfdnvjdbfvsbdubruvbubvkdb\nksdnvidnviudbvibd\n", "1\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij\n", "100\nm\nz\ns\nv\nd\nr\nv\ny\ny\ne\np\nt\nc\na\nn\nm\np\ng\ni\nj\nc\na\nb\nq\ne\nn\nv\no\nk\nx\nf\ni\nl\na\nq\nr\nu\nb\ns\nl\nc\nl\ne\nv\nj\nm\nx\nb\na\nq\nb\na\nf\nj\nv\nm\nq\nc\nt\nt\nn\nx\no\ny\nr\nu\nh\nm\nj\np\nj\nq\nz\ns\nj\no\ng\nc\nm\nn\no\nm\nr\no\ns\nt\nh\nr\np\nk\nb\nz\ng\no\nc\nc\nz\nz\ng\nr\n", "1\na\n", "1\ntcyctkktcctrcyvbyiuhihhhgyvyvyvyvjvytchjckt\n", "24\nyou\nare\nregistered\nfor\npractice\nyou\ncan\nsolve\nproblems\nunofficially\nresults\ncan\nbe\nfound\nin\nthe\ncontest\nstatus\nand\nin\nthe\nbottom\nof\nstandings\n"], "output": ["a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz\n", "g10l\nfzsck\nuidwu\nx13j\ni13e\ncibzc\ndrgbeu\nh12o\nf13u\nkgdco\n", "abcdefgh\nabcdefghi\nabcdefghij\na9k\na11m\n", "lkpmx\nk26v\nh22a\nt13w\nq12c\ntrissbaf\nq21d\nz13x\no17x\nlpuzqgec\ng18w\nr19a\nv25v\nx15j\nl28q\ny26c\nx12r\nv26w\ns27y\ny9t\n", "n20n\nj27b\nk15d\n", "a98j\n", "m\nz\ns\nv\nd\nr\nv\ny\ny\ne\np\nt\nc\na\nn\nm\np\ng\ni\nj\nc\na\nb\nq\ne\nn\nv\no\nk\nx\nf\ni\nl\na\nq\nr\nu\nb\ns\nl\nc\nl\ne\nv\nj\nm\nx\nb\na\nq\nb\na\nf\nj\nv\nm\nq\nc\nt\nt\nn\nx\no\ny\nr\nu\nh\nm\nj\np\nj\nq\nz\ns\nj\no\ng\nc\nm\nn\no\nm\nr\no\ns\nt\nh\nr\np\nk\nb\nz\ng\no\nc\nc\nz\nz\ng\nr\n", "a\n", "t41t\n", "you\nare\nregistered\nfor\npractice\nyou\ncan\nsolve\nproblems\nu10y\nresults\ncan\nbe\nfound\nin\nthe\ncontest\nstatus\nand\nin\nthe\nbottom\nof\nstandings\n"]}, "description": "Sometimes some words like \"localization\" or \"internationalization\" are so long that writing them many times in one text is quite tiresome.\n\nLet's consider a word too long, if its length is strictly more than 10 characters. All too long words should be replaced with a special abbreviation.\n\nThis abbreviation is made like this: we write down the first and the last letter of a word and between them we write the number of letters between the first and the last letters. That number is in decimal system and doesn't contain any leading zeroes.\n\nThus, \"localization\" will be spelt as \"l10n\", and \"internationalization» will be spelt as \"i18n\".\n\nYou are suggested to automatize the process of changing the words with abbreviations. At that all too long words should be replaced by the abbreviation and the words that are not too long should not undergo any changes.\n\nInput\n\nThe first line contains an integer n (1 ≤ n ≤ 100). Each of the following n lines contains one word. All the words consist of lowercase Latin letters and possess the lengths of from 1 to 100 characters.\n\nOutput\n\nPrint n lines. The i-th line should contain the result of replacing of the i-th word from the input data.\n\nExamples\n\nInput\n\n4\nword\nlocalization\ninternationalization\npneumonoultramicroscopicsilicovolcanoconiosis\n\n\nOutput\n\nword\nl10n\ni18n\np43s"}
+    
+    '''
+    discriminator = discriminator()
+    for test_case in test_cases:
+        res = discriminator(test_grammer, test_const, test_case)
+    
+        print(res)
+    '''
     ...

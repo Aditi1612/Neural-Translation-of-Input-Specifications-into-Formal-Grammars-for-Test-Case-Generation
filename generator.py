@@ -9,8 +9,11 @@ class test_case_generator():
         self.space_token = '<s>'
         self.start_token = '<S>'
         self.derivate_token = '->'
+        
+        self.RE_INTEGER = self.re.compile(r'-?[0-9]+ *')
         self.RE_NONTERMINAL = self.re.compile(r'(<[^<]*>)')
         self.RE_STRING = self.re.compile(r'\[[^\[]*\]\{.*\}')
+        
         self.const_dict = {}
         self.variable_dict = {}
         self.derivation_dict = {}
@@ -21,8 +24,8 @@ class test_case_generator():
         self.__init__()
         self.make_derivate_dict(grammer)
         self.make_constraints_dict(constraints)
-        print(self.const_dict)
-        print(self.compare_dict)
+        # print(self.const_dict)
+        # print(self.compare_dict)
         test_case = self.derivate()
         return test_case
         # return result
@@ -84,12 +87,16 @@ class test_case_generator():
                     
                     # 생성된 것 저장
                     self.variable_dict[variable][curr_variable] = generated
+                    
+                elif curr_variable in self.derivation_dict:
+                    test_case += self.random.choice(self.derivation_dict[curr_variable])
+                    continue
                 else:
                     # N, [N]의 형태
                     if self.re.match(r'\[[^\[]*\]', curr_variable):
                         curr_variable = curr_variable[1:-1]
                     
-                    if curr_variable not in self.derivation_dict and curr_variable not in self.const_dict:
+                    if curr_variable not in self.const_dict:
                         
                         test_case += curr_variable
                         del derivation_queue[0]
@@ -110,7 +117,10 @@ class test_case_generator():
             if self.re.match(r'<[^_]*_[^_]*>', curr_variable):
                 nonterminal , counter = curr_variable.split('_')
                 # <T_N>
-                if not counter[:-1].isdigit():
+                if ',' in counter:
+                    
+                    ...
+                if not self.RE_INTEGER.fullmatch(counter[:-1]):
                     counter = self.variable_dict[counter[:-1]]
                     counter = f'{counter}>'
                     curr_variable = nonterminal + '_' + counter
@@ -147,112 +157,6 @@ class test_case_generator():
         
         return test_case
           
-    def derivate_old(self, curr_variable):
-        '''
-        * 이전 grammer에 대한 derivate 함수
-        '''
-        return_str = ''
-        if curr_variable == self.space_token:
-            return ' '
-        if curr_variable == self.new_line_token:
-            return '\n'
-        
-        if self.re.match(r'<[^_]*_[^_]*>', curr_variable):
-            variable, curr_count = curr_variable.split('_')
-            if not curr_count[:-1].isdigit():
-                curr_count = self.variable_dict[curr_count[:-1]]
-                curr_variable = variable + '_i>'
-            elif curr_variable in self.derivation_dict:
-                curr_count = int(curr_count[:-1])
-            else:
-                curr_variable = variable + '_i>'
-                curr_count = int(curr_count[:-1])
-        
-        next_token = self.derivation_dict[curr_variable]
-        next_token = self.random.choice(next_token).split(' ')
-                
-        for token in next_token:
-                        
-            #case1 token is terminal
-            if self.is_terminal(token):
-                if token == 'ε': continue
-                
-                if self.re.match(r'\[[a-zA-Z]*\]', token):
-                    variable = token[1:-1]
-                    start, end = self.get_range(variable)
-                    generated = self.random.randint(start, end)
-                    self.variable_dict[variable] = generated
-                    return_str = f'{return_str}{generated}' + self.derivate(token)
-                    continue
-                
-                # a_i
-                if self.re.match(r'[^_]*_[^_]*', token):
-                    counted_token = token.split('_')[0] + f'_{curr_count}'
-                    
-                    if token not in self.variable_dict or token.split('_')[0] + '_1' in self.variable_dict[token]:
-                            self.variable_dict[token] = {}
-                    
-                    if token in self.derivation_dict:
-                        derivate = self.random.choice(self.derivation_dict[token.split('_')[0] + '_i'])
-                        
-                        if token in self.const_dict and self.const_dict[token]['permutation']:
-                            while token in self.variable_dict and derivate in self.variable_dict[token].values():
-                                derivate = self.random.choice(self.derivation_dict[token.split('_')[0] + '_i'])
-                        
-                        self.variable_dict[token][counted_token] = derivate
-                        return_str = f'{return_str}{derivate}'
-                        continue
-                    
-                    else:
-                        start, end = self.get_range(variable=token, counter=curr_count)
-                        generated = self.random.randint(start, end)
-                        
-                        if token in self.const_dict and self.const_dict[token]['permutation']:
-                            while token in self.variable_dict and generated in self.variable_dict[token].values():
-                                generated = self.random.randint(start, end)
-                        self.variable_dict[token][counted_token] = generated
-                        return_str = f'{return_str}{generated}'
-                        continue
-                
-                if token in self.const_dict:
-                    start, end = self.get_range(token)
-                    generated = self.random.randint(start, end)
-                    self.variable_dict[token] = generated
-                    # print(self.variable_dict)
-                    
-                    # case: M -> <T_i>
-                    if token in self.derivation_dict:
-                        # print(token)
-                        # self.variable_dict[token] = {}
-                        return_str += self.derivate(self.random.choice(self.derivation_dict[token]))
-                        continue
-                    return_str = f'{return_str}{generated}'
-                    continue
-                
-                if token in self.derivation_dict:
-                    return_str += self.random.choice(self.derivation_dict[token])
-                    continue
-                # print('r', return_str)
-                continue
-                
-            # case2 token's shape is <T_i>
-            if self.re.match(r'<[^_]*_[^_]*>', token):
-                variable, count = token.split('_')
-                
-                # case2-1 token is <T_N>
-                if not self.re.fullmatch(r'[^_+-]*[+-]1>', count):
-                    return_str += self.derivate(token)
-                    
-                    continue
-                if count == 'i+1>':
-                    return_str += self.derivate(f'{variable}_{curr_count + 1}>')
-                else:
-                    return_str += self.derivate(f'{variable}_{curr_count - 1}>')
-                continue
-            
-            return_str += self.derivate(token)
-        return return_str
-    
     def get_addition(self, token):
         
         if self.re.match(r'[^+]+\+[0-9]+', token):
@@ -280,13 +184,7 @@ class test_case_generator():
                 # print(start)
             else:
                 start = self.variable_dict[start]
-        elif '^' in start:
-            num = 1
-            if '*' in start:
-                num, start = start.split('*')
-            base, exp = start.split('^')
-            res = int(num) * int(base) ** int(exp)
-            start = res
+        else: start = self.get_value(start)
         
         start = int(start) + addition
         # variable의 constraints가 a_i < a_i+1의 형태라면
@@ -298,20 +196,9 @@ class test_case_generator():
             
         end, addition = self.get_addition(curr_token_const['end'])
 
-        if end in self.variable_dict:
-            end = self.variable_dict[end]
+        end = self.get_value(end)
         
-        elif '^' in end:
-            if '*' in end:
-                num, end = end.split('*')
-                base, exp = end.split('^')
-                res = int(num) * int(base) ** int(exp)
-            else:
-                base, exp = end.split('^')
-                res = int(base) ** int(exp)
-            end = res
-        
-        end = int(end) + addition
+        end = end + addition
         # constraint가 "variable < end"의 형태이면
         # "variable <= end-1"과 같다
         end -= 0 if include2 else 1
@@ -354,11 +241,16 @@ class test_case_generator():
         
         if string_len in self.variable_dict:
             string_len = int(self.variable_dict[string_len])
-        elif string_len.isnumeric():
+        elif ',' in string_len:
+            start, end = string_len.split(',')
+            string_len = self.random.randint(self.get_value(start), self.get_value(end))
+        elif self.RE_INTEGER.fullmatch(string_len):
             string_len = int(string_len)
         else:
             start, end = self.get_range(string_len)
+            variable = string_len
             string_len = self.random.randint(start, end)
+            self.variable_dict[variable] = string_len
         
         if variable in self.derivation_dict:
             variable_list = self.derivation_dict[variable]
@@ -384,6 +276,32 @@ class test_case_generator():
             return_str += self.random.choice(variable_list)
 
         return return_str
+    
+    def get_value(self, num):
+        if num in self.variable_dict:
+            return self.variable_dict[num]
+        
+        elif 'min' in num:
+            num = self.re.findall(r'\(.*,.*\)', num)[0]
+            a, b = self.get_value(num.split(',')[0][1:]), self.get_value(num.split(',')[1][:-1])
+            return min(a,b)
+            
+        elif 'max' in num:
+            num = self.re.findall(r'\(.*,.*\)', num)[0]
+            a, b = self.get_value(num.split(',')[0][1:]), self.get_value(num.split(',')[1][:-1])
+            return max(a,b)
+        
+        elif '^' in num:
+            if '*' in num:
+                bias, num = num.split('*')
+                base, exp = num.split('^')
+                res = int(bias) * int(base) ** int(exp)
+            else:
+                base, exp = num.split('^')
+                res = int(base) ** int(exp)
+            return res
+        else:
+            return int(num)
  
     def is_terminal(self, token):
        return not self.RE_NONTERMINAL.fullmatch(token)

@@ -15,7 +15,7 @@ This repo provides the source code & data of our work.
 
 ## Find information of problem
 ```
-problem+info.py {Problem ID | Problem Name} [d, s, g, t, p, h]
+problem_info.py {Problem ID | Problem Name} [d, s, g, t, p, h]
 ```
 > The last token means what you want to show in the information
   - d: Description

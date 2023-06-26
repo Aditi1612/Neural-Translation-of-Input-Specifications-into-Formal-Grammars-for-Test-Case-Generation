@@ -32,6 +32,9 @@ class discriminator():
         self.make_derivate_dict(grammer)
         self.make_constraints_dict(constraints)
         test_case = test_case.strip()
+        # print(self.const_dict)
+        # print(self.compare_dict)
+        
         return self.parsing(test_case)
         
     pass
@@ -122,9 +125,9 @@ class discriminator():
                     variable += '_i'
                     counter = int(counter)
                     
-                    if curr_variable in self.derivation_dict:
-                        if curr_token not in self.derivation_dict[curr_variable]: 
-                            derivate_list = self.derivation_dict[curr_variable]
+                    if variable in self.derivation_dict:
+                        if curr_token not in self.derivation_dict[variable]: 
+                            derivate_list = self.derivation_dict[variable]
                             # print(4)
                             raise Exception(f"Error4: Invalid derivation\n\t{curr_token} not in {derivate_list}")
                             return False
@@ -135,6 +138,12 @@ class discriminator():
                             # print(5)
                             raise Exception(f"Error5: Number is out of value\n\texpectd: {start}-{end}\n\treal   : {curr_token}")
                             return False
+                    if variable not in self.variable_dict or curr_variable in self.variable_dict[variable]:
+                        self.variable_dict[variable] = {}
+                    
+                    if self.RE_INTEGER.fullmatch(curr_token):
+                        curr_token = int(curr_token)
+                    self.variable_dict[variable][curr_variable] = curr_token
                     
                     continue
                     
@@ -230,7 +239,7 @@ class discriminator():
         
         if test_case == '': return True
         
-        raise Exception("Error9: not finish")
+        raise Exception("Error11: not finish")
         
         return test_case == ''
         
@@ -259,7 +268,8 @@ class discriminator():
         '''
         * terminal variable이 생성할 정수의 범위를 반환하는 함수
         '''
-        # print(variable)
+        # print('v', variable)
+        
         curr_token_const = self.const_dict[variable]
         include1 = curr_token_const['include1']
         include2 = curr_token_const['include2']
@@ -287,9 +297,11 @@ class discriminator():
         end -= 0 if include2 else 1
         
         derivate_range = [start, end]
-        
+        # print('d', type(derivate_range[0]))
         if variable in self.compare_dict:
             range_index = 0 if self.compare_dict[variable]['symbol'] == '<' else 1
+            
+            # print('d1', type(derivate_range[0]))
             # print('i', range_index)
             if self.compare_dict[variable]['type'] == 'same_variable':
                 if len(self.variable_dict[variable]) != 0:
@@ -299,8 +311,10 @@ class discriminator():
                 else:
                     derivate_range[range_index] += 0 if include1 else 1
             else:
+                # print('d2', type(derivate_range[0]))
                 target = self.compare_dict[variable]['target']
                 if self.re.match(r'.*_.*', target):
+                    # print('d3', type(derivate_range[0]))
                     symbol = target.split('_')[0]
                     symbol += f'_{counter}'
                     derivate_range[range_index] = self.variable_dict[target][symbol]
@@ -409,13 +423,14 @@ class discriminator():
                 
                 compare_symbols = self.re.findall(r'[<>]=?', const)
                 
-                for variable in variables:
-                    # start, variable, end = self.re.split(r'<=?', const)
-                    self.const_dict[variable.strip()] = {
-                        'start': start.strip(), 'end': end.strip(),
-                        'include1': compare_symbols[0] == '<=', 
-                        'include2': compare_symbols[-1] == '<='
-                    }
+                for variable_token in variables:
+                    for variable in variable_token.split(','):
+                        # start, variable, end = self.re.split(r'<=?', const)
+                        self.const_dict[variable.strip()] = {
+                            'start': start.strip(), 'end': end.strip(),
+                            'include1': compare_symbols[0] == '<=', 
+                            'include2': compare_symbols[-1] == '<='
+                        }
                 del compare_symbols[0]
                 del compare_symbols[-1]
                 

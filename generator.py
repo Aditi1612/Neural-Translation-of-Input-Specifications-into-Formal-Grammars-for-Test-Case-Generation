@@ -2,8 +2,9 @@
 class test_case_generator():
     import re
     import random
+    import time
     
-    def __init__(self) -> None:
+    def __init__(self, generate_type=None) -> None:
         self.sep_token = '\t'
         self.new_line_token = '<n>'
         self.space_token = '<s>'
@@ -20,9 +21,11 @@ class test_case_generator():
         self.derivation_dict = {}
         self.permutation_variable = []
         self.compare_dict = {}
+        
+        self.generate_type = 'generate' if generate_type == None else generate_type
 
     def __call__(self, grammer: list, constraints: list) -> str:
-        self.__init__()
+        self.__init__(self.generate_type)
         self.make_derivate_dict(grammer)
         self.make_constraints_dict(constraints)
         # print(self.const_dict)
@@ -34,11 +37,16 @@ class test_case_generator():
     def derivate(self):
         test_case = ''
         derivation_queue = [self.start_token]
+        start_time = self.time.time()
         
         # print(derivation_queue)
         
         # 모든 variable이 test case를 생성할 때 까지
         while derivation_queue:
+            curr_time = self.time.time()
+            if curr_time - start_time > 4:
+                raise Exception(f"Error12: infinite loop")
+            # print(derivation_queue)
             curr_variable = derivation_queue[0]
             
             # 공백, 개행문자 생성
@@ -89,6 +97,10 @@ class test_case_generator():
                     
                     # 순열일 경우에 이전에 생성되지 않은 정수 생성
                     while variable in self.permutation_variable and generated in self.variable_dict[variable].values():
+                        curr_time = self.time.time()
+                        if curr_time - start_time > 4:
+                            raise Exception(f"Error12: infinite loop")
+                        # print(generated)
                         generated = self.random.randint(start, end)
                     
                     # 생성된 것 저장
@@ -96,6 +108,7 @@ class test_case_generator():
                     
                 elif curr_variable in self.derivation_dict:
                     test_case += self.random.choice(self.derivation_dict[curr_variable])
+                    del derivation_queue[0]
                     continue
                 else:
                     # N, [N]의 형태
@@ -109,6 +122,7 @@ class test_case_generator():
                         continue
                         
                     start, end = self.get_range(curr_variable)
+                    # print(curr_variable)
                     generated = self.random.randint(start, end)
                     self.variable_dict[curr_variable] = generated
 
@@ -136,8 +150,8 @@ class test_case_generator():
                 else:
                     curr_variable = nonterminal + '_i>'
                     counter = int(counter[:-1])
-            if counter < 0:
-                raise Exception(f"Error10: counter have negative value")
+                if counter < 0:
+                    raise Exception(f"Error10: counter have negative value")
             # derivate
             next_variable = self.random.choice(self.derivation_dict[curr_variable])
             curr_list = []
@@ -204,7 +218,6 @@ class test_case_generator():
         end, addition = self.get_addition(curr_token_const['end'])
 
         end = self.get_value(end)
-        
         end = end + addition
         # constraint가 "variable < end"의 형태이면
         # "variable <= end-1"과 같다
@@ -233,6 +246,7 @@ class test_case_generator():
                     derivate_range[range_index] = self.variable_dict[target]
                     derivate_range[range_index] += 0 if self.compare_dict[variable]['include'] else 1
 
+        # print(derivate_range)
         return derivate_range[0], derivate_range[1]
 
     def get_string(self, variable):
@@ -285,6 +299,7 @@ class test_case_generator():
         return return_str
     
     def get_value(self, num):
+        # print(2, num)
         if num in self.variable_dict:
             return self.variable_dict[num]
         
@@ -299,6 +314,14 @@ class test_case_generator():
             return max(a,b)
         
         elif '^' in num:
+            if self.generate_type == 'test':
+                res = base, exp = num.split('^')
+                if '*' in base:
+                    bias , base = base.split('*')
+                    return int(base) * int (bias)
+                # print('1', ',', base)
+                return int(base)
+            
             if '*' in num:
                 bias, num = num.split('*')
                 base, exp = num.split('^')
@@ -308,6 +331,13 @@ class test_case_generator():
                 res = int(base) ** int(exp)
             return res
         else:
+            # if self.generate_type == 'test':
+            #     num = int(num)
+            #     # print(2, ',', num)
+            #     while num > 50:
+            #         num //= 10
+            #     # print(3, ',', num)
+            #     return num
             return int(num)
  
     def is_terminal(self, token):
@@ -327,19 +357,35 @@ class test_case_generator():
                 variables = self.re.split(r'[<>]=?', const)
                 
                 start, end = variables[0], variables[-1]
-                
+                if self.generate_type == 'test':
+                    if '^' in end:
+                        base = end.split('^')[0]
+                        
+                        if '*' in base:
+                            bias, base = base.split('*')
+                            end = str(int(bias) * int(base))
+                        else:
+                            end = base
+                    elif self.RE_INTEGER.fullmatch(end):
+                        end = int(end)
+                        while end >  50:
+                            end //= 10
+                            # print(1)
+                        end = str(end)
+                        ...
                 del variables[0]
                 del variables[-1]
                 
                 compare_symbols = self.re.findall(r'[<>]=?', const)
                 
-                for variable in variables:
-                    # start, variable, end = self.re.split(r'<=?', const)
-                    self.const_dict[variable.strip()] = {
-                        'start': start.strip(), 'end': end.strip(),
-                        'include1': compare_symbols[0] == '<=', 
-                        'include2': compare_symbols[-1] == '<='
-                    }
+                for variable_token in variables:
+                    for variable in variable_token.split(','):
+                        # start, variable, end = self.re.split(r'<=?', const)
+                        self.const_dict[variable.strip()] = {
+                            'start': start.strip(), 'end': end.strip(),
+                            'include1': compare_symbols[0] == '<=', 
+                            'include2': compare_symbols[-1] == '<='
+                        }
                 del compare_symbols[0]
                 del compare_symbols[-1]
                 

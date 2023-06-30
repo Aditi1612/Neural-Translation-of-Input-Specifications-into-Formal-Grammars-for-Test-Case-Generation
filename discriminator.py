@@ -4,7 +4,7 @@ class discriminator():
     import re
     import random
     
-    def __init__(self) -> None:
+    def __init__(self, generate_mode=None) -> None:
         
         self.sep_token = '\t'
         self.new_line_token = '<n>'
@@ -25,15 +25,18 @@ class discriminator():
         
         self.derivation_queue = [self.start_token]
         
-    
+        self.generate_mode = 'generate' if generate_mode == None else generate_mode
+
 
     def __call__(self, grammer: list, constraints: list, test_case: str) -> bool:
-        self.__init__()
+        self.__init__(self.generate_mode)
         self.make_derivate_dict(grammer)
         self.make_constraints_dict(constraints)
         test_case = test_case.strip()
         # print(self.const_dict)
         # print(self.compare_dict)
+        
+        # print(self.derivation_dict)
         
         return self.parsing(test_case)
         
@@ -57,8 +60,8 @@ class discriminator():
             if self.RE_STRING.fullmatch(curr_variable):
                 curr_sep = self.get_sep_token()
                 if curr_sep == -1:
-                    raise Exception(f"Error1: can't find seperate token\n\t{curr_variable}")
-                    print(1)
+                    if self.generate_mode == "test": 
+                        raise Exception(f"Error1: can't find seperate token\n\t{curr_variable}")
                     
                     return False
                 
@@ -71,15 +74,14 @@ class discriminator():
                 if len_var in self.const_dict:
                     start, end = self.get_range(len_var)
                     if not start <= str_len <= end:
-                        # print('21')
-                        raise Exception(f"Error2-1: length of string is out of range\n\texpected: {start}<=len<={end}\n\treal: {str_len}")
+                        if self.generate_mode == "test": 
+                            raise Exception(f"Error2-1: length of string is out of range\n\texpected: {start}<=len<={end}\n\treal: {str_len}")
                         return False
                     if len_var in self.variable_dict:
-                        # 새롭게 만들어주기?
                         if self.variable_dict[len_var] != str_len:
                             excepted = self.variable_dict[len_var]
-                            raise Exception(f"Error2-2: length of string is defferent\n\texpected: {excepted}\n\treal: {str_len}")
-                            print('22')
+                            if self.generate_mode == "test": 
+                                raise Exception(f"Error2-2: length of string is defferent\n\texpected: {excepted}\n\treal: {str_len}")
                             return False
                     else:
                         self.variable_dict[len_var] = str_len
@@ -94,10 +96,8 @@ class discriminator():
                     
                 if not self.re.match(curr_variable, curr_token):
                     
-                    raise Exception(f"Error2: string_dose not matched\n\tvariable: {curr_variable}\n\ttest case value: {curr_token}")
-                    print(2)
-                    print(curr_token)
-                    print(curr_variable)
+                    if self.generate_mode == "test": 
+                        raise Exception(f"Error2: string_dose not matched\n\tvariable: {curr_variable}\n\ttest case value: {curr_token}")
                     return False
                 
                 del self.derivation_queue[:2]
@@ -107,9 +107,8 @@ class discriminator():
             elif not self.RE_NONTERMINAL.fullmatch(curr_variable):
                 curr_sep = self.get_sep_token()
                 if curr_sep == -1: 
-                    # print(3)
-                    # print(self.derivation_queue)
-                    raise Exception(f"Error3: Invalid value - can't find seperate token\n\t{self.derivation_queue}\n\t{test_case}")
+                    if self.generate_mode == "test": 
+                        raise Exception(f"Error3: Invalid value - can't find seperate token\n\t{self.derivation_queue}\n\t{test_case}")
                     return False
                 
                 test_case = test_case.split(curr_sep)
@@ -128,15 +127,14 @@ class discriminator():
                     if variable in self.derivation_dict:
                         if curr_token not in self.derivation_dict[variable]: 
                             derivate_list = self.derivation_dict[variable]
-                            # print(4)
-                            raise Exception(f"Error4: Invalid derivation\n\t{curr_token} not in {derivate_list}")
+                            if self.generate_mode == "test": 
+                                raise Exception(f"Error4: Invalid derivation\n\t{curr_token} not in {derivate_list}")
                             return False
                     else:
                         start, end = self.get_range(variable, counter)
-                        # print(test_case)
                         if not start <= int(curr_token) <= end:
-                            # print(5)
-                            raise Exception(f"Error5: Number is out of value\n\texpectd: {start}-{end}\n\treal   : {curr_token}")
+                            if self.generate_mode == "test": 
+                                raise Exception(f"Error5: Number is out of value\n\texpectd: {start}-{end}\n\treal   : {curr_token}")
                             return False
                     if variable not in self.variable_dict or curr_variable in self.variable_dict[variable]:
                         self.variable_dict[variable] = {}
@@ -149,9 +147,9 @@ class discriminator():
                     
                 elif curr_variable in self.derivation_dict:
                     if curr_token not in self.derivation_dict[curr_variable]:
-                        # print(6)
                         derivate_list = self.derivation_dict[curr_variable]
-                        raise Exception(f"Error6: Invalid derivation\n\t{curr_token} not in {derivate_list}")
+                        if self.generate_mode == "test": 
+                            raise Exception(f"Error6: Invalid derivation\n\t{curr_token} not in {derivate_list}")
                         
                         return False
                     
@@ -166,12 +164,14 @@ class discriminator():
                         if curr_variable in self.derivation_dict:
                             if curr_token not in self.derivation_dict[curr_variable]:
                                 derivate_list = self.derivation_dict[curr_variable]
-                                raise Exception(f"Error7: Invalid derivation\b\t{curr_variable} not in {derivate_list}")
-                        
+                                if self.generate_mode == "test": 
+                                    raise Exception(f"Error7: Invalid derivation\b\t{curr_variable} not in {derivate_list}")
+                                return False
                         elif not curr_variable == curr_token: 
                             # print(7)
                             
-                            raise Exception(f"Error8: Invalid value\n\texpectd: {curr_token}\n\treal   : {curr_variable}")
+                            if self.generate_mode == "test": 
+                                raise Exception(f"Error8: Invalid value\n\texpectd: {curr_token}\n\treal   : {curr_variable}")
                             
                             return False
                         else:
@@ -184,7 +184,8 @@ class discriminator():
                     start, end = self.get_range(curr_variable)
                     if not start <= int(curr_token) <= end: 
                         # print(8)
-                        raise Exception(f"Error9: variable is out of range\n\texpected: {start}<=len<={end}\n\treal: {curr_token}")
+                        if self.generate_mode == "test": 
+                            raise Exception(f"Error9: variable is out of range\n\texpected: {start}<=len<={end}\n\treal: {curr_token}")
                         return False
                     self.variable_dict[curr_variable] = int(curr_token)
                 
@@ -210,7 +211,9 @@ class discriminator():
                     curr_variable = nonterminal + '_i>'
                     counter = int(counter[:-1])
             if counter < 0:
-                raise Exception(f"Error10: counter have negative value")
+                if self.generate_mode == "test": 
+                    raise Exception(f"Error10: counter have negative value")
+                return False
             # derivate
             next_variable = self.random.choice(self.derivation_dict[curr_variable])
             curr_list = []
@@ -239,9 +242,10 @@ class discriminator():
         
         if test_case == '': return True
         
-        raise Exception("Error11: not finish")
+        if self.generate_mode == "test": 
+            raise Exception("Error11: not finish")
         
-        return test_case == ''
+        return False
         
     
     def get_sep_token(self):

@@ -4,7 +4,7 @@ class test_case_generator():
     import random
     import time
     
-    def __init__(self, generate_type=None) -> None:
+    def __init__(self, generate_mode=None) -> None:
         self.sep_token = '\t'
         self.new_line_token = '<n>'
         self.space_token = '<s>'
@@ -22,14 +22,15 @@ class test_case_generator():
         self.permutation_variable = []
         self.compare_dict = {}
         
-        self.generate_type = 'generate' if generate_type == None else generate_type
+        self.generate_mode = 'generate' if generate_mode == None else generate_mode
 
     def __call__(self, grammer: list, constraints: list) -> str:
-        self.__init__(self.generate_type)
+        self.__init__(self.generate_mode)
         self.make_derivate_dict(grammer)
         self.make_constraints_dict(constraints)
         # print(self.const_dict)
         # print(self.compare_dict)
+        # print(self.derivation_dict)
         test_case = self.derivate()
         return test_case
         # return result
@@ -39,39 +40,32 @@ class test_case_generator():
         derivation_queue = [self.start_token]
         start_time = self.time.time()
         
-        # print(derivation_queue)
-        
         # 모든 variable이 test case를 생성할 때 까지
         while derivation_queue:
-            curr_time = self.time.time()
-            if curr_time - start_time > 4:
-                raise Exception(f"Error12: infinite loop")
+            
             # print(derivation_queue)
+            
+            curr_time = self.time.time()
+            if curr_time - start_time > 4 and self.generate_mode == 'test':
+                raise Exception(f"Error12: infinite loop")
             curr_variable = derivation_queue[0]
+            del derivation_queue[0]
             
             # 공백, 개행문자 생성
             if curr_variable == self.new_line_token:
                 test_case += '\n'
-                del derivation_queue[0]
-                
                 continue
             
             if curr_variable == self.space_token:
                 test_case += ' '
-                del derivation_queue[0]
-                
                 continue
             if curr_variable == self.blink_token:
-                del derivation_queue[0]
                 continue
             
             # string 생성
             if self.RE_STRING.fullmatch(curr_variable):
                 generated = self.get_string(curr_variable)
                 test_case += generated
-                
-                del derivation_queue[0]
-                
                 continue
             
             
@@ -87,6 +81,25 @@ class test_case_generator():
                     if counter < 0:
                         raise Exception(f"Error10: counter have negative value")
                     
+                    if variable in self.derivation_dict:
+                        curr_list = []
+                        next_variable = self.random.choice(self.derivation_dict[variable])
+                        for variable in next_variable.split(' '):
+                            # <T_i-1>이나 a_i가 생성되었을 때 counter가 필요함
+                            if self.re.match(r'<.*_i-1>', variable):
+                                nonterminal = variable.split('_')[0]
+                                variable = f'{nonterminal}_{counter-1}>'
+                            elif self.re.match(r'<.*_i>', variable):
+                                nonterminal = variable.split('_')[0]
+                                variable = f'{nonterminal}_{counter}>'    
+                            elif self.re.fullmatch(r'[^_<]*_.*', variable):
+                                nonterminal = variable.split('_')[0]
+                                variable = f'{nonterminal}_{counter}'
+                            curr_list.append(variable)
+            
+                        curr_list.extend(derivation_queue)
+                        derivation_queue = curr_list
+                        continue
                     # a_i 형태의 terminal을 처음 인식하거나 a_1을 생성할 때
                     if variable not in self.variable_dict or curr_variable in self.variable_dict[variable]:
                         self.variable_dict[variable] = {}
@@ -96,10 +109,11 @@ class test_case_generator():
                     generated = self.random.randint(start, end)
                     
                     # 순열일 경우에 이전에 생성되지 않은 정수 생성
+                    while_start_time = self.time.time()
                     while variable in self.permutation_variable and generated in self.variable_dict[variable].values():
                         curr_time = self.time.time()
-                        if curr_time - start_time > 4:
-                            raise Exception(f"Error12: infinite loop")
+                        if curr_time - while_start_time > 4:
+                            raise Exception(f"Error12-2: infinite loop to make permutation")
                         # print(generated)
                         generated = self.random.randint(start, end)
                     
@@ -108,7 +122,6 @@ class test_case_generator():
                     
                 elif curr_variable in self.derivation_dict:
                     test_case += self.random.choice(self.derivation_dict[curr_variable])
-                    del derivation_queue[0]
                     continue
                 else:
                     # N, [N]의 형태
@@ -118,7 +131,6 @@ class test_case_generator():
                     if curr_variable not in self.const_dict:
                         
                         test_case += curr_variable
-                        del derivation_queue[0]
                         continue
                         
                     start, end = self.get_range(curr_variable)
@@ -128,9 +140,6 @@ class test_case_generator():
 
                 # 생성된 결과물 최종 반환될 test_case에 더하기
                 test_case = f'{test_case}{generated}'
-                
-                # derivateion이 완료된 variable 제거
-                del derivation_queue[0]
                 continue
             
             # <T_i> 형태
@@ -168,9 +177,6 @@ class test_case_generator():
                     nonterminal = variable.split('_')[0]
                     variable = f'{nonterminal}_{counter}'
                 curr_list.append(variable)
-            
-            # derivation이 진행된 이후 완료된 token 제거
-            del derivation_queue[0]
             
             # DFS로 진행하기 위해 제거된 variable에서 생성된 variable들을 queue의 앞에 배치함
             curr_list.extend(derivation_queue)
@@ -314,7 +320,7 @@ class test_case_generator():
             return max(a,b)
         
         elif '^' in num:
-            if self.generate_type == 'test':
+            if self.generate_mode == 'test':
                 res = base, exp = num.split('^')
                 if '*' in base:
                     bias , base = base.split('*')
@@ -331,13 +337,13 @@ class test_case_generator():
                 res = int(base) ** int(exp)
             return res
         else:
-            # if self.generate_type == 'test':
-            #     num = int(num)
-            #     # print(2, ',', num)
-            #     while num > 50:
-            #         num //= 10
-            #     # print(3, ',', num)
-            #     return num
+            if self.generate_mode == 'test':
+                num = int(num)
+                # print(2, ',', num)
+                while num > 50:
+                    num //= 10
+                # print(3, ',', num)
+                return num
             return int(num)
  
     def is_terminal(self, token):
@@ -357,7 +363,7 @@ class test_case_generator():
                 variables = self.re.split(r'[<>]=?', const)
                 
                 start, end = variables[0], variables[-1]
-                if self.generate_type == 'test':
+                if self.generate_mode == 'test':
                     if '^' in end:
                         base = end.split('^')[0]
                         

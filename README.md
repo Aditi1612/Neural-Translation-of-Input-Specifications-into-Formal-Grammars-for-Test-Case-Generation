@@ -25,6 +25,23 @@ problem_info.py {Problem ID | Problem Name} [d, s, g, t, p, h]
   - p: public test cases
   - h: private test cases(hidden test cases)
 
+## Dataset generate and concat
+
+```
+bash dataset.sh
+```
+> After make grammer, we need test cases and description to use generator and parser
+
+## Test grammer
+```
+python test.py
+```
+>Test all the grammer using generator and discriminator
+
+```
+python tester.py {problem index | problem name} [run mode]
+```
+> Test only one that you want using generator and discriminator
 
 ## Reproducing the results
 

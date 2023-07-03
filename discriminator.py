@@ -134,7 +134,7 @@ class discriminator():
                         start, end = self.get_range(variable, counter)
                         if not start <= int(curr_token) <= end:
                             if self.generate_mode == "test": 
-                                raise Exception(f"Error5: Number is out of value\n\texpectd: {start}-{end}\n\treal   : {curr_token}")
+                                raise Exception(f"Error5: Number is out of value: {curr_token}\n\texpectd: {start} ~ {end}\n\treal   : {curr_token}")
                             return False
                     if variable not in self.variable_dict or curr_variable in self.variable_dict[variable]:
                         self.variable_dict[variable] = {}
@@ -400,6 +400,8 @@ class discriminator():
             else:
                 base, exp = num.split('^')
                 res = int(base) ** int(exp)
+                if base[0] == '-' and res > 0:
+                    return -res
             return res
         else:
             return int(num)

@@ -335,6 +335,8 @@ class test_case_generator():
             else:
                 base, exp = num.split('^')
                 res = int(base) ** int(exp)
+                if base[0] == '-' and res > 0:
+                    return -res
             return res
         else:
             if self.generate_mode == 'test':

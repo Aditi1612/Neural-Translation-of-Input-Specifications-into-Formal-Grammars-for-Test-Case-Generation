@@ -2,14 +2,14 @@ import jsonlines
 import json
 
 
-problem_list = []    
+problem_list = []
 with jsonlines.open('data/code_contests_train_input_spec2.jsonl') as f:
     for problem in f:
         # print(problem['input_spec'][8:])
         problem['input_spec'] = problem['input_spec']
             # exit()
         problem_list.append(problem)
-        
+
 problem_list.sort(key= lambda x: ((len(x['solutions']) + len(x['incorrect_solutions']))//2, len(x['solutions'])))
 problem_list.reverse()
 

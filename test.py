@@ -6,11 +6,11 @@ with jsonlines.open('data/grammer_sample.jsonl') as f:
         name = problem['name']
         grammer = problem['grammer']
         const = problem['constraints']
-        
+
         print(name)
         print()
         generator = test_case_generator()
         res = generator(grammer, const)
         print(res)
-        
+
         print('\n\n----------')

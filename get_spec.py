@@ -8,21 +8,21 @@ def main(**kwargs):
             if idx < sample_idx: continue
             if idx >= sample_idx + 5: break
             name = re.split(r'[. ]', problem['name'])[0]
-            
+
             print(f'{idx} -',name + '\n')
             print('constraints: ')
             input_const = str(problem['input_constraints'])
             input_const = input_const.replace('\\ldots', '...').replace('\\cdots', '...').replace('\\leq', '<=').replace('\\times', 'X').replace('\\neq', '!=').replace('\\ ', ' ')
-            
+
             print(input_const + '\n')
             print('\nspec: ')
             print(problem['input_spec'])
-            
+
             input_sample = problem['public_tests']['input'][0]
-            
+
             print('\ninput_sample')
             print(input_sample)
-            
+
             print('---------------------------------\n')
 
 

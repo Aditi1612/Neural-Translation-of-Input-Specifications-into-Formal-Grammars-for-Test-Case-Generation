@@ -17,14 +17,14 @@ discriminator = discriminator('test')
 generator = test_case_generator('test')
 
 with open(p_path_file, 'w', encoding='utf-8') as write_file:
-    write_file.write('')     
+    write_file.write('')
 with open(p_error_file, 'w', encoding='utf-8') as write_file:
     write_file.write('')
 with open(p_error_reason_file, 'w', encoding='utf-8') as write_file:
     write_file.write('')
 
 with open(g_path_file, 'w', encoding='utf-8') as write_file:
-    write_file.write('')     
+    write_file.write('')
 with open(g_error_file, 'w', encoding='utf-8') as write_file:
     write_file.write('')
 with open(g_error_reason_file, 'w', encoding='utf-8') as write_file:
@@ -34,7 +34,7 @@ with open(g_error_reason_file, 'w', encoding='utf-8') as write_file:
 with jsonlines.open(f'data/{file_name}.jsonl') as f:
     for p_idx, problem in enumerate(f, 1):
         print(p_idx)
-        
+
         # name, idx, _ = problem['name']
         name = problem['name']['name']
         print(name)
@@ -45,39 +45,39 @@ with jsonlines.open(f'data/{file_name}.jsonl') as f:
         try:
             for test_case in test_cases:
                 res = discriminator(grammer, const, test_case)
-                if not res: 
+                if not res:
                     print(res)
                     break
             else:
                 print(res)
-            
+
             with open(f'{p_path_file}', 'a', encoding='utf-8') as write_file:
                 write_file.write(f'{name}, {idx}\n')
-            
+
         except Exception as e:
             with open(p_error_file, 'a', encoding='utf-8') as write_file:
                 write_file.write(f'{name}, {idx}\n')
-                
+
             with open(p_error_reason_file, 'a', encoding='utf-8') as write_file:
                 write_file.write(f'{idx} {name}:\n' + test_case + ('' if test_case[-1] == '\n' else '\n'))
                 write_file.write('\t' + str(e) + '\n\n')
-                
+
         try:
             for i in range(3):
                 res = generator(grammer, const)
                 print(res)
             print()
-            
+
             with open(g_path_file, 'a', encoding='utf-8') as write_file:
                 write_file.write(f'{name}, {idx}\n')
-            
+
         except Exception as e:
             print("pass:", i)
             print()
             with open(g_error_file, 'a', encoding='utf-8') as write_file:
                 write_file.write(f'{name}, {idx}\n')
-                
+
             with open(g_error_reason_file, 'a', encoding='utf-8') as write_file:
                 write_file.write(f'{idx} {name}:\n' + test_case + ('' if test_case[-1] == '\n' else '\n'))
                 write_file.write('\t' + str(e) + '\n\n')
-                
+

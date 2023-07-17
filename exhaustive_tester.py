@@ -1,9 +1,8 @@
-import sys
-
 import jsonlines
+from counting_context_free_grammar import CountingContextFreeGrammar as CCFG
 
-from discriminator import discriminator
-from generator import test_case_generator
+from discriminator import Discriminator
+from generator import TestCaseGenerator
 
 
 def test_parser(parser, grammar, constraints, test_cases):
@@ -13,9 +12,18 @@ def test_parser(parser, grammar, constraints, test_cases):
             raise Exception("Wrong parsing result")
 
 
-def test_generator(generator, parser, grammar, constraints, k = 10):
+def test_generator(generator, parser, grammar, constraints, k=10):
     test_cases = [generator(grammar, constraints) for _ in range(k)]
     for test_case in test_cases:
+        parsed_result = parser(grammar, constraints, test_case)
+        if not parsed_result:
+            raise Exception(f"Wrong generation result\n{test_case}")
+
+
+def test_ccfg(ccfg, parser, k=10):
+    test_cases = [ccfg.generate() for _ in range(k)]
+    for test_case in test_cases:
+        print(test_case)
         parsed_result = parser(grammar, constraints, test_case)
         if not parsed_result:
             raise Exception(f"Wrong generation result\n{test_case}")
@@ -35,14 +43,13 @@ if __name__ == "__main__":
             grammar = specification['grammer']
             constraints = specification['constraints']
 
-            parser = discriminator("test")
-            generator = test_case_generator("test")
+            parser = Discriminator("test")
+            generator = TestCaseGenerator("test")
 
             public_tests = problem['public_tests']
             private_tests = problem['private_tests']
             test_cases = public_tests['input'] + private_tests['input']
 
-            # Test parser
             parser_failed = True
             try:
                 test_parser(parser, grammar, constraints, test_cases)
@@ -63,6 +70,17 @@ if __name__ == "__main__":
                 print()
                 print()
                 continue
+
+            try:
+                ccfg = CCFG(grammar, constraints)
+                test_ccfg(ccfg, parser)
+            except Exception as e:
+                print(f'CCFG exception on idx: {problem_idx}')
+                print("Error:", type(e))
+                print(specification)
+                print()
+                print()
+                raise(e)
 
             passed_number += 1
 

@@ -1,6 +1,7 @@
 import jsonlines
 import re
 
+
 def main(**kwargs):
     with jsonlines.open('data/train_input_spec_sample2.jsonl') as f:
         sample_idx = kwargs['idx']

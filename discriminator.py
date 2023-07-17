@@ -81,7 +81,7 @@ class Discriminator():
                         if self.variable_dict[len_var] != str_len:
                             excepted = self.variable_dict[len_var]
                             if self.generate_mode == "test":
-                                raise Exception(f"Error2-2: length of string is defferent\n\texpected: {excepted}\n\treal: {str_len}")
+                                raise Exception(f"Error2-2: length of string is different\n\texpected: {excepted}\n\treal: {str_len}")
                             return False
                     else:
                         self.variable_dict[len_var] = str_len
@@ -97,7 +97,10 @@ class Discriminator():
                 if not self.re.match(curr_variable, curr_token):
 
                     if self.generate_mode == "test":
-                        raise Exception(f"Error2: string_dose not matched\n\tvariable: {curr_variable}\n\ttest case value: {curr_token}")
+                        raise Exception(
+                            "Error2: string does not matched\n"
+                            + f"\tvariable: {curr_variable}\n"
+                            + f"\ttest case value: {curr_token}")
                     return False
 
                 del self.derivation_queue[:2]

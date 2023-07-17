@@ -2,37 +2,11 @@ import re
 import logging
 import itertools
 import math
+from typing import Union
 
 import jsonlines
 
 from generator import TestCaseGenerator
-
-_RE_COMPARATOR = re.compile("<=|>=|<|>|!=")
-_RE_NUMBER_CBE = re.compile(r'(?:(-?\d+)\*)?(-?\d+)(?:\^(-?\d+))?')
-
-
-def _comparator_to_str(comparator: int) -> str:
-    return {-2: "<", -1: "<=", 0: "!=", 1: ">=", 2: ">"}[comparator]
-
-
-def _parse_comparator(text: str) -> int:
-    return {"<": -2, "<=": -1, "!=": 0, ">=": 1, ">": 2}[text]
-
-
-def _parse_comparand(text: str):
-    number_cbe_match = _RE_NUMBER_CBE.fullmatch(text)
-
-    if not number_cbe_match:
-        return text
-
-    coefficient, base, exponent = number_cbe_match.group(1, 2, 3)
-
-    if coefficient is None:
-        coefficient = "1"
-    if exponent is None:
-        exponent = "1"
-
-    return int(coefficient) * (int(base) ** int(exponent))
 
 
 class Constraint():
@@ -55,6 +29,17 @@ class Constraint():
     def update_inequal(self, not_equal):
         self.inequal.add(not_equal)
 
+    def update(self, comparator, number):
+        inclusive = (abs(comparator) == 1)
+
+        if comparator == 0:
+            self.update_inequal(number)
+        elif comparator < 0:
+            self.update_upper_bound(number, inclusive)
+        else:
+            self.update_lower_bound(number, inclusive)
+
+
     def __str__(self) -> str:
         return f"{self.lower_bound} <= ... <= {self.upper_bound}"
 
@@ -75,6 +60,18 @@ class Comparison():
     def add_inequal(self, inequal):
         self.inequal.add(inequal)
 
+    def update(self, comparator, target):
+
+        # update compare dict
+        inclusive = (abs(comparator) == 1)
+
+        if comparator < 0:
+            self.add_upper_bound(target, inclusive)
+        if comparator > 0:
+            self.add_lower_bound(target, inclusive)
+        if not inclusive:
+            self.add_inequal(target)
+
     def __str__(self):
         return " ".join([
             f"{self.lower_bounds}",
@@ -83,35 +80,13 @@ class Comparison():
         ])
 
 
-def _update_constraints(
-        variable: str, number: int, comparator: int, constraints: dict):
-
-    logging.debug("Update constraints")
-    logging.debug(
-        f"{variable} {_comparator_to_str(comparator)} {number}")
-
-    if variable not in constraints:
-        constraints[variable] = Constraint()
-
-    constraint = constraints[variable]
-    inclusive = (abs(comparator) == 1)
-
-    if comparator == 0:
-        constraint.update_inequal(number)
-    elif comparator < 0:
-        constraint.update_upper_bound(number, inclusive)
-    else:
-        constraint.update_lower_bound(number, inclusive)
-
-
-def update_constraints_and_comparisons(
+def _update_constraints_and_comparisons(
         text: str, constraints: dict, comparisons: dict) -> None:
     text = text.replace(" ", "")
 
     comparators = list(map(_parse_comparator, _RE_COMPARATOR.findall(text)))
     comparandss = [
-        list(map(_parse_comparand, piece.split(",")))
-        for piece in _RE_COMPARATOR.split(text)
+        _parse_comparands(piece) for piece in _RE_COMPARATOR.split(text)
     ]
 
     for i, comparator in enumerate(comparators):
@@ -131,45 +106,33 @@ def update_constraints_and_comparisons(
 
                 if not is_left_number and not is_right_number:
 
-                    # update compare dict
-                    if left not in constraints:
-                        constraints[left] = Constraint()
-                    if right not in constraints:
-                        constraints[right] = Constraint()
+                    comparisons.setdefault(left, Comparison())
+                    comparisons.setdefault(right, Comparison())
 
-                    inclusive = (abs(comparator) == 1)
-                    if left not in comparisons:
-                        comparisons[left] = Comparison()
-                    if right not in comparisons:
-                        comparisons[right] = Comparison()
-                    if comparator < 0:
-                        comparisons[left].add_upper_bound(right, inclusive)
-                        comparisons[right].add_lower_bound(left, inclusive)
-                    if comparator > 0:
-                        comparisons[right].add_upper_bound(left, inclusive)
-                        comparisons[left].add_lower_bound(right, inclusive)
-                    if not inclusive:
-                        comparisons[left].add_inequal(right)
-                        comparisons[right].add_inequal(left)
+                    if left in comparisons:
+                        comparisons[left].update(comparator, right)
+                    if right in comparisons:
+                        comparisons[right].update(comparator * -1, left)
 
                 elif is_left_number != is_right_number:
                     # update constraint dict
-                    local_comparator = comparator
+                    comparator_local = comparator
                     if is_left_number:
                         left, right = right, left
-                        local_comparator *= -1
-                    _update_constraints(
-                        left, right, local_comparator, constraints)
-                else:  # 1 < 3
+                        comparator_local *= -1
+
+                    constraints.setdefault(left, Constraint())
+                    constraints[left].update(comparator_local, right)
+
+                else:  # E.g., 1 < 3
                     continue
 
 
 def get_constraints_and_comparisons(constraint_strings):
     constraints = {}
     comparisons = {}
-
     for constraint_string in constraint_strings:
-        update_constraints_and_comparisons(
+        _update_constraints_and_comparisons(
             constraint_string, constraints, comparisons)
     return constraints, comparisons
 
@@ -206,3 +169,42 @@ if __name__ == "__main__":
                 print(Comparison.get_dict(comparisons))
             except Exception:
                 input()
+
+
+_RE_COMPARATOR = re.compile(r'<=|>=|<|>|!=')
+_RE_NUMBER_CBE = re.compile(r'(?:(-?\d+)\*)?(-?\d+)(?:\^(-?\d+))?')
+_RE_MIN_OR_MAX = re.compile(r'(?:min|max)\((\w+),(\w+)\)')
+
+
+def _comparator_to_str(comparator: int) -> str:
+    return {-2: "<", -1: "<=", 0: "!=", 1: ">=", 2: ">"}[comparator]
+
+
+def _parse_comparator(text: str) -> int:
+    return {"<": -2, "<=": -1, "!=": 0, ">=": 1, ">": 2}[text]
+
+
+def _parse_comparand(text: str) -> Union[int, str]:
+    number_cbe_match = _RE_NUMBER_CBE.fullmatch(text)
+
+    if not number_cbe_match:
+        return text
+
+    coefficient, base, exponent = number_cbe_match.group(1, 2, 3)
+
+    if coefficient is None:
+        coefficient = "1"
+    if exponent is None:
+        exponent = "1"
+
+    return int(coefficient) * (int(base) ** int(exponent))
+
+
+def _parse_comparands(text: str) -> list[Union[int, str]]:
+    pieces = []
+    match = _RE_MIN_OR_MAX.fullmatch(text)
+    if match:
+        pieces = [match.group(1), match.group(2)]
+    else:
+        pieces = text.split(',')
+    return [_parse_comparand(e) for e in pieces]

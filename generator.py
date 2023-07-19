@@ -1,8 +1,8 @@
-import re
-import random
-import time
 
-class TestCaseGenerator():
+class test_case_generator():
+    import re
+    import random
+    import time
 
     def __init__(self, generate_mode=None) -> None:
         self.sep_token = '\t'
@@ -12,9 +12,9 @@ class TestCaseGenerator():
         self.derivate_token = '->'
         self.blink_token = 'ε'
 
-        self.RE_INTEGER = re.compile(r'-?[0-9]+ *')
-        self.RE_NONTERMINAL = re.compile(r'(<[^<]*>)')
-        self.RE_STRING = re.compile(r'\[[^\[]*\]\{.*\}')
+        self.RE_INTEGER = self.re.compile(r'-?[0-9]+ *')
+        self.RE_NONTERMINAL = self.re.compile(r'(<[^<]*>)')
+        self.RE_STRING = self.re.compile(r'\[[^\[]*\]\{.*\}')
 
         self.const_dict = {}
         self.variable_dict = {}
@@ -38,14 +38,14 @@ class TestCaseGenerator():
     def derivate(self):
         test_case = ''
         derivation_queue = [self.start_token]
-        start_time = time.time()
+        start_time = self.time.time()
 
         # 모든 variable이 test case를 생성할 때 까지
         while derivation_queue:
 
             # print(derivation_queue)
 
-            curr_time = time.time()
+            curr_time = self.time.time()
             if curr_time - start_time > 4 and self.generate_mode == 'test':
                 raise Exception(f"Error12: infinite loop")
             curr_variable = derivation_queue[0]
@@ -73,7 +73,7 @@ class TestCaseGenerator():
             elif not self.RE_NONTERMINAL.fullmatch(curr_variable):
 
                 # a_i 형태
-                if re.match(r'.*_.*', curr_variable):
+                if self.re.match(r'.*_.*', curr_variable):
 
                     variable, counter = curr_variable.split('_')
                     variable += '_i'
@@ -82,18 +82,17 @@ class TestCaseGenerator():
                         raise Exception(f"Error10: counter have negative value")
 
                     if variable in self.derivation_dict:
-                        assert False
                         curr_list = []
-                        next_variable = random.choice(self.derivation_dict[variable])
+                        next_variable = self.random.choice(self.derivation_dict[variable])
                         for variable in next_variable.split(' '):
                             # <T_i-1>이나 a_i가 생성되었을 때 counter가 필요함
-                            if re.match(r'<.*_i-1>', variable):
+                            if self.re.match(r'<.*_i-1>', variable):
                                 nonterminal = variable.split('_')[0]
                                 variable = f'{nonterminal}_{counter-1}>'
-                            elif re.match(r'<.*_i>', variable):
+                            elif self.re.match(r'<.*_i>', variable):
                                 nonterminal = variable.split('_')[0]
                                 variable = f'{nonterminal}_{counter}>'
-                            elif re.fullmatch(r'[^_<]*_.*', variable):
+                            elif self.re.fullmatch(r'[^_<]*_.*', variable):
                                 nonterminal = variable.split('_')[0]
                                 variable = f'{nonterminal}_{counter}'
                             curr_list.append(variable)
@@ -107,26 +106,26 @@ class TestCaseGenerator():
 
                     start, end = self.get_range(variable, counter)
 
-                    generated = random.randint(start, end)
+                    generated = self.random.randint(start, end)
 
                     # 순열일 경우에 이전에 생성되지 않은 정수 생성
-                    while_start_time = time.time()
+                    while_start_time = self.time.time()
                     while variable in self.permutation_variable and generated in self.variable_dict[variable].values():
-                        curr_time = time.time()
+                        curr_time = self.time.time()
                         if curr_time - while_start_time > 4:
                             raise Exception(f"Error12-2: infinite loop to make permutation")
                         # print(generated)
-                        generated = random.randint(start, end)
+                        generated = self.random.randint(start, end)
 
                     # 생성된 것 저장
                     self.variable_dict[variable][curr_variable] = generated
 
                 elif curr_variable in self.derivation_dict:
-                    test_case += random.choice(self.derivation_dict[curr_variable])
+                    test_case += self.random.choice(self.derivation_dict[curr_variable])
                     continue
                 else:
                     # N, [N]의 형태
-                    if re.match(r'\[[^\[]*\]', curr_variable):
+                    if self.re.match(r'\[[^\[]*\]', curr_variable):
                         curr_variable = curr_variable[1:-1]
 
                     if curr_variable not in self.const_dict:
@@ -136,7 +135,7 @@ class TestCaseGenerator():
 
                     start, end = self.get_range(curr_variable)
                     # print(curr_variable)
-                    generated = random.randint(start, end)
+                    generated = self.random.randint(start, end)
                     self.variable_dict[curr_variable] = generated
 
                 # 생성된 결과물 최종 반환될 test_case에 더하기
@@ -144,7 +143,7 @@ class TestCaseGenerator():
                 continue
 
             # <T_i> 형태
-            if re.match(r'<[^_]*_[^_]*>', curr_variable):
+            if self.re.match(r'<[^_]*_[^_]*>', curr_variable):
                 nonterminal , counter = curr_variable.split('_')
                 # <T_N>
                 if ',' in counter:
@@ -163,18 +162,18 @@ class TestCaseGenerator():
                 if counter < 0:
                     raise Exception(f"Error10: counter have negative value")
             # derivate
-            next_variable = random.choice(self.derivation_dict[curr_variable])
+            next_variable = self.random.choice(self.derivation_dict[curr_variable])
             curr_list = []
 
             for variable in next_variable.split(' '):
                 # <T_i-1>이나 a_i가 생성되었을 때 counter가 필요함
-                if re.match(r'<.*_i-1>', variable):
+                if self.re.match(r'<.*_i-1>', variable):
                     nonterminal = variable.split('_')[0]
                     variable = f'{nonterminal}_{counter-1}>'
-                elif re.match(r'<.*_i>', variable):
+                elif self.re.match(r'<.*_i>', variable):
                     nonterminal = variable.split('_')[0]
                     variable = f'{nonterminal}_{counter}>'
-                elif re.fullmatch(r'[^_<]*_.*', variable):
+                elif self.re.fullmatch(r'[^_<]*_.*', variable):
                     nonterminal = variable.split('_')[0]
                     variable = f'{nonterminal}_{counter}'
                 curr_list.append(variable)
@@ -187,10 +186,10 @@ class TestCaseGenerator():
 
     def get_addition(self, token):
 
-        if re.match(r'[^+]+\+[0-9]+', token):
+        if self.re.match(r'[^+]+\+[0-9]+', token):
             token, addition = token.split('+')
             return token, int(addition)
-        elif re.match(r'[^-]+-[0-9]+', token):
+        elif self.re.match(r'[^-]+-[0-9]+', token):
             token, addition = token.split('-')
             return token, int(addition) * -1
         else:
@@ -244,7 +243,7 @@ class TestCaseGenerator():
                     derivate_range[range_index] += 0 if include1 else 1
             else:
                 target = self.compare_dict[variable]['target']
-                if re.match(r'.*_.*', target):
+                if self.re.match(r'.*_.*', target):
                     symbol = target.split('_')[0]
                     symbol += f'_{counter}'
                     derivate_range[range_index] = self.variable_dict[target][symbol]
@@ -271,13 +270,13 @@ class TestCaseGenerator():
             string_len = int(self.variable_dict[string_len])
         elif ',' in string_len:
             start, end = string_len.split(',')
-            string_len = random.randint(self.get_value(start), self.get_value(end))
+            string_len = self.random.randint(self.get_value(start), self.get_value(end))
         elif self.RE_INTEGER.fullmatch(string_len):
             string_len = int(string_len)
         else:
             start, end = self.get_range(string_len)
             variable = string_len
-            string_len = random.randint(start, end)
+            string_len = self.random.randint(start, end)
             self.variable_dict[variable] = string_len
 
         if variable in self.derivation_dict:
@@ -301,7 +300,7 @@ class TestCaseGenerator():
             self.derivation_dict[variable] = variable_list
 
         for _ in range(string_len):
-            return_str += random.choice(variable_list)
+            return_str += self.random.choice(variable_list)
 
         return return_str
 
@@ -311,12 +310,12 @@ class TestCaseGenerator():
             return self.variable_dict[num]
 
         elif 'min' in num:
-            num = re.findall(r'\(.*,.*\)', num)[0]
+            num = self.re.findall(r'\(.*,.*\)', num)[0]
             a, b = self.get_value(num.split(',')[0][1:]), self.get_value(num.split(',')[1][:-1])
             return min(a,b)
 
         elif 'max' in num:
-            num = re.findall(r'\(.*,.*\)', num)[0]
+            num = self.re.findall(r'\(.*,.*\)', num)[0]
             a, b = self.get_value(num.split(',')[0][1:]), self.get_value(num.split(',')[1][:-1])
             return max(a,b)
 
@@ -361,9 +360,9 @@ class TestCaseGenerator():
 
     def make_constraints_dict(self, constraints:list):
         for const in constraints:
-            if re.match(r'[^<]*<=?[^<]*<=?[^<]*', const):
+            if self.re.match(r'[^<]*<=?[^<]*<=?[^<]*', const):
 
-                variables = re.split(r'[<>]=?', const)
+                variables = self.re.split(r'[<>]=?', const)
 
                 start, end = variables[0], variables[-1]
                 if self.generate_mode == 'test':
@@ -385,11 +384,11 @@ class TestCaseGenerator():
                 del variables[0]
                 del variables[-1]
 
-                compare_symbols = re.findall(r'[<>]=?', const)
+                compare_symbols = self.re.findall(r'[<>]=?', const)
 
                 for variable_token in variables:
                     for variable in variable_token.split(','):
-                        # start, variable, end = re.split(r'<=?', const)
+                        # start, variable, end = self.re.split(r'<=?', const)
                         self.const_dict[variable.strip()] = {
                             'start': start.strip(), 'end': end.strip(),
                             'include1': compare_symbols[0] == '<=',
@@ -407,11 +406,11 @@ class TestCaseGenerator():
                             'type': 'different_variable'
                         }
 
-            elif re.fullmatch(r'[^<>]*[<>]=?[^<>]*', const):
+            elif self.re.fullmatch(r'[^<>]*[<>]=?[^<>]*', const):
 
-                variable1, variable2 = re.split(r'[<>]=?', const)
+                variable1, variable2 = self.re.split(r'[<>]=?', const)
                 variable1, variable2 = variable1.strip(), variable2.strip()
-                compare_symbol = re.findall(r'[<>]=?', const)[0]
+                compare_symbol = self.re.findall(r'[<>]=?', const)[0]
                 if '=' not in compare_symbol:
                     v1_const = self.const_dict[variable1]
                     v2_const = self.const_dict[variable2]
@@ -439,9 +438,44 @@ class TestCaseGenerator():
                                         'type': 'different_variable'
                                         }
 
-            elif re.fullmatch(r'[^=]*!=[^=]*', const):
+            elif self.re.fullmatch(r'[^=]*!=[^=]*', const):
                 variable1, variable2 = const.split('!=')
                 self.permutation_variable.append(variable1)
+
+        '''
+            # case 1: <= N <=
+            if self.re.fullmatch(r'[^<]* <= [a-zA-Z]* <= [^<]*', const):
+                start, variable, end = self.re.split(r'<=|<', const, 2)
+                start = int(start)
+                end = int(end)
+                const_dict[variable] = {'start': start, 'end': end, 'include1': True, 'include2': True}
+
+            # case 2: <= N <
+            elif self.re.fullmatch(r'[^<]* <= [a-zA-Z]* < [^<]*', const):
+                start, variable, end = self.re.split(r'<=|<', const, 2)
+                start = int(start)
+                end = int(end)
+                const_dict[variable] = {'start': start, 'end': end, 'include1': True, 'include2': False}
+
+            # case 3: <  N <=
+            elif self.re.fullmatch(r'[^<]* < [a-zA-Z]* <= [^<]*', const):
+                start, variable, end = self.re.split(r'<=|<', const, 2)
+                start = int(start)
+                end = int(end)
+                const_dict[variable] = {'start': start, 'end': end, 'include1': False, 'include2': True}
+
+            # case 4: <  N <
+            elif self.re.fullmatch(r'[^<]* < [a-zA-Z]* < [^<]*', const):
+                start, variable, end = self.re.split(r'<=|<', const, 2)
+                start = int(start)
+                end = int(end)
+                const_dict[variable] = {'start': start, 'end': end, 'include1': False, 'include2': False}
+
+            else:
+                start, variable, end = self.re.split(r'<=|<', const, 2)
+                if len(self.re.findall(r'<=|<', end)) == 1:
+                    end = self.re.split(r'<=|<', end)[0]
+        '''
 
 if __name__ == '__main__':
 
@@ -451,7 +485,7 @@ if __name__ == '__main__':
     # test_grammer = ['<S> -> M <space> N']
     # test_const = ['1 <= M <= 16', 'M <= N <= 16', 'a <= b']
 
-    generator = TestCaseGenerator()
+    generator = test_case_generator()
     generator.get_string('[a-z]{S}')
     # res = generator(test_grammer, test_const)
     # print(res)

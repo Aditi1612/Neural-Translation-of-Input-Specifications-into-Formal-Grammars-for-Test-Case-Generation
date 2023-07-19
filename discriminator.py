@@ -1,5 +1,5 @@
 
-class Discriminator():
+class discriminator():
 
     import re
     import random
@@ -499,7 +499,7 @@ if __name__ == '__main__':
     path_file = f"result_{file_name}_pass_list.txt"
     error_reason_file = f"result_{file_name}_error_reason.txt"
 
-    Discriminator = Discriminator()
+    discriminator = discriminator()
 
     with open(path_file, 'w', encoding='utf-8') as write_file:
         write_file.write('')
@@ -520,7 +520,7 @@ if __name__ == '__main__':
             const = problem['constraints']
             test_case = problem['public_tests']['input'][0]
             try:
-                res = Discriminator(grammer, const, test_case)
+                res = discriminator(grammer, const, test_case)
 
                 with open(path_file, 'a', encoding='utf-8') as write_file:
                     write_file.write(f'{name}, {idx}\n')

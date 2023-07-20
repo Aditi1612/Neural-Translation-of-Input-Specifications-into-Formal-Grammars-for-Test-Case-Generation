@@ -203,6 +203,7 @@ class CountingContextFreeGrammar():
 
         if nonterminal_type == NonterminalType.DEFAULT:
             return random.choice(self.productions[nonterminal])
+
         elif nonterminal_type == NonterminalType.UNINDEXED:
             raise ValueError(
                 f"Invalid derivation of nonterminal {nonterminal}")

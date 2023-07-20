@@ -2,10 +2,11 @@ import re
 import logging
 import itertools
 import math
-from typing import Union
+from typing import (Union, TypeVar, )
 
 
 ExtInt = Union[int, float]
+Comp = TypeVar('Comp', bound='Comparison')
 
 
 class Constraint():
@@ -69,9 +70,9 @@ class Comparison():
 
         if comparator < 0:
             self.add_upper_bound(target, inclusive)
-        if comparator > 0:
+        elif comparator > 0:
             self.add_lower_bound(target, inclusive)
-        if not inclusive:
+        else:
             self.add_inequal(target)
 
     def __str__(self) -> str:
@@ -150,6 +151,74 @@ def _update_constraints_and_comparisons(
                     continue
 
 
+def _to_transitive_lower_bound(
+    variable: str,
+    comparisons: dict[str, Comparison],
+    visited: set[str] = set()
+) -> list[tuple[str, bool]]:
+    """Make ``comparisons`` be transitive closure
+
+    Args:
+        variable: A variable
+        comparisons: Comparisons
+        visited: Visited variables
+
+    Returns:
+        updated lower bounds of ``variable``
+    """
+
+    comparison = comparisons[variable]
+    if variable in visited:
+        return comparison.lower_bounds
+    visited.add(variable)
+
+    lower_bounds = [e for e in comparison.lower_bounds]
+
+    for lower_variable, inclusive1 in lower_bounds:
+        lowerer_bounds = _to_transitive_lower_bound(
+            lower_variable, comparisons, visited)
+
+        for lowerer_variable, inclusive2 in lowerer_bounds:
+            inclusive = inclusive1 and inclusive2
+            comparison.add_lower_bound(lowerer_variable, inclusive)
+
+    return comparison.lower_bounds
+
+
+def _to_transitive_upper_bound(
+    variable: str,
+    comparisons: dict[str, Comparison],
+    visited: set[str] = set()
+) -> list[tuple[str, bool]]:
+    """Make ``comparisons`` be transitive closure
+
+    Args:
+        variable: A variable
+        comparisons: Comparisons
+        visited: Visited variables
+
+    Returns:
+        updated upper bounds of ``variable``
+    """
+
+    comparison = comparisons[variable]
+    if variable in visited:
+        return comparison.upper_bounds
+    visited.add(variable)
+
+    upper_bounds = [e for e in comparison.upper_bounds]
+
+    for upper_variable, inclusive1 in upper_bounds:
+        upperer_bounds = _to_transitive_upper_bound(
+            upper_variable, comparisons, visited)
+
+        for upperer_variable, inclusive2 in upperer_bounds:
+            inclusive = inclusive1 and inclusive2
+            comparison.add_upper_bound(upperer_variable, inclusive)
+
+    return comparison.upper_bounds
+
+
 def get_constraints_and_comparisons(
     constraint_strings: list[str]
 ) -> tuple[dict[str, Constraint], dict[str, Comparison]]:
@@ -158,6 +227,12 @@ def get_constraints_and_comparisons(
     for constraint_string in constraint_strings:
         _update_constraints_and_comparisons(
             constraint_string, constraints, comparisons)
+
+    # Make comparisons be transitive closure
+    for variable in comparisons:
+        _to_transitive_lower_bound(variable, comparisons)
+        _to_transitive_upper_bound(variable, comparisons)
+
     return constraints, comparisons
 
 
@@ -183,3 +258,9 @@ def _parse_comparands(text: str) -> list[ExtInt]:
     else:
         pieces = text.split(',')
     return [parse_comparand(e) for e in pieces]
+
+
+if __name__ == "__main__":
+    constraint_strings = ["A < B", "B <= C", "C <= D"]
+    constraints, comparisons = (
+        get_constraints_and_comparisons(constraint_strings))

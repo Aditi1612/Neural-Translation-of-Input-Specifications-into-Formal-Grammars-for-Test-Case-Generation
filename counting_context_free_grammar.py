@@ -1,12 +1,12 @@
 from enum import Enum
-from typing import (Optional, )
+from typing import (Optional, Callable, )
 import logging
 import random
 import re
 
-from constraint import Comparison
 from constraint import get_constraints_and_comparisons
 from constraint import parse_comparand
+from constraint import ExtInt
 
 Assignment = dict[str, int]
 
@@ -241,11 +241,10 @@ class CountingContextFreeGrammar():
             assignment: An assignment
 
         Returns:
-            Tuple consists of production and value
+            A tuple consists of production and value.
 
         Raises:
-            RuntimeError: [TODO:description]
-            RuntimeError: [TODO:description]
+            RuntimeError: Constraint or production is ambiguous.
         """
         variable_type = self._get_variable_type(variable)
 
@@ -321,6 +320,69 @@ class CountingContextFreeGrammar():
 
         return constraint_form_variables, index
 
+    def _get_variable_bound(
+        self,
+        variable: str,
+        assignment: Assignment,
+        index: Optional[int],
+        reverse: bool = False
+    ) -> int:
+
+        comparison = self.comparisons[variable]
+
+        constraint_bound = None
+        bound_variables = None
+        tightest = None
+        get_target_bound: Callable[[str], ExtInt]
+        tighter_than: Callable[[ExtInt, ExtInt], bool]
+        tighten: Callable[[ExtInt], ExtInt]
+        if not reverse:
+            constraint_bound = self.constraints[variable].lower_bound
+            bound_variables = comparison.lower_bounds
+            tightest = max
+            def get_target_bound(e): return self.constraints[e].upper_bound
+            def tighter_than(a, b): return a >= b
+            def tighten(e): return e + 1
+        else:
+            constraint_bound = self.constraints[variable].upper_bound
+            bound_variables = comparison.upper_bounds
+            tightest = min
+            def get_target_bound(e): return self.constraints[e].lower_bound
+            def tighter_than(a, b): return a <= b
+            def tighten(e): return e - 1
+
+        unassigned_bound_variables = []
+        bounds = [constraint_bound]
+
+        placeholder = None
+        if index is not None:
+            _, placeholder = _split_variable(variable)
+
+        for bound_variable, inclusive in bound_variables:
+            indexed_bound_variable = (
+                self._substitute(bound_variable, placeholder, index))
+
+            if indexed_bound_variable in assignment:
+                bound = assignment[indexed_bound_variable]
+                if not inclusive:
+                    bound = tighten(bound)
+                bounds.append(bound)
+            else:
+                unassigned_bound_variables.append(bound_variable)
+
+        bound = tightest(bounds)
+
+        # If there exists unassigned variables whose bounds are
+        # intersect with the current variable, we have to make a room
+        # for them.
+        # TODO
+        for bound_variable in unassigned_bound_variables:
+            target_bound = get_target_bound(bound_variable)
+            if tighter_than(target_bound, bound):
+                pass
+                # bound = tighten(bound)
+        return bound
+
     def _sample_variable(
         self,
         variable: str,
@@ -337,44 +399,22 @@ class CountingContextFreeGrammar():
             Return an integer or ``None`` if the variable is not in
             constraints.
         """
-        placeholder = None
-        if index is not None:
-            _, placeholder = _split_variable(variable)
-
         if variable not in self.constraints:
             return None
 
         constraint = self.constraints[variable]
-        comparison = self.comparisons.get(variable, Comparison())
 
-        upper_bound = constraint.upper_bound
-        lower_bound = constraint.lower_bound
+        lower_bound = self._get_variable_bound(variable, assignment, index)
+        upper_bound = self._get_variable_bound(
+            variable, assignment, index, reverse=True)
 
-        # TODO: Instead of these, update constraints
-        for lower_variable, inclusive in comparison.lower_bounds:
-            indexed_lower_variable = (
-                self._substitute(lower_variable, placeholder, index))
-            _lower_bound = assignment.get(
-                indexed_lower_variable,
-                self.constraints[lower_variable].lower_bound)
-            if not inclusive:
-                _lower_bound += 1
-            lower_bound = max(_lower_bound, lower_bound)
-
-        for upper_variable, inclusive in comparison.upper_bounds:
-            indexed_upper_variable = (
-                self._substitute(upper_variable, placeholder, index))
-            _upper_bound = assignment.get(
-                indexed_upper_variable,
-                self.constraints[upper_variable].upper_bound)
-            if not inclusive:
-                _upper_bound -= 1
-            upper_bound = min(_upper_bound, upper_bound)
+        # print(variable, lower_bound, upper_bound)
 
         if self.testmode:
             upper_bound = min(upper_bound, TESTMODE_VARIABLE_UPPER_BOUND)
             upper_bound = max(lower_bound, upper_bound)
 
+        comparison = self.comparisons[variable]
         comparison_inequal = {assignment.get(e) for e in comparison.inequal}
         inequal = constraint.inequal | comparison_inequal
 
@@ -384,10 +424,8 @@ class CountingContextFreeGrammar():
             if value not in inequal:
                 return value
 
-        indexed_variable = self._substitute(variable, placeholder, index)
         raise RuntimeError(
-            f"Fail to sample variable: {indexed_variable}\n"
-            + f"Assignment: {assignment}")
+            f"Fail to sample variable: {variable}\n Assignment: {assignment}")
 
     def _get_token_type(self, token: str) -> TokenType:
         if token in {NEW_LINE_TOKEN, SPACE_TOKEN, BLANK_TOKEN}:

@@ -8,6 +8,8 @@ from constraint import Comparison
 from constraint import get_constraints_and_comparisons
 from constraint import parse_comparand
 
+Assignment = dict[str, int]
+
 MAX_ITER = 100
 TESTMODE_VARIABLE_UPPER_BOUND = 50
 TESTMODE_MAXIMUM_TERMINAL_LEN = 50
@@ -122,6 +124,7 @@ class CountingContextFreeGrammar():
 
                 constraint_form_variables, index = (
                     self._to_constraint_form(token))
+
                 _production, value = self._derivate_variable(token, assignment)
 
                 assignment_form_variable = token
@@ -194,7 +197,7 @@ class CountingContextFreeGrammar():
         ]
 
     def _derivate_nonterminal(
-        self, nonterminal: str, assignment: dict[str, int]
+        self, nonterminal: str, assignment: Assignment
     ) -> list[str]:
         nonterminal_type = self._get_nonterminal_type(nonterminal)
 
@@ -229,7 +232,7 @@ class CountingContextFreeGrammar():
             return self._substitute_production(production, placeholder, index)
 
     def _derivate_variable(
-        self, variable: str, assignment: dict[str, int]
+        self, variable: str, assignment: Assignment
     ) -> tuple[Optional[list[str]], Optional[int]]:
         """Randomly select production of variable and generate value
 
@@ -321,7 +324,7 @@ class CountingContextFreeGrammar():
     def _sample_variable(
         self,
         variable: str,
-        assignment: dict[str, int],
+        assignment: Assignment,
         index: Optional[int] = None
     ) -> Optional[int]:
         """Sample a value of variables whose form is in constraints
@@ -331,7 +334,8 @@ class CountingContextFreeGrammar():
             index: Index of variable, which is omitted in ``variable``.
 
         Returns:
-            Sampled integer or ``None`` if the variable is not in constraints
+            Return an integer or ``None`` if the variable is not in
+            constraints.
         """
         placeholder = None
         if index is not None:
@@ -348,29 +352,33 @@ class CountingContextFreeGrammar():
 
         # TODO: Instead of these, update constraints
         for lower_variable, inclusive in comparison.lower_bounds:
-            new_lower_bound = assignment.get(
-                self._substitute(lower_variable, placeholder, index),
+            indexed_lower_variable = (
+                self._substitute(lower_variable, placeholder, index))
+            _lower_bound = assignment.get(
+                indexed_lower_variable,
                 self.constraints[lower_variable].lower_bound)
             if not inclusive:
-                new_lower_bound += 1
-            lower_bound = max(new_lower_bound, lower_bound)
+                _lower_bound += 1
+            lower_bound = max(_lower_bound, lower_bound)
 
         for upper_variable, inclusive in comparison.upper_bounds:
-            new_upper_bound = assignment.get(
-                self._substitute(upper_variable, placeholder, index),
+            indexed_upper_variable = (
+                self._substitute(upper_variable, placeholder, index))
+            _upper_bound = assignment.get(
+                indexed_upper_variable,
                 self.constraints[upper_variable].upper_bound)
             if not inclusive:
-                new_upper_bound -= 1
-            upper_bound = min(new_upper_bound, upper_bound)
-
-        # XXX: It depends on max iteration
-        comparison_inequal = {assignment.get(e) for e in comparison.inequal}
-        inequal = constraint.inequal | comparison_inequal
+                _upper_bound -= 1
+            upper_bound = min(_upper_bound, upper_bound)
 
         if self.testmode:
             upper_bound = min(upper_bound, TESTMODE_VARIABLE_UPPER_BOUND)
             upper_bound = max(lower_bound, upper_bound)
 
+        comparison_inequal = {assignment.get(e) for e in comparison.inequal}
+        inequal = constraint.inequal | comparison_inequal
+
+        # XXX: It depends on max iteration
         for _ in range(MAX_ITER):
             value = random.randint(lower_bound, upper_bound)
             if value not in inequal:
@@ -417,8 +425,27 @@ class CountingContextFreeGrammar():
         else:
             return VariableType.DEFAULT
 
+    def _parse_counter_operator(
+        self,
+        counter_operator: str,
+        assignment: Assignment
+    ) -> int:
+        if _RE_NUMBER_CBE.fullmatch(counter_operator):
+            value = parse_comparand(counter_operator)
+        elif counter_operator in assignment:
+            value = assignment[counter_operator]
+        elif counter_operator in self.constraints:
+            value = self._sample_variable(counter_operator, assignment)
+            assignment[counter_operator] = value
+        elif counter_operator.isdigit():
+            value = int(counter_operator)
+        else:
+            raise ValueError(
+                f'Counter operater parse failed: {counter_operator}')
+        return value
+
     def _sample_terminal(
-        self, terminal: str, assignment: dict[str, int]
+        self, terminal: str, assignment: Assignment
     ) -> str:
         if terminal == NEW_LINE_TOKEN:
             return '\n'
@@ -433,25 +460,14 @@ class CountingContextFreeGrammar():
 
         # Parse regex operands
         counter_operands = list(_parse_counter_oparands(match.group(1)))
-        counter_operator_tokens = match.group(2).split(',')
+        counter_operators = match.group(2).split(',')
 
-        if len(counter_operator_tokens) > 2:
+        if len(counter_operators) > 2:
             raise ValueError(f'Too many counter operators: {terminal}')
 
         values = []
-        for counter_operator in counter_operator_tokens:
-            value = None
-            if _RE_NUMBER_CBE.fullmatch(counter_operator):
-                value = parse_comparand(counter_operator)
-            elif counter_operator in assignment:
-                value = assignment[counter_operator]
-            elif counter_operator in self.constraints:
-                value = self._sample_variable(counter_operator, assignment)
-                assignment[counter_operator] = value
-            elif counter_operator.isdigit():
-                value = int(counter_operator)
-            else:
-                raise ValueError(f'Regex terminal parse failed: {terminal}')
+        for counter_operator in counter_operators:
+            value = self._parse_counter_operator(counter_operator, assignment)
             values.append(value)
 
         start = 0
@@ -499,7 +515,7 @@ def _substitute_nonterminal(
     frag, token_placeholder = _split_nonterminal(nonterminal)
     if token_placeholder == placeholder:
         return f"<{frag}_{index}>"
-    if token_placeholder == f"{placeholder}-1":
+    elif token_placeholder == f"{placeholder}-1":
         return f"<{frag}_{index-1}>"
     return nonterminal
 
@@ -514,7 +530,7 @@ def _substitute_variable(
     frag, token_placeholder = _split_variable(variable)
     if token_placeholder == placeholder:
         return f"{frag}_{index}"
-    if token_placeholder == f"{placeholder}-1":
+    elif token_placeholder == f"{placeholder}-1":
         return f"{frag}_{index-1}"
     return variable
 
@@ -553,7 +569,7 @@ def _get_alphabet_from_charclass(regexes: list) -> set[str]:
     return alphabet
 
 
-def _parse_counter_oparands(regex_string: str):
+def _parse_counter_oparands(regex_string: str) -> set[str]:
     counter_operands = set()
     parsed = re.sre_parse.parse(regex_string)
 

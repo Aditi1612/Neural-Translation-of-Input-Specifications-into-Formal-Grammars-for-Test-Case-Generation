@@ -5,20 +5,7 @@ import math
 from typing import Union
 
 
-def parse_comparand(text: str) -> Union[int, str]:
-    number_cbe_match = _RE_NUMBER_CBE.fullmatch(text)
-
-    if not number_cbe_match:
-        return text
-
-    coefficient, base, exponent = number_cbe_match.group(1, 2, 3)
-
-    if coefficient is None:
-        coefficient = "1"
-    if exponent is None:
-        exponent = "1"
-
-    return int(coefficient) * (int(base) ** int(exponent))
+ExtInt = Union[int, float]
 
 
 class Constraint():
@@ -29,14 +16,14 @@ class Constraint():
         self.inequal = set()
 
     def update_upper_bound(
-        self, upper_bound: Union[int, float], inclusive: bool
+        self, upper_bound: ExtInt, inclusive: bool
     ) -> None:
         if not inclusive:
             upper_bound -= 1
         self.upper_bound = min(self.upper_bound, upper_bound)
 
     def update_lower_bound(
-        self, lower_bound: Union[int, float], inclusive: bool
+        self, lower_bound: ExtInt, inclusive: bool
     ) -> None:
         if not inclusive:
             lower_bound += 1
@@ -95,6 +82,22 @@ class Comparison():
         ])
 
 
+def parse_comparand(text: str) -> ExtInt:
+    number_cbe_match = _RE_NUMBER_CBE.fullmatch(text)
+
+    if not number_cbe_match:
+        return text
+
+    coefficient, base, exponent = number_cbe_match.group(1, 2, 3)
+
+    if coefficient is None:
+        coefficient = "1"
+    if exponent is None:
+        exponent = "1"
+
+    return int(coefficient) * (int(base) ** int(exponent))
+
+
 def _update_constraints_and_comparisons(
     text: str,
     constraints: dict[str, Constraint],
@@ -148,7 +151,7 @@ def _update_constraints_and_comparisons(
 
 
 def get_constraints_and_comparisons(
-        constraint_strings: list[str]
+    constraint_strings: list[str]
 ) -> tuple[dict[str, Constraint], dict[str, Comparison]]:
     constraints = {}
     comparisons = {}
@@ -171,8 +174,9 @@ def _parse_comparator(text: str) -> int:
     return {"<": -2, "<=": -1, "!=": 0, ">=": 1, ">": 2}[text]
 
 
-def _parse_comparands(text: str) -> list[Union[int, str]]:
+def _parse_comparands(text: str) -> list[ExtInt]:
     pieces = []
+    # FIXME: Currently, we do not consider minimum or maximum.
     match = _RE_MIN_OR_MAX.fullmatch(text)
     if match:
         pieces = [match.group(1), match.group(2)]

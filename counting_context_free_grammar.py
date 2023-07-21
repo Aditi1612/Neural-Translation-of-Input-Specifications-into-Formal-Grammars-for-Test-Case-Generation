@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import (Optional, Callable, )
+from typing import (Optional, Callable, Union, NewType, cast, )
 import logging
 import random
 import re
@@ -7,8 +7,12 @@ import re
 from constraint import get_constraints_and_comparisons
 from constraint import parse_comparand
 from constraint import ExtInt
+from constraint import Variable
+from generator import test_case_generator as TestCaseGenerator
 
 Assignment = dict[str, int]
+Nonterminal = NewType('Nonterminal', str)
+Token = Union[Nonterminal, Variable]
 
 MAX_ITER = 100
 TESTMODE_VARIABLE_UPPER_BOUND = 50
@@ -61,7 +65,7 @@ class CountingContextFreeGrammar():
         self.testmode = testmode
 
         # Parse productions
-        self.productions = {}
+        self.productions: dict[str, list[list[str]]] = {}
         for rule_string in production_strings:
             lhs, rhss = rule_string.split(DERIVATE_TOKEN)
             self.productions[lhs] = []
@@ -75,11 +79,9 @@ class CountingContextFreeGrammar():
         # Initialize placeholders from constraints and comparisons
         self.placeholders = set()
         for token in self.productions:
-            if token[0] == '<' and token[-1] == '>':
-                _, subscript = _split_nonterminal(token)
-            else:
-                _, subscript = _split_variable(token)
-            if subscript is not None and not subscript.isdigit():
+            subscript: Union[None, int, str]
+            _, subscript = _split_token(token)
+            if type(subscript) is str:
                 self.placeholders.add(subscript)
 
         # Remove constraints and comparisons of placeholders
@@ -99,7 +101,7 @@ class CountingContextFreeGrammar():
         string = ''
 
         derivation_queue = [START_TOKEN]
-        assignment = {}
+        assignment: dict[str, int] = {}
         while derivation_queue:
 
             logging.debug(derivation_queue)
@@ -137,7 +139,7 @@ class CountingContextFreeGrammar():
                     if value is not None:
                         raise RuntimeError(
                             f"A variable {token} has both"
-                            + "constraint and production.")
+                            + " constraint and production.")
                     string += " ".join(_production)
 
                 if value is not None:
@@ -150,7 +152,9 @@ class CountingContextFreeGrammar():
         return string
 
     def _substitute(
-        self, token: str, subscript: Optional[str], index: int
+        self, token: str,
+        subscript: Optional[str],
+        index: Optional[int]
     ) -> str:
         """Substitute ``subscript`` of ``token`` with ``index``.
 
@@ -166,7 +170,7 @@ class CountingContextFreeGrammar():
             A ``index``-subscripted ``token`` if ``token`` has
             ``subscript``. Otherwise, return ``token``.
         """
-        if subscript is None:
+        if subscript is None or index is None:
             return token
 
         token_type = self._get_token_type(token)
@@ -175,19 +179,19 @@ class CountingContextFreeGrammar():
             nonterminal_type = self._get_nonterminal_type(token)
             if nonterminal_type in (
                     {NonterminalType.UNINDEXED, NonterminalType.VAR_INDEXED}):
-                return _substitute_nonterminal(token, subscript, index)
+                return _substitute_token(token, subscript, index)
 
         elif token_type == TokenType.VARIABLE:
             variable_type = self._get_variable_type(token)
             if variable_type in (
                     {VariableType.UNINDEXED, VariableType.VAR_INDEXED}):
-                return _substitute_variable(token, subscript, index)
+                return _substitute_token(token, subscript, index)
 
         return token
 
     def _substitute_production(
         self, production: list[str], placeholder: str, index: int
-    ) -> str:
+    ) -> list[str]:
 
         assert placeholder in self.placeholders
 
@@ -202,22 +206,29 @@ class CountingContextFreeGrammar():
         nonterminal_type = self._get_nonterminal_type(nonterminal)
 
         if nonterminal_type == NonterminalType.DEFAULT:
-            return random.choice(self.productions[nonterminal])
+            return random.choice(list(self.productions[nonterminal]))
 
         elif nonterminal_type == NonterminalType.UNINDEXED:
             raise ValueError(
                 f"Invalid derivation of nonterminal {nonterminal}")
 
         elif nonterminal_type == NonterminalType.VAR_INDEXED:
-            _, variable = _split_nonterminal(nonterminal)
+            _, variable = _split_token(nonterminal)
+            assert type(variable) is str
+
             return [self._substitute(
                 nonterminal, variable, assignment[variable])]
 
         elif nonterminal_type == NonterminalType.INDEXED:
             if nonterminal in self.productions:  # E.g., <T_0> -> <L_N>
-                return random.choice(self.productions[nonterminal])
+                return random.choice(list(self.productions[nonterminal]))
 
-            frag, index = _split_nonterminal(nonterminal)
+            frag, opt_index = _split_token(nonterminal)
+
+            assert type(opt_index) is str
+            assert opt_index.isdigit()
+
+            index = int(opt_index)
 
             placeholder = None
             production = None
@@ -275,16 +286,16 @@ class CountingContextFreeGrammar():
         productions = []
         for production_form_variable in production_form_variables:
             if production_form_variable in self.productions:
-                production = random.choice(
+                _production = random.choice(
                     self.productions[production_form_variable])
-                productions.append(production)
+                productions.append(_production)
         productions = list(
             filter(lambda e: e is not None, productions))
         if len(productions) > 1:
             raise RuntimeError(
                 f"Production is ambiguous for {variable}.")
 
-        production = None
+        production: list[str]
         if len(productions) == 1:
             production = productions[0]
 
@@ -304,14 +315,15 @@ class CountingContextFreeGrammar():
         """
         variable_type = self._get_variable_type(variable)
 
-        index = None
+        index: int
         constraint_form_variables = []
         if variable_type == VariableType.DEFAULT:
             constraint_form_variables.append(variable)
         elif variable_type == VariableType.INDEXED:
-            frag, _index = _split_variable(variable)
-            if _index is not None:
-                index = int(_index)
+            frag, _index = _split_token(variable)
+            assert type(_index) is int
+            index = _index
+
             for placeholder in self.placeholders:
                 constraint_form_variables.append(f"{frag}_{placeholder}")
         elif variable_type == VariableType.COUNTER:
@@ -327,7 +339,7 @@ class CountingContextFreeGrammar():
         assignment: Assignment,
         index: Optional[int],
         reverse: bool = False
-    ) -> int:
+    ) -> tuple[int, list[str]]:
 
         comparison = self.comparisons[variable]
 
@@ -355,9 +367,12 @@ class CountingContextFreeGrammar():
         unassigned_bound_variables = []
         bounds = [constraint_bound]
 
-        placeholder = None
+        subscript = None
         if index is not None:
-            _, placeholder = _split_variable(variable)
+            _, subscript = _split_token(variable)
+
+        assert type(subscript) is not int
+        placeholder = cast(Optional[str], subscript)
 
         for bound_variable, inclusive in bound_variables:
             indexed_bound_variable = (
@@ -382,7 +397,7 @@ class CountingContextFreeGrammar():
             if tighter_than(target_bound, bound):
                 pass
                 # bound = tighten(bound)
-        return bound
+        return bound, unassigned_bound_variables
 
     def _sample_variable(
         self,
@@ -405,8 +420,8 @@ class CountingContextFreeGrammar():
 
         constraint = self.constraints[variable]
 
-        lower_bound = self._get_variable_bound(variable, assignment, index)
-        upper_bound = self._get_variable_bound(
+        lower_bound, _ = self._get_variable_bound(variable, assignment, index)
+        upper_bound, _ = self._get_variable_bound(
             variable, assignment, index, reverse=True)
 
         # print(variable, lower_bound, upper_bound)
@@ -439,30 +454,29 @@ class CountingContextFreeGrammar():
             return TokenType.VARIABLE
 
     def _get_nonterminal_type(self, nonterminal: str) -> NonterminalType:
-        if '_' in nonterminal:
-            _, index = _split_nonterminal(nonterminal)
-            if index.isdigit():
-                return NonterminalType.INDEXED
-            elif index in self.constraints:
-                return NonterminalType.VAR_INDEXED
-            else:
-                return NonterminalType.UNINDEXED
-        else:
+        _, index = _split_token(nonterminal)
+        if index is None:
             return NonterminalType.DEFAULT
+        elif type(index) is int:
+            return NonterminalType.INDEXED
+        elif index in self.constraints:
+            return NonterminalType.VAR_INDEXED
+        else:
+            return NonterminalType.UNINDEXED
 
     def _get_variable_type(self, variable: str) -> VariableType:
         if variable[0] == '[' and variable[-1] == ']':
             return VariableType.COUNTER
-        elif '_' in variable:
-            _, index = _split_variable(variable)
-            if index.isdigit():
-                return VariableType.INDEXED
-            elif index in self.constraints:
-                return VariableType.VAR_INDEXED
-            else:
-                return VariableType.UNINDEXED
-        else:
+
+        _, index = _split_token(variable)
+        if index is None:
             return VariableType.DEFAULT
+        elif type(index) is int:
+            return VariableType.INDEXED
+        elif index in self.constraints:
+            return VariableType.VAR_INDEXED
+        else:
+            return VariableType.UNINDEXED
 
     def _parse_counter_operator(
         self,
@@ -470,18 +484,21 @@ class CountingContextFreeGrammar():
         assignment: Assignment
     ) -> int:
         if _RE_NUMBER_CBE.fullmatch(counter_operator):
-            value = parse_comparand(counter_operator)
+            parsed = parse_comparand(counter_operator)
+            assert type(parsed) is int
+            return parsed
         elif counter_operator in assignment:
-            value = assignment[counter_operator]
+            return assignment[counter_operator]
         elif counter_operator in self.constraints:
             value = self._sample_variable(counter_operator, assignment)
+            assert value is not None
+            return value
             assignment[counter_operator] = value
         elif counter_operator.isdigit():
-            value = int(counter_operator)
+            return int(counter_operator)
         else:
             raise ValueError(
                 f'Counter operater parse failed: {counter_operator}')
-        return value
 
     def _sample_terminal(
         self, terminal: str, assignment: Assignment
@@ -544,55 +561,38 @@ _RE_REGEX_TERMINAL = re.compile(r'(.+?)\{([\w\-\*\^,]*)\}')
 _RE_NUMBER_CBE = re.compile(r'(?:(-?\d+)\*)?(-?\d+)(?:\^(-?\d+))?')
 
 
-def _substitute_nonterminal(
-    nonterminal: str, placeholder: Optional[str], index: int
+def _substitute_token(
+    token: str, placeholder: Optional[str], index: int
 ) -> str:
     if placeholder is None:
-        return nonterminal
+        return token
 
     # XXX: Hard-coded
-    frag, token_placeholder = _split_nonterminal(nonterminal)
+    frag, token_placeholder = _split_token(token)
+
+    substituted: str
     if token_placeholder == placeholder:
-        return f"<{frag}_{index}>"
+        substituted = f"{frag}_{index}"
     elif token_placeholder == f"{placeholder}-1":
-        return f"<{frag}_{index-1}>"
-    return nonterminal
-
-
-def _substitute_variable(
-    variable: str, placeholder: Optional[str], index: int
-) -> str:
-    if placeholder is None:
-        return variable
-
-    # XXX: Hard-coded
-    frag, token_placeholder = _split_variable(variable)
-    if token_placeholder == placeholder:
-        return f"{frag}_{index}"
-    elif token_placeholder == f"{placeholder}-1":
-        return f"{frag}_{index-1}"
-    return variable
-
-
-def _split_token(token: str) -> tuple[str, Optional[str]]:
-    if token[0] == '<' and token[-1] == '>':
-        return _split_nonterminal(token)
+        substituted = f"{frag}_{index-1}"
     else:
-        return _split_variable(token)
+        return token
+
+    if token[0] == '<' and token[-1] == '>':
+        substituted = f'<{substituted}>'
+    return substituted
 
 
-def _split_variable(variable: str) -> tuple[str, Optional[str]]:
-    tmp = tuple(variable.rsplit('_', 1))
+def _split_token(token: str) -> tuple[str, Union[None, int, str]]:
+    if token[0] == '<' and token[-1] == '>':
+        token = token[1:-1]
+    tmp = tuple(token.rsplit('_', 1))
     if len(tmp) != 2:
-        return variable, None
-    return tuple(tmp)
-
-
-def _split_nonterminal(nonterminal: str) -> tuple[str, Optional[str]]:
-    tmp = tuple(nonterminal[1:-1].rsplit('_', 1))
-    if len(tmp) != 2:
-        return nonterminal, None
-    return tuple(tmp)
+        return token, None
+    elif tmp[1].isdigit():
+        return tmp[0], int(tmp[1])
+    else:
+        return (tmp[0], tmp[1])
 
 
 def _get_alphabet_from_charclass(regexes: list) -> set[str]:
@@ -610,7 +610,7 @@ def _get_alphabet_from_charclass(regexes: list) -> set[str]:
 
 def _parse_counter_oparands(regex_string: str) -> set[str]:
     counter_operands = set()
-    parsed = re.sre_parse.parse(regex_string)
+    parsed = re.sre_parse.parse(regex_string)  # type: ignore[attr-defined]
 
     if len(parsed) != 1:
         raise ValueError(f'Too many nodes: {regex_string}')
@@ -627,13 +627,41 @@ def _parse_counter_oparands(regex_string: str) -> set[str]:
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+    # logging.basicConfig(level=logging.DEBUG)
 
-    test_grammar = [
-        '<S>->[LR]{2,10^5}',
+    production_strings = [
+        '<S>->A <s> B <s> C <s> D',
     ]
-    test_const = []
+    constraint_strings = [
+        "0 <= A, B, C, D < 5 * 10 ^ 5",
+        "A <= B",
+        "B <= C",
+        "C <= D"
+    ]
 
-    ccfg = CountingContextFreeGrammar(test_grammar, test_const)
-    print(ccfg)
-    print(ccfg.generate())
+    ccfg = CountingContextFreeGrammar(production_strings, constraint_strings)
+    generator = TestCaseGenerator()
+
+    def true_distribution():
+        variables = [random.randrange(0, 5 * (10 ** 5)) for _ in range(4)]
+        return " ".join(map(str, sorted(variables)))
+
+    def print_avg(generate):
+        variable_lists = [[] for _ in range(4)]
+        for _ in range(10000):
+            variables = tuple(map(int, generate().split()))
+            for i in range(4):
+                variable_lists[i].append(variables[i])
+        for i in range(4):
+            variable_list = variable_lists[i]
+            print(sum(variable_list)/len(variable_list))
+        print()
+
+    def generator_distribution():
+        return generator(production_strings, constraint_strings)
+
+    print()
+    # print(ccfg)
+    print_avg(ccfg.generate)
+    print_avg(generator_distribution)
+    print_avg(true_distribution)

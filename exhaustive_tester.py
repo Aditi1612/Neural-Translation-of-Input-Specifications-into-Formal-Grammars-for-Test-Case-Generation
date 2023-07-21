@@ -2,7 +2,7 @@ import jsonlines
 import traceback
 from typing import (Optional, Callable, )
 
-from tqdm import tqdm
+from tqdm import tqdm  # type: ignore
 from counting_context_free_grammar import CountingContextFreeGrammar as CCFG
 
 from discriminator import discriminator as Discriminator
@@ -12,7 +12,7 @@ DEFAULT_MAX_ITER = 100
 
 
 def test_parser(
-    parse: Callable[[], bool], test_cases: list[str]
+    parse: Callable[[str], bool], test_cases: list[str]
 ) -> tuple[Optional[Exception], str]:
     try:
         for test_case in test_cases:
@@ -27,7 +27,7 @@ def test_parser(
 
 def test_generator(
     generate: Callable[[], str],
-    parse: Optional[Callable[[], bool]],
+    parse: Optional[Callable[[str], bool]],
     k: int = DEFAULT_MAX_ITER
 ) -> tuple[Optional[Exception], str]:
 

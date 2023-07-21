@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import (Optional, Callable, Union, NewType, cast, )
+from typing import (Optional, Callable, Union, NewType, TypeVar, cast, )
 import logging
 import random
 import re
@@ -8,22 +8,31 @@ from constraint import get_constraints_and_comparisons
 from constraint import parse_comparand
 from constraint import ExtInt
 from constraint import Variable
-from generator import test_case_generator as TestCaseGenerator
+# from generator import test_case_generator as TestCaseGenerator
 
-Assignment = dict[str, int]
 Nonterminal = NewType('Nonterminal', str)
-Token = Union[Nonterminal, Variable]
+Terminal = NewType('Terminal', str)
+Placeholder = NewType('Placeholder', str)
+
+Token = Union[Nonterminal, Variable, Terminal]
+Assignment = dict[Variable, int]
+Production = list[Token]
+Subscript = Union[None, int, Variable, Placeholder]
+
+TToken = TypeVar('TToken', bound=Token)
 
 MAX_ITER = 100
 TESTMODE_VARIABLE_UPPER_BOUND = 50
 TESTMODE_MAXIMUM_TERMINAL_LEN = 50
 
-SEP_TOKEN = '\t'
-NEW_LINE_TOKEN = '<n>'
-SPACE_TOKEN = '<s>'
-START_TOKEN = '<S>'
+START_TOKEN = Variable('<S>')
+
+NEW_LINE_TOKEN = Terminal('<n>')
+SPACE_TOKEN = Terminal('<s>')
+BLANK_TOKEN = Terminal('ε')
+
 DERIVATE_TOKEN = '->'
-BLANK_TOKEN = 'ε'
+# SEP_TOKEN = '\t'
 
 
 class TokenType(Enum):
@@ -65,31 +74,34 @@ class CountingContextFreeGrammar():
         self.testmode = testmode
 
         # Parse productions
-        self.productions: dict[str, list[list[str]]] = {}
+        self.productions: dict[Token, list[Production]] = {}
         for rule_string in production_strings:
             lhs, rhss = rule_string.split(DERIVATE_TOKEN)
-            self.productions[lhs] = []
+            variable = Variable(lhs)
+            self.productions[variable] = []
             for rhs in rhss.split('|'):
-                self.productions[lhs].append(rhs.split(' '))
+                tokenize = CountingContextFreeGrammar._tokenize
+                production = [tokenize(e) for e in rhs.split()]
+                self.productions[Variable(lhs)].append(production)
 
         # Parse constraints and comparisons
         self.constraints, self.comparisons = (
             get_constraints_and_comparisons(constraint_strings))
 
         # Initialize placeholders from constraints and comparisons
-        self.placeholders = set()
+        self.placeholders: set[Placeholder] = set()
         for token in self.productions:
-            subscript: Union[None, int, str]
+            subscript: Subscript
             _, subscript = _split_token(token)
             if type(subscript) is str:
-                self.placeholders.add(subscript)
+                self.placeholders.add(cast(Placeholder, subscript))
 
         # Remove constraints and comparisons of placeholders
         for placeholder in self.placeholders:
             if placeholder in self.constraints:
-                del self.constraints[placeholder]
+                del self.constraints[Variable(placeholder)]
             if placeholder in self.comparisons:
-                del self.comparisons[placeholder]
+                del self.comparisons[Variable(placeholder)]
 
     def generate(self) -> str:
         """Randomly generate a string of the counting context-free grammar.
@@ -100,8 +112,8 @@ class CountingContextFreeGrammar():
 
         string = ''
 
-        derivation_queue = [START_TOKEN]
-        assignment: dict[str, int] = {}
+        derivation_queue: list[Token] = [START_TOKEN]
+        assignment: Assignment = {}
         while derivation_queue:
 
             logging.debug(derivation_queue)
@@ -116,29 +128,34 @@ class CountingContextFreeGrammar():
             logging.debug(f'Token type: {token_type}')
 
             if token_type == TokenType.TERMINAL:
-                string += self._sample_terminal(token, assignment)
+                terminal = cast(Terminal, token)
+                string += self._sample_terminal(terminal, assignment)
 
             elif token_type == TokenType.NONTERMINAL:
-                production = self._derivate_nonterminal(token, assignment)
+                nonterminal = cast(Nonterminal, token)
+                production = (
+                    self._derivate_nonterminal(nonterminal, assignment))
 
             elif token_type == TokenType.VARIABLE:
-                variable_type = self._get_variable_type(token)
+                variable = cast(Variable, token)
+                variable_type = self._get_variable_type(variable)
 
                 constraint_form_variables, index = (
-                    self._to_constraint_form(token))
+                    self._to_constraint_form(variable))
 
-                _production, value = self._derivate_variable(token, assignment)
+                _production, value = self._derivate_variable(
+                    variable, assignment)
 
-                assignment_form_variable = token
+                assignment_form_variable = variable
+
                 if variable_type is VariableType.COUNTER:
-                    assignment_form_variable = token[1:-1]
-
-                if variable_type is VariableType.COUNTER:
+                    assignment_form_variable = Variable(variable[1:-1])
                     production = _production
+
                 elif _production is not None:
                     if value is not None:
                         raise RuntimeError(
-                            f"A variable {token} has both"
+                            f"A variable {variable} has both"
                             + " constraint and production.")
                     string += " ".join(_production)
 
@@ -152,10 +169,11 @@ class CountingContextFreeGrammar():
         return string
 
     def _substitute(
-        self, token: str,
-        subscript: Optional[str],
+        self,
+        token: TToken,
+        opt_subscript: Optional[Subscript],
         index: Optional[int]
-    ) -> str:
+    ) -> TToken:
         """Substitute ``subscript`` of ``token`` with ``index``.
 
         Substitute ``subscript`` of ``token`` with ``index``.
@@ -170,28 +188,34 @@ class CountingContextFreeGrammar():
             A ``index``-subscripted ``token`` if ``token`` has
             ``subscript``. Otherwise, return ``token``.
         """
-        if subscript is None or index is None:
+        if opt_subscript is None or index is None:
             return token
 
+        placeholder = cast(Placeholder, opt_subscript)
         token_type = self._get_token_type(token)
 
         if token_type == TokenType.NONTERMINAL:
-            nonterminal_type = self._get_nonterminal_type(token)
-            if nonterminal_type in (
+            nonterminal = Nonterminal(token)
+            nonterminal_type = self._get_nonterminal_type(nonterminal)
+            if nonterminal_type not in (
                     {NonterminalType.UNINDEXED, NonterminalType.VAR_INDEXED}):
-                return _substitute_token(token, subscript, index)
+                return token
 
         elif token_type == TokenType.VARIABLE:
-            variable_type = self._get_variable_type(token)
-            if variable_type in (
+            variable = cast(Variable, token)
+            variable_type = self._get_variable_type(variable)
+            if variable_type not in (
                     {VariableType.UNINDEXED, VariableType.VAR_INDEXED}):
-                return _substitute_token(token, subscript, index)
+                return token
 
-        return token
+        return _substitute_token(token, placeholder, index)
 
     def _substitute_production(
-        self, production: list[str], placeholder: str, index: int
-    ) -> list[str]:
+        self,
+        production: Production,
+        placeholder: Placeholder,
+        index: int
+    ) -> Production:
 
         assert placeholder in self.placeholders
 
@@ -201,51 +225,51 @@ class CountingContextFreeGrammar():
         ]
 
     def _derivate_nonterminal(
-        self, nonterminal: str, assignment: Assignment
-    ) -> list[str]:
+        self, nonterminal: Nonterminal, assignment: Assignment
+    ) -> Production:
         nonterminal_type = self._get_nonterminal_type(nonterminal)
 
         if nonterminal_type == NonterminalType.DEFAULT:
-            return random.choice(list(self.productions[nonterminal]))
+            return random.choice(self.productions[nonterminal])
 
         elif nonterminal_type == NonterminalType.UNINDEXED:
             raise ValueError(
                 f"Invalid derivation of nonterminal {nonterminal}")
 
         elif nonterminal_type == NonterminalType.VAR_INDEXED:
-            _, variable = _split_token(nonterminal)
-            assert type(variable) is str
+            _, subscript = _split_token(nonterminal)
+            assert type(subscript) is str
+            variable = cast(Variable, subscript)
 
             return [self._substitute(
                 nonterminal, variable, assignment[variable])]
 
         elif nonterminal_type == NonterminalType.INDEXED:
-            if nonterminal in self.productions:  # E.g., <T_0> -> <L_N>
+            if nonterminal in self.productions:  # E.g., <T_0> -> ...
                 return random.choice(list(self.productions[nonterminal]))
 
             frag, opt_index = _split_token(nonterminal)
+            assert type(opt_index) is int
 
-            assert type(opt_index) is str
-            assert opt_index.isdigit()
-
-            index = int(opt_index)
-
-            placeholder = None
+            index = cast(int, opt_index)
+            opt_placeholder = None
             production = None
-            for placeholder in self.placeholders:
-                unindexed = f"<{frag}_{placeholder}>"
+            for _placeholder in self.placeholders:
+                unindexed = Nonterminal(f"<{frag}_{_placeholder}>")
                 if unindexed in self.productions:
                     production = random.choice(self.productions[unindexed])
+                    opt_placeholder = _placeholder
                     break
 
-            if production is None:
+            if production is None or opt_placeholder is None:
                 raise ValueError(f"Cannot find production of {nonterminal}")
 
+            placeholder = cast(Placeholder, opt_placeholder)
             return self._substitute_production(production, placeholder, index)
 
     def _derivate_variable(
-        self, variable: str, assignment: Assignment
-    ) -> tuple[Optional[list[str]], Optional[int]]:
+        self, variable: Variable, assignment: Assignment
+    ) -> tuple[Optional[Production], Optional[int]]:
         """Randomly select production of variable and generate value
 
         Args:
@@ -295,13 +319,16 @@ class CountingContextFreeGrammar():
             raise RuntimeError(
                 f"Production is ambiguous for {variable}.")
 
-        production: list[str]
+        production = None
         if len(productions) == 1:
             production = productions[0]
 
         return production, value
 
-    def _to_constraint_form(self, variable: str) -> tuple[list[str], int]:
+    def _to_constraint_form(
+        self,
+        variable: Variable
+    ) -> tuple[list[Variable], Optional[int]]:
         """ Format variable to find the variable in constraints.
 
         Args:
@@ -315,7 +342,7 @@ class CountingContextFreeGrammar():
         """
         variable_type = self._get_variable_type(variable)
 
-        index: int
+        index = None
         constraint_form_variables = []
         if variable_type == VariableType.DEFAULT:
             constraint_form_variables.append(variable)
@@ -325,9 +352,11 @@ class CountingContextFreeGrammar():
             index = _index
 
             for placeholder in self.placeholders:
-                constraint_form_variables.append(f"{frag}_{placeholder}")
+                variable = Variable(f"{frag}_{placeholder}")
+                constraint_form_variables.append(variable)
         elif variable_type == VariableType.COUNTER:
-            constraint_form_variables = [variable[1:-1]]
+            variable = Variable(variable[1:-1])
+            constraint_form_variables = [variable]
         else:
             raise ValueError(f"Invalid variable: {variable}")
 
@@ -335,18 +364,18 @@ class CountingContextFreeGrammar():
 
     def _get_variable_bound(
         self,
-        variable: str,
+        variable: Variable,
         assignment: Assignment,
         index: Optional[int],
         reverse: bool = False
-    ) -> tuple[int, list[str]]:
+    ) -> tuple[int, list[Variable]]:
 
         comparison = self.comparisons[variable]
 
-        constraint_bound = None
-        bound_variables = None
-        tightest = None
-        get_target_bound: Callable[[str], ExtInt]
+        constraint_bound: ExtInt
+        bound_variables: set[tuple[Variable, bool]]
+        tightest: Callable[[list[ExtInt]], ExtInt]
+        get_target_bound: Callable[[Variable], ExtInt]
         tighter_than: Callable[[ExtInt, ExtInt], bool]
         tighten: Callable[[ExtInt], ExtInt]
         if not reverse:
@@ -372,11 +401,11 @@ class CountingContextFreeGrammar():
             _, subscript = _split_token(variable)
 
         assert type(subscript) is not int
-        placeholder = cast(Optional[str], subscript)
+        opt_placeholder = cast(Optional[Placeholder], subscript)
 
         for bound_variable, inclusive in bound_variables:
             indexed_bound_variable = (
-                self._substitute(bound_variable, placeholder, index))
+                self._substitute(bound_variable, opt_placeholder, index))
 
             if indexed_bound_variable in assignment:
                 bound = assignment[indexed_bound_variable]
@@ -386,7 +415,9 @@ class CountingContextFreeGrammar():
             else:
                 unassigned_bound_variables.append(bound_variable)
 
-        bound = tightest(bounds)
+        _bound = tightest(bounds)
+        assert type(_bound) is int
+        bound = cast(int, _bound)
 
         # If there exists unassigned variables whose bounds are
         # intersect with the current variable, we have to make a room
@@ -401,7 +432,7 @@ class CountingContextFreeGrammar():
 
     def _sample_variable(
         self,
-        variable: str,
+        variable: Variable,
         assignment: Assignment,
         index: Optional[int] = None
     ) -> Optional[int]:
@@ -443,7 +474,19 @@ class CountingContextFreeGrammar():
         raise RuntimeError(
             f"Fail to sample variable: {variable}\n Assignment: {assignment}")
 
+    @staticmethod
+    def _tokenize(string: str) -> Token:
+        if string in {NEW_LINE_TOKEN, SPACE_TOKEN, BLANK_TOKEN}:
+            return Terminal(string)
+        elif _RE_REGEX_TERMINAL.fullmatch(string):
+            return Terminal(string)
+        elif string[0] == '<' and string[-1] == '>':
+            return Nonterminal(string)
+        else:
+            return Variable(string)
+
     def _get_token_type(self, token: str) -> TokenType:
+        # raise DeprecationWarning("Now use typing instead")
         if token in {NEW_LINE_TOKEN, SPACE_TOKEN, BLANK_TOKEN}:
             return TokenType.TERMINAL
         elif _RE_REGEX_TERMINAL.fullmatch(token):
@@ -453,7 +496,10 @@ class CountingContextFreeGrammar():
         else:
             return TokenType.VARIABLE
 
-    def _get_nonterminal_type(self, nonterminal: str) -> NonterminalType:
+    def _get_nonterminal_type(
+        self,
+        nonterminal: Nonterminal
+    ) -> NonterminalType:
         _, index = _split_token(nonterminal)
         if index is None:
             return NonterminalType.DEFAULT
@@ -464,7 +510,7 @@ class CountingContextFreeGrammar():
         else:
             return NonterminalType.UNINDEXED
 
-    def _get_variable_type(self, variable: str) -> VariableType:
+    def _get_variable_type(self, variable: Variable) -> VariableType:
         if variable[0] == '[' and variable[-1] == ']':
             return VariableType.COUNTER
 
@@ -488,9 +534,10 @@ class CountingContextFreeGrammar():
             assert type(parsed) is int
             return parsed
         elif counter_operator in assignment:
-            return assignment[counter_operator]
+            return assignment[Variable(counter_operator)]
         elif counter_operator in self.constraints:
-            value = self._sample_variable(counter_operator, assignment)
+            value = self._sample_variable(
+                Variable(counter_operator), assignment)
             assert value is not None
             return value
             assignment[counter_operator] = value
@@ -501,7 +548,7 @@ class CountingContextFreeGrammar():
                 f'Counter operater parse failed: {counter_operator}')
 
     def _sample_terminal(
-        self, terminal: str, assignment: Assignment
+        self, terminal: Terminal, assignment: Assignment
     ) -> str:
         if terminal == NEW_LINE_TOKEN:
             return '\n'
@@ -562,8 +609,10 @@ _RE_NUMBER_CBE = re.compile(r'(?:(-?\d+)\*)?(-?\d+)(?:\^(-?\d+))?')
 
 
 def _substitute_token(
-    token: str, placeholder: Optional[str], index: int
-) -> str:
+    token: TToken,
+    placeholder: Optional[Placeholder],
+    index: int
+) -> TToken:
     if placeholder is None:
         return token
 
@@ -580,19 +629,22 @@ def _substitute_token(
 
     if token[0] == '<' and token[-1] == '>':
         substituted = f'<{substituted}>'
-    return substituted
+    return cast(TToken, substituted)
 
 
-def _split_token(token: str) -> tuple[str, Union[None, int, str]]:
+def _split_token(token: TToken) -> tuple[str, Subscript]:
+
+    tmp_string = str(token)
     if token[0] == '<' and token[-1] == '>':
-        token = token[1:-1]
-    tmp = tuple(token.rsplit('_', 1))
+        tmp_string = token[1:-1]
+
+    tmp = tuple(tmp_string.rsplit('_', 1))
     if len(tmp) != 2:
         return token, None
     elif tmp[1].isdigit():
         return tmp[0], int(tmp[1])
     else:
-        return (tmp[0], tmp[1])
+        return (tmp[0], Variable(tmp[1]))
 
 
 def _get_alphabet_from_charclass(regexes: list) -> set[str]:
@@ -640,7 +692,7 @@ if __name__ == '__main__':
     ]
 
     ccfg = CountingContextFreeGrammar(production_strings, constraint_strings)
-    generator = TestCaseGenerator()
+    # generator = TestCaseGenerator()
 
     def true_distribution():
         variables = [random.randrange(0, 5 * (10 ** 5)) for _ in range(4)]
@@ -657,11 +709,11 @@ if __name__ == '__main__':
             print(sum(variable_list)/len(variable_list))
         print()
 
-    def generator_distribution():
-        return generator(production_strings, constraint_strings)
+    # def generator_distribution():
+        # return generator(production_strings, constraint_strings)
 
     print()
     # print(ccfg)
     print_avg(ccfg.generate)
-    print_avg(generator_distribution)
+    # print_avg(generator_distribution)
     print_avg(true_distribution)

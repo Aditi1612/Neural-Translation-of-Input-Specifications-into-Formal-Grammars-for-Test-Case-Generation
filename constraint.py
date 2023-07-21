@@ -2,19 +2,19 @@ import re
 import logging
 import itertools
 import math
-from typing import (Union, TypeVar, Optional, )
+from typing import (Union, NewType, Optional, Callable, cast, )
 
 
 ExtInt = Union[int, float]
-Comp = TypeVar('Comp', bound='Comparison')
+Variable = NewType('Variable', str)
 
 
 class Constraint():
 
-    def __init__(self):
-        self.lower_bound = -math.inf
-        self.upper_bound = math.inf
-        self.inequal = set()
+    def __init__(self) -> None:
+        self.lower_bound: ExtInt = -math.inf
+        self.upper_bound: ExtInt = math.inf
+        self.inequal: set[ExtInt] = set()
 
     def update_upper_bound(
         self, upper_bound: ExtInt, inclusive: bool
@@ -54,16 +54,16 @@ class Comparison():
         self.upper_bounds = set()
         self.inequal = set()
 
-    def add_lower_bound(self, lower_bound: str, inclusive: bool) -> None:
+    def add_lower_bound(self, lower_bound: Variable, inclusive: bool) -> None:
         self.lower_bounds.add((lower_bound, inclusive))
 
-    def add_upper_bound(self, upper_bound: str, inclusive: bool) -> None:
+    def add_upper_bound(self, upper_bound: Variable, inclusive: bool) -> None:
         self.upper_bounds.add((upper_bound, inclusive))
 
-    def add_inequal(self, inequal: str) -> None:
+    def add_inequal(self, inequal: Variable) -> None:
         self.inequal.add(inequal)
 
-    def update(self, comparator: int, target: str) -> None:
+    def update(self, comparator: int, target: Variable) -> None:
 
         # update compare dict
         inclusive = (abs(comparator) == 1)
@@ -83,11 +83,11 @@ class Comparison():
         ])
 
 
-def parse_comparand(text: str) -> ExtInt:
+def parse_comparand(text: str) -> Union[Variable, int]:
     number_cbe_match = _RE_NUMBER_CBE.fullmatch(text)
 
     if not number_cbe_match:
-        return text
+        return Variable(text)
 
     coefficient, base, exponent = number_cbe_match.group(1, 2, 3)
 
@@ -101,8 +101,8 @@ def parse_comparand(text: str) -> ExtInt:
 
 def _update_constraints_and_comparisons(
     text: str,
-    constraints: dict[str, Constraint],
-    comparisons: dict[str, Comparison]
+    constraints: dict[Variable, Constraint],
+    comparisons: dict[Variable, Comparison]
 ) -> None:
 
     text = text.replace(" ", "")
@@ -129,13 +129,18 @@ def _update_constraints_and_comparisons(
 
                 if not is_left_number and not is_right_number:
 
-                    comparisons.setdefault(left, Comparison())
-                    comparisons.setdefault(right, Comparison())
+                    left_variable = cast(Variable, left)
+                    right_variable = cast(Variable, right)
 
-                    if left in comparisons:
-                        comparisons[left].update(comparator, right)
-                    if right in comparisons:
-                        comparisons[right].update(comparator * -1, left)
+                    comparisons.setdefault(left_variable, Comparison())
+                    comparisons.setdefault(right_variable, Comparison())
+
+                    if left_variable in comparisons:
+                        comparison = comparisons[left_variable]
+                        comparison.update(comparator, right_variable)
+                    if right_variable in comparisons:
+                        comparison = comparisons[right_variable]
+                        comparison.update(-comparator, left_variable)
 
                 elif is_left_number != is_right_number:
                     # update constraint dict
@@ -144,20 +149,23 @@ def _update_constraints_and_comparisons(
                         left, right = right, left
                         _comparator *= -1
 
-                    constraints.setdefault(left, Constraint())
-                    constraints[left].update(_comparator, right)
+                    variable = cast(Variable, left)
+                    number = cast(int, right)
+
+                    constraints.setdefault(variable, Constraint())
+                    constraints[variable].update(_comparator, number)
 
                 else:  # E.g., 1 < 3
                     continue
 
 
 def _to_transitive_bound(
-    variable: str,
-    constraints: dict[str, Constraint],
-    comparisons: dict[str, Comparison],
+    variable: Variable,
+    constraints: dict[Variable, Constraint],
+    comparisons: dict[Variable, Comparison],
     reverse: bool = False,
-    visited: Optional[set[str]] = None
-) -> tuple[int, list[tuple[str, bool]]]:
+    visited: Optional[set[Variable]] = None
+) -> tuple[ExtInt, list[tuple[Variable, bool]]]:
     """Make ``comparisons`` be transitive closure and update ``constraints``
 
     Args:
@@ -182,9 +190,9 @@ def _to_transitive_bound(
             return constraint.upper_bound, comparison.upper_bounds
 
     bound = None
-    update_bound = None
+    update_bound: Callable[[ExtInt, bool], None]
     bound_variables = None
-    add_bound_variable = None
+    add_bound_variable: Callable[[Variable, bool], None]
 
     if not reverse:
         bound = constraint.lower_bound
@@ -213,9 +221,9 @@ def _to_transitive_bound(
 
 def get_constraints_and_comparisons(
     constraint_strings: list[str]
-) -> tuple[dict[str, Constraint], dict[str, Comparison]]:
-    constraints = {}
-    comparisons = {}
+) -> tuple[dict[Variable, Constraint], dict[Variable, Comparison]]:
+    constraints: dict[Variable, Constraint] = {}
+    comparisons: dict[Variable, Comparison] = {}
     for constraint_string in constraint_strings:
         _update_constraints_and_comparisons(
             constraint_string, constraints, comparisons)
@@ -245,7 +253,7 @@ def _parse_comparator(text: str) -> int:
     return {"<": -2, "<=": -1, "!=": 0, ">=": 1, ">": 2}[text]
 
 
-def _parse_comparands(text: str) -> list[ExtInt]:
+def _parse_comparands(text: str) -> list[Union[int, Variable]]:
     pieces = []
     # FIXME: Currently, we do not consider minimum or maximum.
     match = _RE_MIN_OR_MAX.fullmatch(text)

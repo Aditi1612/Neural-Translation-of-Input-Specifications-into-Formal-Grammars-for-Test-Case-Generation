@@ -425,6 +425,8 @@ class CountingContextFreeGrammar():
                 unassigned_bound_variables.append(bound_variable)
 
         _bound = tightest(bounds)
+        if _bound in [math.inf, -math.inf]:
+            raise RuntimeError(f"Unbounded variable: {variable}")
         assert type(_bound) is int
         bound = cast(int, _bound)
 

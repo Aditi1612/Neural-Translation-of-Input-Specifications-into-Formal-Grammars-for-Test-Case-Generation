@@ -1,7 +1,7 @@
-*.txt
 *.ipynb
 
 /test_results
 /.vscode
 /__pycache__
 .venv
+!.requirements.txt

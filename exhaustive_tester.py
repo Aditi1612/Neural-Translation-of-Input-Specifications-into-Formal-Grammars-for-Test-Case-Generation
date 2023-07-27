@@ -4,6 +4,7 @@ from typing import (Optional, Callable, )
 
 from tqdm import tqdm  # type: ignore
 from counting_context_free_grammar import CountingContextFreeGrammar as CCFG
+from counting_context_free_grammar import InvalidGrammarError
 
 from discriminator import discriminator as Discriminator
 from generator import test_case_generator as TestCaseGenerator
@@ -61,6 +62,7 @@ def print_error(name: str, spec: dict, detail: str) -> None:
 if __name__ == "__main__":
     total = 0
 
+    grammar_errors = []
     generator_errors = []
     parser_errors = []
     ccfg_errors = []
@@ -111,7 +113,9 @@ if __name__ == "__main__":
             # Test CCFG
             e, detail = test_generator(
                 generate_ccfg, None if parser_failed else parse)
-            if e is not None:
+            if isinstance(e, InvalidGrammarError):
+                grammar_errors.append((problem_idx, str(e)))
+            elif e is not None:
                 ccfg_errors.append(problem_idx)
                 print_error("CCFG", specification, detail)
 
@@ -130,3 +134,6 @@ if __name__ == "__main__":
     print(f"Generator only error {generator_only_error}")
     print(f"CCFG only error {ccfg_only_error}")
     print(f"Both error {both_error}")
+    print("Grammar error:")
+    for _, msg in grammar_errors:
+        print(msg)

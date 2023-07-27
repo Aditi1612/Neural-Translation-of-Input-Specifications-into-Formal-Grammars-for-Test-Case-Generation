@@ -3,12 +3,14 @@ from typing import (Optional, Callable, Union, NewType, TypeVar, cast, )
 import logging
 import random
 import re
+import sys
+
+import jsonlines
 
 from constraint import get_constraints_and_comparisons
 from constraint import parse_comparand
 from constraint import ExtInt
 from constraint import Variable
-# from generator import test_case_generator as TestCaseGenerator
 
 Nonterminal = NewType('Nonterminal', str)
 Terminal = NewType('Terminal', str)
@@ -33,6 +35,18 @@ BLANK_TOKEN = Terminal('ε')
 
 DERIVATE_TOKEN = '->'
 # SEP_TOKEN = '\t'
+
+
+class InvalidGrammarError(Exception):
+    pass
+
+
+class InvalidConstraintError(InvalidGrammarError):
+    pass
+
+
+class InvalidProductionError(InvalidGrammarError):
+    pass
 
 
 class TokenType(Enum):
@@ -116,9 +130,9 @@ class CountingContextFreeGrammar():
         assignment: Assignment = {}
         while derivation_queue:
 
-            logging.debug(derivation_queue)
-            logging.debug(assignment)
-            logging.debug(f'\n{string}')
+            logging.debug(f'derivation_queue: {derivation_queue}')
+            logging.debug(f'assignment:\n{assignment}')
+            logging.debug(f'string:\n{string}')
 
             token = derivation_queue.pop()
             production = None
@@ -140,23 +154,21 @@ class CountingContextFreeGrammar():
                 variable = cast(Variable, token)
                 variable_type = self._get_variable_type(variable)
 
+                _production, value = (
+                    self._derivate_variable(variable, assignment))
+
+                assignment_form_variable = variable
                 constraint_form_variables, index = (
                     self._to_constraint_form(variable))
 
-                _production, value = self._derivate_variable(
-                    variable, assignment)
-
-                assignment_form_variable = variable
+                if _production is None and value is None:
+                    raise InvalidConstraintError(
+                        f"{variable} has no constraint")
 
                 if variable_type is VariableType.COUNTER:
                     assignment_form_variable = Variable(variable[1:-1])
                     production = _production
-
                 elif _production is not None:
-                    if value is not None:
-                        raise RuntimeError(
-                            f"A variable {variable} has both"
-                            + " constraint and production.")
                     string += " ".join(_production)
 
                 if value is not None:
@@ -233,6 +245,11 @@ class CountingContextFreeGrammar():
             return random.choice(self.productions[nonterminal])
 
         elif nonterminal_type == NonterminalType.UNINDEXED:
+            _, subscript = _split_token(nonterminal)
+            if subscript == "-1":
+                raise InvalidProductionError(
+                    f"Invalid indexed nonterminal {nonterminal}")
+            # TODO: Some derivation of <T_N-1> ..
             raise ValueError(
                 f"Invalid derivation of nonterminal {nonterminal}")
 
@@ -245,13 +262,19 @@ class CountingContextFreeGrammar():
                 nonterminal, variable, assignment[variable])]
 
         elif nonterminal_type == NonterminalType.INDEXED:
-            if nonterminal in self.productions:  # E.g., <T_0> -> ...
-                return random.choice(list(self.productions[nonterminal]))
 
             frag, opt_index = _split_token(nonterminal)
             assert type(opt_index) is int
-
             index = cast(int, opt_index)
+
+            if nonterminal in self.productions:  # E.g., <T_0> -> ...
+                production = random.choice(list(self.productions[nonterminal]))
+
+                # XXX: Implicit indexing
+                for placeholder in self.placeholders:
+                    return self._substitute_production(
+                        production, placeholder, index)
+
             opt_placeholder = None
             production = None
             for _placeholder in self.placeholders:
@@ -264,13 +287,16 @@ class CountingContextFreeGrammar():
             if production is None or opt_placeholder is None:
                 raise ValueError(f"Cannot find production of {nonterminal}")
 
+            assert opt_placeholder is not None
             placeholder = cast(Placeholder, opt_placeholder)
+
             return self._substitute_production(production, placeholder, index)
 
     def _derivate_variable(
         self, variable: Variable, assignment: Assignment
     ) -> tuple[Optional[Production], Optional[int]]:
-        """Randomly select production of variable and generate value
+        """Randomly select a production of variable and generate a value of the
+        variable
 
         Args:
             variable: A variable
@@ -299,7 +325,7 @@ class CountingContextFreeGrammar():
             values.append(value)
         values = list(filter(lambda e: e is not None, values))
         if len(values) > 1:
-            raise RuntimeError(
+            raise InvalidConstraintError(
                 f"Constraint is ambiguous for {variable}.")
 
         value = None
@@ -329,7 +355,7 @@ class CountingContextFreeGrammar():
         self,
         variable: Variable
     ) -> tuple[list[Variable], Optional[int]]:
-        """ Format variable to find the variable in constraints.
+        """ Format a variable to find the variable in constraints.
 
         Args:
             variable: A variable
@@ -358,6 +384,8 @@ class CountingContextFreeGrammar():
             variable = Variable(variable[1:-1])
             constraint_form_variables = [variable]
         else:
+            if variable[-1] == ">":
+                raise InvalidProductionError(f"Nonterminal Typo: {variable}")
             raise ValueError(f"Invalid variable: {variable}")
 
         return constraint_form_variables, index
@@ -419,16 +447,16 @@ class CountingContextFreeGrammar():
         assert type(_bound) is int
         bound = cast(int, _bound)
 
-        # If there exists unassigned variables whose bounds are
-        # intersect with the current variable, we have to make a room
-        # for them.
-        # TODO
+        significant_bound_variables = []
+
+        # If there exists unassigned variables whose bounds are intersect with
+        # the current variable, we have to consider them.
         for bound_variable in unassigned_bound_variables:
             target_bound = get_target_bound(bound_variable)
             if tighter_than(target_bound, bound):
-                pass
-                # bound = tighten(bound)
-        return bound, unassigned_bound_variables
+                significant_bound_variables.append(bound_variable)
+
+        return bound, significant_bound_variables
 
     def _sample_variable(
         self,
@@ -436,7 +464,7 @@ class CountingContextFreeGrammar():
         assignment: Assignment,
         index: Optional[int] = None
     ) -> Optional[int]:
-        """Sample a value of variables whose form is in constraints
+        """Sample a value of a constraint-form variable
 
         Args:
             variable: A variable occurs in constraints.,
@@ -451,11 +479,10 @@ class CountingContextFreeGrammar():
 
         constraint = self.constraints[variable]
 
-        lower_bound, _ = self._get_variable_bound(variable, assignment, index)
-        upper_bound, _ = self._get_variable_bound(
+        lower_bound, lower_variables = self._get_variable_bound(
+            variable, assignment, index)
+        upper_bound, upper_variables = self._get_variable_bound(
             variable, assignment, index, reverse=True)
-
-        # print(variable, lower_bound, upper_bound)
 
         if self.testmode:
             upper_bound = min(upper_bound, TESTMODE_VARIABLE_UPPER_BOUND)
@@ -465,9 +492,22 @@ class CountingContextFreeGrammar():
         comparison_inequal = {assignment.get(e) for e in comparison.inequal}
         inequal = constraint.inequal | comparison_inequal
 
+        # At this point, we knows follows:
+        # * the target variable is in a bound [`lower_bound`, `upper_bound`],
+        # * the target variable is greater than `lower_variables`,
+        # * the target variable is smaller than `upper_variables`, and
+        # * `lower_` and `upper_variables` "may be" in the bound.
+        # Heuristically, we choose the `k+1`-th one of `n` sampled values.
+
+        n = len(lower_variables) + len(upper_variables) + 1
+        k = len(lower_variables)
+
         # XXX: It depends on max iteration
         for _ in range(MAX_ITER):
-            value = random.randint(lower_bound, upper_bound)
+            values = [
+                random.randint(lower_bound, upper_bound) for _ in range(n)
+            ]
+            value = sorted(values)[k]
             if value not in inequal:
                 return value
 
@@ -493,8 +533,16 @@ class CountingContextFreeGrammar():
             return TokenType.TERMINAL
         elif token[0] == '<' and token[-1] == '>':
             return TokenType.NONTERMINAL
-        else:
+        elif token[0] == '[' and token[-1] == ']':
             return TokenType.VARIABLE
+        elif token in self.constraints:
+            return TokenType.VARIABLE
+        elif token in self.productions:
+            return TokenType.VARIABLE
+        elif '_' in token:
+            return TokenType.VARIABLE
+        else:
+            return TokenType.TERMINAL
 
     def _get_nonterminal_type(
         self,
@@ -539,8 +587,8 @@ class CountingContextFreeGrammar():
             value = self._sample_variable(
                 Variable(counter_operator), assignment)
             assert value is not None
-            return value
             assignment[counter_operator] = value
+            return value
         elif counter_operator.isdigit():
             return int(counter_operator)
         else:
@@ -679,41 +727,29 @@ def _parse_counter_oparands(regex_string: str) -> set[str]:
 
 
 if __name__ == '__main__':
-    # logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.DEBUG)
 
-    production_strings = [
-        '<S>->A <s> B <s> C <s> D',
-    ]
-    constraint_strings = [
-        "0 <= A, B, C, D < 5 * 10 ^ 5",
-        "A <= B",
-        "B <= C",
-        "C <= D"
-    ]
+    if len(sys.argv) < 1:
+        raise ValueError("Invalid arguments")
 
-    ccfg = CountingContextFreeGrammar(production_strings, constraint_strings)
-    # generator = TestCaseGenerator()
+    production_strings = None
+    constraint_strings = None
 
-    def true_distribution():
-        variables = [random.randrange(0, 5 * (10 ** 5)) for _ in range(4)]
-        return " ".join(map(str, sorted(variables)))
+    with jsonlines.open('data/train_grammer.jsonl') as problems:
+        for problem in problems:
+            problem_idx = problem['name']['index']
 
-    def print_avg(generate):
-        variable_lists = [[] for _ in range(4)]
-        for _ in range(10000):
-            variables = tuple(map(int, generate().split()))
-            for i in range(4):
-                variable_lists[i].append(variables[i])
-        for i in range(4):
-            variable_list = variable_lists[i]
-            print(sum(variable_list)/len(variable_list))
-        print()
+            if problem_idx != int(sys.argv[1]):
+                continue
 
-    # def generator_distribution():
-        # return generator(production_strings, constraint_strings)
+            specification = problem['spec']
+            production_strings = specification['grammer']
+            constraint_strings = specification['constraints']
+            break
 
-    print()
-    # print(ccfg)
-    print_avg(ccfg.generate)
-    # print_avg(generator_distribution)
-    print_avg(true_distribution)
+    print(production_strings)
+    print(constraint_strings)
+    ccfg = CountingContextFreeGrammar(
+        production_strings, constraint_strings, testmode=True)
+    print(ccfg)
+    print(ccfg.generate())

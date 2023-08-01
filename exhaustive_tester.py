@@ -3,11 +3,11 @@ import traceback
 from typing import (Optional, Callable, )
 
 from tqdm import tqdm  # type: ignore
-from counting_context_free_grammar import CountingContextFreeGrammar as CCFG
-from counting_context_free_grammar import InvalidGrammarError
 
+from counting_context_free_grammar import CountingContextFreeGrammar as CCFG
 from discriminator import discriminator as Discriminator
 from generator import test_case_generator as TestCaseGenerator
+from invalid_grammar_error import InvalidGrammarError
 
 DEFAULT_MAX_ITER = 100
 
@@ -135,5 +135,5 @@ if __name__ == "__main__":
     print(f"CCFG only error {ccfg_only_error}")
     print(f"Both error {both_error}")
     print("Grammar error:")
-    for _, msg in grammar_errors:
-        print(msg)
+    for idx, msg in grammar_errors:
+        print(idx, msg)

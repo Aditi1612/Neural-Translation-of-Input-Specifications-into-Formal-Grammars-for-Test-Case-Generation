@@ -12,6 +12,9 @@ from constraint import parse_comparand
 from constraint import ExtInt
 from constraint import Variable
 
+from invalid_grammar_error import InvalidConstraintError
+from invalid_grammar_error import InvalidProductionError
+
 Nonterminal = NewType('Nonterminal', str)
 Terminal = NewType('Terminal', str)
 Placeholder = NewType('Placeholder', str)
@@ -34,18 +37,6 @@ BLANK_TOKEN = Terminal('ε')
 
 DERIVATE_TOKEN = '->'
 # SEP_TOKEN = '\t'
-
-
-class InvalidGrammarError(Exception):
-    pass
-
-
-class InvalidConstraintError(InvalidGrammarError):
-    pass
-
-
-class InvalidProductionError(InvalidGrammarError):
-    pass
 
 
 class TokenType(Enum):
@@ -82,7 +73,11 @@ class CountingContextFreeGrammar():
         # Parse productions
         self.productions: dict[Token, list[Production]] = {}
         for rule_string in production_strings:
-            lhs, rhss = rule_string.split(DERIVATE_TOKEN)
+            try:
+                lhs, rhss = rule_string.split(DERIVATE_TOKEN)
+            except ValueError:
+                raise InvalidProductionError("Improper production form")
+
             variable = Variable(lhs)
             self.productions[variable] = []
             for rhs in rhss.split('|'):
@@ -233,22 +228,25 @@ class CountingContextFreeGrammar():
         if opt_subscript is None:
             return random.choice(self.productions[nonterminal])
 
+        # XXX: Ad Hoc Grammar Errors
+        if opt_subscript == "-1":
+            raise InvalidProductionError(
+                f"Invalid indexed nonterminal {nonterminal}")
+        if opt_subscript[-1] == ">":
+            raise InvalidProductionError(
+                f"Invalid indexed nonterminal {nonterminal}")
+
         subscript = cast(str, opt_subscript)
         subscript_type = self._get_subscript_type(subscript)
 
-        if subscript_type == SubscriptType.PLACEHOLDER:
-            if subscript == "-1":
-                raise InvalidProductionError(
-                    f"Invalid indexed nonterminal {nonterminal}")
-            # TODO: Some derivation of <T_N-1> ..
-            raise ValueError(
-                f"Invalid derivation of nonterminal {nonterminal}")
-
-        elif subscript_type == SubscriptType.VARIABLE:
+        if subscript_type == SubscriptType.VARIABLE:
             variable = cast(Variable, subscript)
             return [self._substitute(
                 nonterminal, variable, assignment[variable])]
-
+        elif subscript_type == SubscriptType.VARIABLE_DECREASING:
+            variable = cast(Variable, subscript[:-2])
+            return [self._substitute(
+                nonterminal, variable, assignment[variable])]
         elif subscript_type == SubscriptType.CONSTANT:
             index = int(subscript)
 
@@ -277,8 +275,7 @@ class CountingContextFreeGrammar():
 
             return self._substitute_production(production, placeholder, index)
 
-        else:
-            raise ValueError(f"Invalid nonterminal: {nonterminal}")
+        raise ValueError(f"Invalid nonterminal: {nonterminal}")
 
     def _derivate_variable(
         self, variable: Variable, assignment: Assignment
@@ -376,8 +373,6 @@ class CountingContextFreeGrammar():
                 variable = Variable(f"{frag}_{placeholder}")
                 constraint_form_variables.append(variable)
         else:
-            if variable[-1] == ">":
-                raise InvalidProductionError(f"Nonterminal Typo: {variable}")
             raise ValueError(f"Invalid variable: {variable}")
 
         return constraint_form_variables, index
@@ -398,6 +393,7 @@ class CountingContextFreeGrammar():
         get_target_bound: Callable[[Variable], ExtInt]
         tighter_than: Callable[[ExtInt, ExtInt], bool]
         tighten: Callable[[ExtInt], ExtInt]
+
         if not reverse:
             constraint_bound = self.constraints[variable].lower_bound
             bound_variables = comparison.lower_bounds
@@ -416,17 +412,8 @@ class CountingContextFreeGrammar():
         unassigned_bound_variables = []
         bounds = [constraint_bound]
 
-        opt_subscript = None
-        if opt_index is not None:
-            _, opt_subscript = _split_token(variable)
-
-        opt_placeholder = None
-        if opt_subscript is not None:
-            subscript = cast(str, opt_subscript)
-            subscript_type = self._get_subscript_type(subscript)
-            assert subscript_type == SubscriptType.PLACEHOLDER
-
-            opt_placeholder = cast(Placeholder, opt_subscript)
+        _, opt_subscript = _split_token(variable)
+        opt_placeholder = cast(Optional[Placeholder], opt_subscript)
 
         assert (opt_placeholder is None) == (opt_index is None)
 
@@ -450,7 +437,8 @@ class CountingContextFreeGrammar():
                 unassigned_bound_variables.append(bound_variable)
 
         _bound = tightest(bounds)
-        assert type(_bound) is int
+        if type(_bound) is not int:
+            raise ValueError(f"Failed to parse constraints of {variable}.")
         bound = cast(int, _bound)
 
         significant_bound_variables = []

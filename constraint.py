@@ -38,6 +38,9 @@ class Constraint():
 
         if comparator == 0:
             self.update_inequal(number)
+        elif comparator == 3:
+            self.update_upper_bound(number, True)
+            self.update_lower_bound(number, True)
         elif comparator < 0:
             self.update_upper_bound(number, inclusive)
         else:
@@ -68,7 +71,10 @@ class Comparison():
         # update compare dict
         inclusive = (abs(comparator) == 1)
 
-        if comparator < 0:
+        if comparator == 3:
+            self.add_upper_bound(target, True)
+            self.add_lower_bound(target, True)
+        elif comparator < 0:
             self.add_upper_bound(target, inclusive)
         elif comparator > 0:
             self.add_lower_bound(target, inclusive)
@@ -113,50 +119,46 @@ def _update_constraints_and_comparisons(
     ]
 
     for i, comparator in enumerate(comparators):
-        leftss = comparandss[:i+1]
-        rightss = comparandss[i+1:]
+        lefts = comparandss[i]
+        rights = comparandss[i+1]
 
-        logging.debug(
-            f"{leftss} {_comparator_to_str(comparator)} {rightss}")
+        for left, right in itertools.product(lefts, rights):
+            logging.debug(
+                f"{left} {_comparator_to_str(comparator)} {right}")
 
-        for lefts, rights in itertools.product(leftss, rightss):
-            for left, right in itertools.product(lefts, rights):
-                logging.debug(
-                    f"{left} {_comparator_to_str(comparator)} {right}")
+            is_left_number = (type(left) is int)
+            is_right_number = (type(right) is int)
 
-                is_left_number = (type(left) is int)
-                is_right_number = (type(right) is int)
+            if not is_left_number and not is_right_number:
 
-                if not is_left_number and not is_right_number:
+                left_variable = cast(Variable, left)
+                right_variable = cast(Variable, right)
 
-                    left_variable = cast(Variable, left)
-                    right_variable = cast(Variable, right)
+                comparisons.setdefault(left_variable, Comparison())
+                comparisons.setdefault(right_variable, Comparison())
 
-                    comparisons.setdefault(left_variable, Comparison())
-                    comparisons.setdefault(right_variable, Comparison())
+                if left_variable in comparisons:
+                    comparison = comparisons[left_variable]
+                    comparison.update(comparator, right_variable)
+                if right_variable in comparisons:
+                    comparison = comparisons[right_variable]
+                    comparison.update(-comparator, left_variable)
 
-                    if left_variable in comparisons:
-                        comparison = comparisons[left_variable]
-                        comparison.update(comparator, right_variable)
-                    if right_variable in comparisons:
-                        comparison = comparisons[right_variable]
-                        comparison.update(-comparator, left_variable)
+            elif is_left_number != is_right_number:
+                # update constraint dict
+                _comparator = comparator
+                if is_left_number:
+                    left, right = right, left
+                    _comparator *= -1
 
-                elif is_left_number != is_right_number:
-                    # update constraint dict
-                    _comparator = comparator
-                    if is_left_number:
-                        left, right = right, left
-                        _comparator *= -1
+                variable = cast(Variable, left)
+                number = cast(int, right)
 
-                    variable = cast(Variable, left)
-                    number = cast(int, right)
+                constraints.setdefault(variable, Constraint())
+                constraints[variable].update(_comparator, number)
 
-                    constraints.setdefault(variable, Constraint())
-                    constraints[variable].update(_comparator, number)
-
-                else:  # E.g., 1 < 3
-                    continue
+            else:  # E.g., 1 < 3
+                continue
 
 
 def _to_transitive_bound(
@@ -246,11 +248,11 @@ _RE_MIN_OR_MAX = re.compile(r'(?:min|max)\((\w+),(\w+)\)')
 
 
 def _comparator_to_str(comparator: int) -> str:
-    return {-2: "<", -1: "<=", 0: "!=", 1: ">=", 2: ">"}[comparator]
+    return {-2: "<", -1: "<=", 0: "!=", 1: ">=", 2: ">", 3: "="}[comparator]
 
 
 def _parse_comparator(text: str) -> int:
-    return {"<": -2, "<=": -1, "!=": 0, ">=": 1, ">": 2}[text]
+    return {"<": -2, "<=": -1, "!=": 0, ">=": 1, ">": 2, "=": 3}[text]
 
 
 def _parse_comparands(text: str) -> list[Union[int, Variable]]:

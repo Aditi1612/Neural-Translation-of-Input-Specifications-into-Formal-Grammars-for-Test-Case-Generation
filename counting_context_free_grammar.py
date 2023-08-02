@@ -1,6 +1,9 @@
 from enum import Enum
-from typing import (Optional, Callable, Union, NewType, TypeVar, cast, )
+from types import ModuleType
+from typing import (Optional, Callable, Union, cast, )
+import typing
 import logging
+import math
 import random
 import re
 import sys
@@ -15,15 +18,21 @@ from constraint import Variable
 from invalid_grammar_error import InvalidConstraintError
 from invalid_grammar_error import InvalidProductionError
 
-Nonterminal = NewType('Nonterminal', str)
-Terminal = NewType('Terminal', str)
-Placeholder = NewType('Placeholder', str)
+sre_parse: ModuleType
+try:
+    import sre_parse
+except ImportError:
+    sre_parse = re.sre_parse
+
+Nonterminal = typing.NewType('Nonterminal', str)
+Terminal = typing.NewType('Terminal', str)
+Placeholder = typing.NewType('Placeholder', str)
 
 Token = Union[Nonterminal, Variable, Terminal]
 Assignment = dict[Variable, int]
 Production = list[Token]
 
-TToken = TypeVar('TToken', bound=Token)
+TToken = typing.TypeVar('TToken', bound=Token)
 
 MAX_ITER = 100
 TESTMODE_VARIABLE_UPPER_BOUND = 50
@@ -437,8 +446,9 @@ class CountingContextFreeGrammar():
                 unassigned_bound_variables.append(bound_variable)
 
         _bound = tightest(bounds)
-        if type(_bound) is not int:
-            raise ValueError(f"Failed to parse constraints of {variable}.")
+        if _bound in [math.inf, -math.inf]:
+            raise RuntimeError(f"Unbounded variable: {variable}")
+        assert type(_bound) is int
         bound = cast(int, _bound)
 
         significant_bound_variables = []
@@ -666,7 +676,7 @@ def _get_alphabet_from_charclass(regexes: list) -> set[str]:
 
 def _parse_counter_oparands(regex_string: str) -> set[str]:
     counter_operands = set()
-    parsed = re.sre_parse.parse(regex_string)  # type: ignore[attr-defined]
+    parsed = sre_parse.parse(regex_string)  # type: ignore[attr-defined]
 
     if len(parsed) != 1:
         raise ValueError(f'Too many nodes: {regex_string}')

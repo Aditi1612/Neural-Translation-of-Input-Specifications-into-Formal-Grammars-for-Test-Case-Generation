@@ -10,10 +10,11 @@ import sys
 
 import jsonlines
 
-from constraint import get_constraints_and_comparisons
-from constraint import parse_comparand
+import constraint
+from constraint import standardize_variable
 from constraint import ExtInt
 from constraint import Variable
+from constraint import Placeholder
 
 from invalid_grammar_error import InvalidConstraintError
 from invalid_grammar_error import InvalidProductionError
@@ -22,11 +23,10 @@ sre_parse: ModuleType
 try:
     import sre_parse
 except ImportError:
-    sre_parse = re.sre_parse
+    sre_parse = re.sre_parse  # type: ignore[attr-defined]
 
 Nonterminal = typing.NewType('Nonterminal', str)
 Terminal = typing.NewType('Terminal', str)
-Placeholder = typing.NewType('Placeholder', str)
 
 Token = Union[Nonterminal, Variable, Terminal]
 Assignment = dict[Variable, int]
@@ -56,13 +56,15 @@ class TokenType(Enum):
 
 class SubscriptType(Enum):
     PLACEHOLDER = 0  # X_i, <A_i>
-    PLACEHOLDER_DECREASING = 1  # X_i-1
-    VARIABLE = 2  # X_N, X_N-1, <A_N>
-    VARIABLE_DECREASING = 3  # X_i-1
-    CONSTANT = 4  # X_3, <A_3>
+    VARIABLE = 1  # X_N, X_N-1, <A_N>
+    CONSTANT = 2  # X_3, <A_3>
+    PLACEHOLDER_DECREASING = 3  # X_i-1
+    VARIABLE_DECREASING = 4  # X_i-1
+    PLACEHOLDER_INCREASING = 5  # X_i+1
+    VARIABLE_INCREASING = 6  # X_i+1
 
 
-class CountingContextFreeGrammar():
+class CountingContextFreeGrammar:
 
     def __init__(
         self,
@@ -95,25 +97,21 @@ class CountingContextFreeGrammar():
                 self.productions[Variable(lhs)].append(production)
 
         # Parse constraints and comparisons
-        self.constraints, self.comparisons = (
-            get_constraints_and_comparisons(constraint_strings))
+        parsed = constraint.parse(constraint_strings)
+        self.constraints, self.comparisons, self.placeholders = parsed
 
-        # Initialize placeholders from constraints and comparisons
-        self.placeholders: set[Placeholder] = set()
+        # Add placeholders from constraints and comparisons
         for token in self.productions:
-            _, opt_subscript = _split_token(token)
-            if opt_subscript is None:
+            _, subscript = _split_token(token)
+            if subscript is None:
                 continue
-            subscript = cast(str, opt_subscript)
             if _is_placeholder(subscript):
                 self.placeholders.add(cast(Placeholder, subscript))
 
         # Remove constraints and comparisons of placeholders
         for placeholder in self.placeholders:
-            if placeholder in self.constraints:
-                del self.constraints[Variable(placeholder)]
-            if placeholder in self.comparisons:
-                del self.comparisons[Variable(placeholder)]
+            self.constraints.pop(Variable(placeholder), None)
+            self.comparisons.pop(Variable(placeholder), None)
 
     def generate(self) -> str:
         """Randomly generate a string of the counting context-free grammar.
@@ -198,16 +196,18 @@ class CountingContextFreeGrammar():
             ``subscript``. Otherwise, return ``token``.
         """
 
-        frag, opt_subscript = _split_token(token)
-        if opt_subscript is None:
+        fragment, subscript = _split_token(token)
+        if subscript is None:
             return token
 
-        subscript = cast(str, opt_subscript)
+        # XXX: Hard-coded
         substituted: str
         if subscript == substitutable:
-            substituted = f"{frag}_{index}"
+            substituted = f"{fragment}_{index}"
         elif subscript == f"{substitutable}-1":
-            substituted = f"{frag}_{index-1}"
+            substituted = f"{fragment}_{index-1}"
+        elif subscript == f"{substitutable}+1":
+            substituted = f"{fragment}_{index+1}"
         else:
             return token
 
@@ -232,20 +232,20 @@ class CountingContextFreeGrammar():
         self, nonterminal: Nonterminal, assignment: Assignment
     ) -> Production:
 
-        frag, opt_subscript = _split_token(nonterminal)
+        fragment, subscript = _split_token(nonterminal)
 
-        if opt_subscript is None:
+        if subscript is None:
             return random.choice(self.productions[nonterminal])
 
         # XXX: Ad Hoc Grammar Errors
-        if opt_subscript == "-1":
+        if subscript == "-1":
             raise InvalidProductionError(
                 f"Invalid indexed nonterminal {nonterminal}")
-        if opt_subscript[-1] == ">":
+        if subscript[-1] == ">":
             raise InvalidProductionError(
                 f"Invalid indexed nonterminal {nonterminal}")
 
-        subscript = cast(str, opt_subscript)
+        subscript = cast(str, subscript)
         subscript_type = self._get_subscript_type(subscript)
 
         if subscript_type == SubscriptType.VARIABLE:
@@ -263,24 +263,23 @@ class CountingContextFreeGrammar():
                 production = random.choice(list(self.productions[nonterminal]))
 
                 # XXX: Implicit indexing
-                for placeholder in self.placeholders:
+                if len(self.placeholders) == 1:
                     return self._substitute_production(
-                        production, placeholder, index)
+                        production, list(self.placeholders)[0], index)
+                return production
 
-            opt_placeholder = None
-            opt_production = None
+            placeholder: Optional[Placeholder] = None
+            opt_production: Optional[Production] = None
             for _placeholder in self.placeholders:
-                unindexed = Nonterminal(f"<{frag}_{_placeholder}>")
+                unindexed = Nonterminal(f"<{fragment}_{_placeholder}>")
                 if unindexed in self.productions:
                     opt_production = random.choice(self.productions[unindexed])
-                    opt_placeholder = _placeholder
+                    placeholder = _placeholder
                     break
 
-            if opt_production is None or opt_placeholder is None:
+            if opt_production is None or placeholder is None:
                 raise ValueError(f"Cannot find production of {nonterminal}")
-
             production = cast(Production, opt_production)
-            placeholder = cast(Placeholder, opt_placeholder)
 
             return self._substitute_production(production, placeholder, index)
 
@@ -304,6 +303,8 @@ class CountingContextFreeGrammar():
         Raises:
             RuntimeError: Constraint or production is ambiguous.
         """
+        # XXX: For a variable a_3 with a constraint a_i < a_i+1,
+        # we can not check "a_2 < a_3"
         constraint_form_variables, index = (
             self._to_constraint_form(variable))
 
@@ -312,19 +313,17 @@ class CountingContextFreeGrammar():
             production_form_variables = [variable]
 
         # Sample value of the variable
-        values = []
-        for constraint_form_variable in constraint_form_variables:
-            value = self._sample_variable(
-                constraint_form_variable, assignment, index)
-            values.append(value)
-        values = list(filter(lambda e: e is not None, values))
+        values = [
+            self._sample_variable(variable, assignment, index)
+            for variable in constraint_form_variables
+            if variable in self.constraints
+        ]
+
         if len(values) > 1:
             raise InvalidConstraintError(
                 f"Constraint is ambiguous for {variable}.")
 
-        value = None
-        if len(values) == 1:
-            value = values[0]
+        value = None if len(values) == 0 else values[0]
 
         # Find production of the variable
         productions = []
@@ -362,8 +361,8 @@ class CountingContextFreeGrammar():
             form.
         """
 
-        frag, opt_subscript = _split_token(variable)
-        if opt_subscript is None:
+        fragment, subscript = _split_token(variable)
+        if subscript is None:
             if _is_counter(variable):
                 new_variable = Variable(variable[1:-1])
                 return [new_variable], None
@@ -373,13 +372,13 @@ class CountingContextFreeGrammar():
         constraint_form_variables = []
         index = None
 
-        subscript = cast(str, opt_subscript)
+        subscript = cast(str, subscript)
         subscript_type = self._get_subscript_type(subscript)
 
         if subscript_type == SubscriptType.CONSTANT:
             index = int(subscript)
             for placeholder in self.placeholders:
-                variable = Variable(f"{frag}_{placeholder}")
+                variable = Variable(f"{fragment}_{placeholder}")
                 constraint_form_variables.append(variable)
         else:
             raise ValueError(f"Invalid variable: {variable}")
@@ -390,9 +389,11 @@ class CountingContextFreeGrammar():
         self,
         variable: Variable,
         assignment: Assignment,
-        opt_index: Optional[int],
+        indexing: Optional[tuple[Placeholder, int]],
         reverse: bool = False
-    ) -> tuple[int, list[Variable]]:
+    ) -> tuple[int, int]:
+        logging.debug(
+            f"Get {'lower' if reverse else 'upper'} bound of {variable}")
 
         comparison = self.comparisons[variable]
 
@@ -402,72 +403,98 @@ class CountingContextFreeGrammar():
         get_target_bound: Callable[[Variable], ExtInt]
         tighter_than: Callable[[ExtInt, ExtInt], bool]
         tighten: Callable[[ExtInt], ExtInt]
-
         if not reverse:
             constraint_bound = self.constraints[variable].lower_bound
-            bound_variables = comparison.lower_bounds
+            bound_variables = comparison.lower_variables
             tightest = max
             def get_target_bound(e): return self.constraints[e].upper_bound
             def tighter_than(a, b): return a >= b
-            def tighten(e): return e + 1
+            def tighten(e, n=1): return e + n
         else:
             constraint_bound = self.constraints[variable].upper_bound
-            bound_variables = comparison.upper_bounds
+            bound_variables = comparison.upper_variables
             tightest = min
             def get_target_bound(e): return self.constraints[e].lower_bound
             def tighter_than(a, b): return a <= b
-            def tighten(e): return e - 1
+            def tighten(e, n=1): return e - n
 
         unassigned_bound_variables = []
         bounds = [constraint_bound]
 
-        _, opt_subscript = _split_token(variable)
-        opt_placeholder = cast(Optional[Placeholder], opt_subscript)
+        index_variable: Callable[[Variable, int], Variable]
+        if indexing is not None:
+            placeholder, index = cast(tuple[Placeholder, int], indexing)
 
-        assert (opt_placeholder is None) == (opt_index is None)
+            def index_variable(variable: Variable, delta: int = 0):
+                return self._substitute(variable, placeholder, index)
+        else:
+            def index_variable(variable: Variable, delta: int = 0):
+                return variable
 
         for bound_variable, inclusive in bound_variables:
-            indexed_bound_variable: Variable
-            if opt_placeholder is None:
-                indexed_bound_variable = bound_variable
+            bound = assignment.get(index_variable(bound_variable), None)
+            if bound is not None:
+                bounds.append(bound if inclusive else tighten(bound))
             else:
-                placeholder = cast(Placeholder, opt_placeholder)
-                index = cast(int, opt_index)
+                unassigned_bound_variables.append((bound_variable, inclusive))
 
-                indexed_bound_variable = self._substitute(
-                    bound_variable, placeholder, index)
-
-            if indexed_bound_variable in assignment:
-                bound = assignment[indexed_bound_variable]
-                if not inclusive:
-                    bound = tighten(bound)
-                bounds.append(bound)
-            else:
-                unassigned_bound_variables.append(bound_variable)
-
-        _bound = tightest(bounds)
-        if _bound in [math.inf, -math.inf]:
+        bound = cast(int, tightest(bounds))
+        if bound in [math.inf, -math.inf]:
             raise RuntimeError(f"Unbounded variable: {variable}")
-        assert type(_bound) is int
-        bound = cast(int, _bound)
-
-        significant_bound_variables = []
 
         # If there exists unassigned variables whose bounds are intersect with
         # the current variable, we have to consider them.
-        for bound_variable in unassigned_bound_variables:
-            target_bound = get_target_bound(bound_variable)
-            if tighter_than(target_bound, bound):
-                significant_bound_variables.append(bound_variable)
 
-        return bound, significant_bound_variables
+        # E.g., For a variable (a_i, N) (= a_N), inner variables
+        # [(a_i, i, +1), (b, None, 0), ...]
+        inner_variables: list[tuple[Variable, Placeholder, int], bool] = []
+        for bound_variable, inclusive in unassigned_bound_variables:
+            standardization = standardize_variable(bound_variable)
+            standardized_variable, bound_placeholder, delta = standardization
+            if tighter_than(get_target_bound(standardized_variable), bound):
+                inner_variables.append((standardization, inclusive))
+
+        logging.debug(
+            f"unassigned bound variables: {unassigned_bound_variables}")
+        logging.debug(f"inner variables: {inner_variables}")
+
+        # Update the bounds and the number of constant-indexed inner_variables
+        # according to the placeholder-indexed inner variables
+        number_of_inner_variables = 0
+        for standardization, inclusive in inner_variables:
+            inner_variable, inner_placeholder, delta = standardization
+
+            # E.g., (b, None, 0) yields one inner variable between the variable
+            # and the bound. And current bound considering it.
+            if bound_placeholder is None:
+                number_of_inner_variables += 1
+
+            # E.g., (a_i, i, xx)
+            elif inner_variable == variable:
+
+                # If we are considering non decreasing placeholder (e.g.,
+                # a_i+1), we believe that a_N+1 must be assigned or not exists
+                if delta >= 0:
+                    continue
+
+                # E.g., if a_i-1's are inner variables, a_N has N inner
+                # variables
+                number_of_indexed_inner_variables = index // (-delta)
+                number_of_inner_variables += number_of_indexed_inner_variables
+                if not inclusive:
+                    bound = tighten(bound, number_of_indexed_inner_variables)
+            else:
+                raise NotImplementedError(
+                    f"Constraint between {variable} and {inner_variable}")
+
+        return bound, number_of_inner_variables
 
     def _sample_variable(
         self,
         variable: Variable,
         assignment: Assignment,
         index: Optional[int] = None
-    ) -> Optional[int]:
+    ) -> int:
         """Sample a value of a constraint-form variable
 
         Args:
@@ -478,23 +505,47 @@ class CountingContextFreeGrammar():
             Return an integer or ``None`` if the variable is not in
             constraints.
         """
-        if variable not in self.constraints:
-            return None
+
+        _, placeholder = _split_token(variable)
+        assert (placeholder is None) == (index is None)
+        indexing = None
+        if placeholder is not None and index is not None:
+            indexing = Placeholder(placeholder), index
 
         constraint = self.constraints[variable]
+        lower_bound, lower_inner_variables = self._get_variable_bound(
+            variable, assignment, indexing)
+        upper_bound, upper_inner_variables = self._get_variable_bound(
+            variable, assignment, indexing, reverse=True)
 
-        lower_bound, lower_variables = self._get_variable_bound(
-            variable, assignment, index)
-        upper_bound, upper_variables = self._get_variable_bound(
-            variable, assignment, index, reverse=True)
+        logging.debug(
+            f"({variable}, {index}) in [{lower_bound}, {upper_bound}]")
 
         if self.testmode:
             upper_bound = min(upper_bound, TESTMODE_VARIABLE_UPPER_BOUND)
             upper_bound = max(lower_bound, upper_bound)
 
         comparison = self.comparisons[variable]
-        comparison_inequal = {assignment.get(e) for e in comparison.inequal}
-        inequal = constraint.inequal | comparison_inequal
+        inequal_variables: set[Variable]
+        if indexing is not None:
+            placeholder, index = indexing
+            inequal_variables = {
+                self._substitute(token, placeholder, index)
+                for token in comparison.inequal_variables
+            }
+        else:
+            inequal_variables = comparison.inequal_variables
+        comparison_inequal = {
+            assignment[variable]
+            for variable in inequal_variables
+            if variable in assignment
+        }
+
+        inequal = constraint.inequal_values | comparison_inequal
+
+        logging.debug(f'Sample a variable ({variable}, {index})')
+        logging.debug(f'[{lower_bound}, {upper_bound}]')
+        logging.debug(comparison)
 
         # At this point, we knows follows:
         # * the target variable is in a bound [`lower_bound`, `upper_bound`],
@@ -503,8 +554,8 @@ class CountingContextFreeGrammar():
         # * `lower_` and `upper_variables` "may be" in the bound.
         # Heuristically, we choose the `k+1`-th one of `n` sampled values.
 
-        n = len(lower_variables) + len(upper_variables) + 1
-        k = len(lower_variables)
+        n = lower_inner_variables + upper_inner_variables + 1
+        k = lower_inner_variables
 
         # XXX: It depends on max iteration
         for _ in range(MAX_ITER):
@@ -516,7 +567,8 @@ class CountingContextFreeGrammar():
                 return value
 
         raise RuntimeError(
-            f"Fail to sample variable: {variable}\n Assignment: {assignment}")
+            f"Failed to sample variable: {variable} with index {index}\n"
+            + f"Assignment: {assignment}")
 
     @staticmethod
     def _tokenize(string: str) -> Token:
@@ -561,6 +613,11 @@ class CountingContextFreeGrammar():
                 return SubscriptType.VARIABLE_DECREASING
             elif subscript[:-2] in self.placeholders:
                 return SubscriptType.PLACEHOLDER_DECREASING
+        elif subscript[-2:] == "+1":
+            if subscript[:-2] in self.constraints:
+                return SubscriptType.VARIABLE_INCREASING
+            elif subscript[:-2] in self.placeholders:
+                return SubscriptType.PLACEHOLDER_INCREASING
 
         raise ValueError(f"Invalid subscript {subscript}")
 
@@ -570,7 +627,7 @@ class CountingContextFreeGrammar():
         assignment: Assignment
     ) -> int:
         if _RE_NUMBER_CBE.fullmatch(counter_operator):
-            parsed = parse_comparand(counter_operator)
+            parsed = constraint.parse_comparand(counter_operator)
             assert type(parsed) is int
             return parsed
         elif counter_operator in assignment:
@@ -602,7 +659,7 @@ class CountingContextFreeGrammar():
             return terminal
 
         # Parse regex operands
-        counter_operands = list(_parse_counter_oparands(match.group(1)))
+        counter_operands = _parse_counter_oparands(match.group(1))
         counter_operators = match.group(2).split(',')
 
         if len(counter_operators) > 2:
@@ -628,7 +685,7 @@ class CountingContextFreeGrammar():
         terminal_len = random.choice(range(start, end+1))
         terminal_string = ""
         for _ in range(terminal_len):
-            terminal_string += random.choice(counter_operands)
+            terminal_string += random.choice(list(counter_operands))
         return terminal_string
 
     def __str__(self):
@@ -654,7 +711,7 @@ def _split_token(token: TToken) -> tuple[str, Optional[str]]:
     if token[0] == '<' and token[-1] == '>':
         tmp_string = token[1:-1]
 
-    tmp = tuple(tmp_string.rsplit('_', 1))
+    tmp = tmp_string.rsplit('_', 1)
     if len(tmp) != 2:
         return token, None
     else:
@@ -701,6 +758,9 @@ def _is_placeholder(subscript: str) -> bool:
 
 
 if __name__ == '__main__':
+    # 192, 1162
+    # Invalid Grammar: 1186, 1188
+
     logging.basicConfig(level=logging.DEBUG)
 
     if len(sys.argv) < 1:

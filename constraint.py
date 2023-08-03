@@ -2,42 +2,59 @@ import re
 import logging
 import itertools
 import math
-from typing import (Union, NewType, Optional, Callable, cast, )
+import typing
+from typing import (Union, Optional, Callable, TypeVar, cast, )
 
 
 ExtInt = Union[int, float]
-Variable = NewType('Variable', str)
+Variable = typing.NewType('Variable', str)
+Placeholder = typing.NewType('Placeholder', str)
+
+TConstraint = TypeVar("TConstraint", bound="Constraint")
+TComparison = TypeVar("TComparison", bound="Comparison")
 
 
-class Constraint():
+class Constraint:
 
     def __init__(self) -> None:
         self.lower_bound: ExtInt = -math.inf
         self.upper_bound: ExtInt = math.inf
-        self.inequal: set[ExtInt] = set()
+        self.inequal_values: set[int] = set()
 
     def update_upper_bound(
-        self, upper_bound: ExtInt, inclusive: bool
-    ) -> None:
+        self: TConstraint,
+        upper_bound: ExtInt,
+        inclusive: bool = True
+    ) -> TConstraint:
         if not inclusive:
             upper_bound -= 1
         self.upper_bound = min(self.upper_bound, upper_bound)
+        return self
 
     def update_lower_bound(
-        self, lower_bound: ExtInt, inclusive: bool
-    ) -> None:
+        self: TConstraint,
+        lower_bound: ExtInt,
+        inclusive: bool = True
+    ) -> TConstraint:
         if not inclusive:
             lower_bound += 1
         self.lower_bound = max(self.lower_bound, lower_bound)
+        return self
 
-    def update_inequal(self, not_equal: int) -> None:
-        self.inequal.add(not_equal)
+    def add_inequal_value(
+        self: TConstraint,
+        not_equal: int
+    ) -> TConstraint:
+        self.inequal_values.add(not_equal)
+        return self
 
-    def update(self, comparator: int, number: int) -> None:
+    def update(
+        self: TConstraint, comparator: int, number: int
+    ) -> TConstraint:
         inclusive = (abs(comparator) == 1)
 
         if comparator == 0:
-            self.update_inequal(number)
+            self.add_inequal_value(number)
         elif comparator == 3:
             self.update_upper_bound(number, True)
             self.update_lower_bound(number, True)
@@ -45,48 +62,96 @@ class Constraint():
             self.update_upper_bound(number, inclusive)
         else:
             self.update_lower_bound(number, inclusive)
+        return self
+
+    def update_constraint(
+        self: TConstraint, constraint: TConstraint
+    ) -> TConstraint:
+        self.update_upper_bound(constraint.upper_bound)
+        self.update_lower_bound(constraint.lower_bound)
+        for inequal in constraint.inequal_values:
+            self.add_inequal_value(inequal)
+        return self
 
     def __str__(self) -> str:
         return f"{self.lower_bound} <= ... <= {self.upper_bound}"
 
 
-class Comparison():
+class Comparison:
 
-    def __init__(self):
-        self.lower_bounds = set()
-        self.upper_bounds = set()
-        self.inequal = set()
+    def __init__(self) -> None:
+        self.lower_variables: set[tuple[Variable, bool]] = set()
+        self.upper_variables: set[tuple[Variable, bool]] = set()
+        self.inequal_variables: set[Variable] = set()
 
-    def add_lower_bound(self, lower_bound: Variable, inclusive: bool) -> None:
-        self.lower_bounds.add((lower_bound, inclusive))
+    def add_lower_variable(
+        self: TComparison,
+        lower_bound: Variable,
+        inclusive: bool
+    ) -> TComparison:
+        self.lower_variables.add((lower_bound, inclusive))
+        return self
 
-    def add_upper_bound(self, upper_bound: Variable, inclusive: bool) -> None:
-        self.upper_bounds.add((upper_bound, inclusive))
+    def add_upper_variable(
+        self: TComparison,
+        upper_bound: Variable,
+        inclusive: bool
+    ) -> TComparison:
+        self.upper_variables.add((upper_bound, inclusive))
+        return self
 
-    def add_inequal(self, inequal: Variable) -> None:
-        self.inequal.add(inequal)
+    def add_inequal_variable(
+        self: TComparison,
+        inequal: Variable
+    ) -> TComparison:
+        self.inequal_variables.add(inequal)
+        return self
 
-    def update(self, comparator: int, target: Variable) -> None:
+    def update(
+        self: TComparison,
+        comparator: int,
+        target: Variable
+    ) -> TComparison:
 
         # update compare dict
         inclusive = (abs(comparator) == 1)
 
         if comparator == 3:
-            self.add_upper_bound(target, True)
-            self.add_lower_bound(target, True)
+            self.add_upper_variable(target, True)
+            self.add_lower_variable(target, True)
         elif comparator < 0:
-            self.add_upper_bound(target, inclusive)
+            self.add_upper_variable(target, inclusive)
         elif comparator > 0:
-            self.add_lower_bound(target, inclusive)
+            self.add_lower_variable(target, inclusive)
         else:
-            self.add_inequal(target)
+            self.add_inequal_variable(target)
+        return self
+
+    def update_comparison(
+        self: TComparison,
+        comparison: TComparison
+    ) -> TComparison:
+        for lower_variable, inclusive in self.lower_variables:
+            comparison.add_lower_variable(lower_variable, inclusive)
+        for upper_variable, inclusive in self.upper_variables:
+            comparison.add_upper_variable(lower_variable, inclusive)
+        for inequal_variable in self.inequal_variables:
+            comparison.add_inequal_variable(inequal_variable)
+        return self
 
     def __str__(self) -> str:
         return " ".join([
-            f"{self.lower_bounds}",
-            f"<= {{}} (!= {self.inequal})",
-            f"<= {self.upper_bounds}",
+            f"{self.lower_variables}",
+            f"<= {{}} (!= {self.inequal_variables})",
+            f"<= {self.upper_variables}",
         ])
+
+
+Parsed = tuple[
+    dict[Variable, Constraint],
+    dict[Variable, Comparison],
+    set[Placeholder]
+]
 
 
 def parse_comparand(text: str) -> Union[Variable, int]:
@@ -123,8 +188,6 @@ def _update_constraints_and_comparisons(
         rights = comparandss[i+1]
 
         for left, right in itertools.product(lefts, rights):
-            logging.debug(
-                f"{left} {_comparator_to_str(comparator)} {right}")
 
             is_left_number = (type(left) is int)
             is_right_number = (type(right) is int)
@@ -134,15 +197,13 @@ def _update_constraints_and_comparisons(
                 left_variable = cast(Variable, left)
                 right_variable = cast(Variable, right)
 
-                comparisons.setdefault(left_variable, Comparison())
-                comparisons.setdefault(right_variable, Comparison())
+                comparison = (
+                    comparisons.setdefault(left_variable, Comparison()))
+                comparison.update(comparator, right_variable)
 
-                if left_variable in comparisons:
-                    comparison = comparisons[left_variable]
-                    comparison.update(comparator, right_variable)
-                if right_variable in comparisons:
-                    comparison = comparisons[right_variable]
-                    comparison.update(-comparator, left_variable)
+                comparison = (
+                    comparisons.setdefault(right_variable, Comparison()))
+                comparison.update(-comparator, left_variable)
 
             elif is_left_number != is_right_number:
                 # update constraint dict
@@ -165,9 +226,9 @@ def _to_transitive_bound(
     variable: Variable,
     constraints: dict[Variable, Constraint],
     comparisons: dict[Variable, Comparison],
-    reverse: bool = False,
-    visited: Optional[set[Variable]] = None
-) -> tuple[ExtInt, list[tuple[Variable, bool]]]:
+    visited: Optional[set[Variable]],
+    reverse: bool = False
+) -> tuple[ExtInt, set[tuple[Variable, bool]]]:
     """Make ``comparisons`` be transitive closure and update ``constraints``
 
     Args:
@@ -187,32 +248,32 @@ def _to_transitive_bound(
     comparison = comparisons[variable]
     if variable in visited:
         if not reverse:
-            return constraint.lower_bound, comparison.lower_bounds
+            return constraint.lower_bound, comparison.lower_variables
         else:
-            return constraint.upper_bound, comparison.upper_bounds
-
-    bound = None
-    update_bound: Callable[[ExtInt, bool], None]
-    bound_variables = None
-    add_bound_variable: Callable[[Variable, bool], None]
-
-    if not reverse:
-        bound = constraint.lower_bound
-        update_bound = constraint.update_lower_bound
-        bound_variables = comparison.lower_bounds
-        add_bound_variable = comparison.add_lower_bound
-    else:
-        bound = constraint.upper_bound
-        update_bound = constraint.update_upper_bound
-        bound_variables = comparison.upper_bounds
-        add_bound_variable = comparison.add_upper_bound
+            return constraint.upper_bound, comparison.upper_variables
 
     visited.add(variable)
 
+    get_bound = Callable[[Constraint], ExtInt]
+    update_bound: Callable[[ExtInt, bool], Constraint]
+    bound_variables = None
+    add_bound_variable: Callable[[Variable, bool], Comparison]
+    if not reverse:
+        def get_bound(constraint: Constraint): return constraint.lower_bound
+        update_bound = constraint.update_lower_bound
+        bound_variables = comparison.lower_variables
+        add_bound_variable = comparison.add_lower_variable
+    else:
+        def get_bound(constraint: Constraint): return constraint.upper_bound
+        update_bound = constraint.update_upper_bound
+        bound_variables = comparison.upper_variables
+        add_bound_variable = comparison.add_upper_variable
+
+    bound = get_bound(constraint)
     for bound_variable, inclusive1 in bound_variables.copy():
         updated_bound, updated_variables = _to_transitive_bound(
-            bound_variable, constraints, comparisons, reverse, visited)
-        update_bound(updated_bound, inclusive1)
+            bound_variable, constraints, comparisons, visited, reverse)
+        bound = get_bound(update_bound(updated_bound, inclusive1))
 
         for next_variable, inclusive2 in updated_variables:
             inclusive = inclusive1 and inclusive2
@@ -221,25 +282,143 @@ def _to_transitive_bound(
     return bound, bound_variables
 
 
-def get_constraints_and_comparisons(
+def _split(variable: Variable) -> tuple[str, Optional[str]]:
+    tmp = variable.rsplit('_', 1)
+    if len(tmp) != 2:
+        return tmp[0], None
+    return tmp[0], tmp[1]
+
+
+def _standardize_comparison(
+    placeholder: Placeholder,
+    comparison: Comparison,
+    decrease: bool,
+) -> Comparison:
+
+    standardized_comparison = Comparison()
+
+    modify_subscript: Callable[[str], str]
+    if decrease:
+        def modify_subscript(subscript: str):
+            if subscript == f'{placeholder}+1':
+                return f'{placeholder}'
+            elif subscript == f'{placeholder}':
+                return f'{placeholder}-1'
+            else:
+                return subscript
+    else:
+        def modify_subscript(subscript: str):
+            if subscript == f'{placeholder}-1':
+                return f'{placeholder}'
+            elif subscript == f'{placeholder}':
+                return f'{placeholder}+1'
+            else:
+                return subscript
+
+    def modify(variable: Variable):
+        fragment, subscript = _split(variable)
+        if subscript is None:
+            return variable
+        subscript = modify_subscript(subscript)
+        return Variable(f"{fragment}_{subscript}")
+
+    for lower_variable, inclusive in comparison.lower_variables:
+        lower_variable = modify(lower_variable)
+        standardized_comparison.add_lower_variable(lower_variable, inclusive)
+
+    for upper_variable, inclusive in comparison.upper_variables:
+        upper_variable = modify(upper_variable)
+        standardized_comparison.add_upper_variable(upper_variable, inclusive)
+
+    for inequal_variable in comparison.inequal_variables:
+        inequal_variable = modify(inequal_variable)
+        standardized_comparison.add_inequal_variable(inequal_variable)
+
+    return standardized_comparison
+
+
+def standardize_variable(
+    variable: Variable
+) -> tuple[Variable, Optional[Placeholder], int]:
+    fragment, subscript = _split(variable)
+    if subscript is None or len(subscript) < 3:
+        return variable, None, 0
+
+    # XXX: Hard-coded
+    if not subscript[-2:] in {"-1", "+1"}:
+        return variable, None, 0
+
+    delta = int(subscript[-2:])
+    placeholder = Placeholder(subscript[:-2])
+
+    return Variable(f"{fragment}_{placeholder}"), placeholder, delta
+
+
+def parse(
     constraint_strings: list[str]
-) -> tuple[dict[Variable, Constraint], dict[Variable, Comparison]]:
+) -> Parsed:
     constraints: dict[Variable, Constraint] = {}
     comparisons: dict[Variable, Comparison] = {}
+    placeholders: set[Placeholder] = set()
+
     for constraint_string in constraint_strings:
         _update_constraints_and_comparisons(
             constraint_string, constraints, comparisons)
 
-    for variable in set(constraints.keys()) | set(comparisons.keys()):
+    variables = set(constraints.keys()) | set(comparisons.keys())
+    for variable in variables:
         comparisons.setdefault(variable, Comparison())
         constraints.setdefault(variable, Constraint())
 
-    # Make comparisons be transitive closure
-    for variable in comparisons:
-        _to_transitive_bound(variable, constraints, comparisons)
-        _to_transitive_bound(variable, constraints, comparisons, reverse=True)
+    lower_visited = set()
+    upper_visited = set()
+    for variable in variables:
+        _to_transitive_bound(
+            variable, constraints, comparisons, lower_visited)
+        _to_transitive_bound(
+            variable, constraints, comparisons, upper_visited, reverse=True)
 
-    return constraints, comparisons
+    subscripts: set[str] = set()
+    for variable in variables:
+        _, subscript = _split(variable)
+        if subscript is not None and subscript not in variables:
+            subscripts.add(subscript)
+
+    for subscript in subscripts:
+        def proper_substring(a, b): return a != b and a in b
+        if all(map(lambda e: not proper_substring(e, subscript), subscripts)):
+            placeholders.add(Placeholder(subscript))
+
+    for variable in variables:
+        variable_standardization = standardize_variable(variable)
+        standardized_variable, placeholder, delta = variable_standardization
+
+        if placeholder is None or delta == 0:
+            continue
+
+        if delta not in [-1, 0, 1]:
+            raise NotImplementedError("Placeholder delta must be -1, 0, or 1")
+
+        placeholders.add(placeholder)
+
+        if delta == 0:
+            continue
+
+        decrease = (delta == 1)
+
+        constraint = constraints[variable]
+        constraint.update_constraint(
+            constraints.setdefault(standardized_variable, Constraint()))
+
+        comparison = _standardize_comparison(
+            placeholder, comparisons[variable], decrease)
+        comparison.update_comparison(
+            comparisons.setdefault(standardized_variable, Comparison()))
+
+        constraints.pop(variable, None)
+        comparisons.pop(variable, None)
+
+    return constraints, comparisons, placeholders
 
 
 _RE_COMPARATOR = re.compile(r'<=|>=|<|>|!=')
@@ -267,14 +446,12 @@ def _parse_comparands(text: str) -> list[Union[int, Variable]]:
 
 
 if __name__ == "__main__":
-    constraint_strings = [
-        "0 <= A, B, C, D < 5 * 10 ^ 7",
-        "A < B",
-        "B <= C",
-        "C <= D"
-    ]
-    constraints, comparisons = (
-        get_constraints_and_comparisons(constraint_strings))
+    logging.basicConfig(level=logging.DEBUG)
+
+    # constraint_strings = ['0 <= a_i < 100', 'a_i < a_i+1']
+    constraint_strings = ['0 <= A < B < C < D < 4']
+    constraints, comparisons, placeholders = parse(constraint_strings)
 
     print({k: str(v) for k, v in constraints.items()})
     print({k: str(v) for k, v in comparisons.items()})
+    print(placeholders)

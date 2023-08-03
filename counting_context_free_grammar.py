@@ -11,10 +11,8 @@ import sys
 import jsonlines
 
 import constraint
-from constraint import standardize_variable
-from constraint import ExtInt
-from constraint import Variable
-from constraint import Placeholder
+from constraint import normalize_variable
+from constraint import (ExtInt, Variable, Placeholder, Normalization, )
 
 from invalid_grammar_error import InvalidConstraintError
 from invalid_grammar_error import InvalidProductionError
@@ -447,12 +445,12 @@ class CountingContextFreeGrammar:
 
         # E.g., For a variable (a_i, N) (= a_N), inner variables
         # [(a_i, i, +1), (b, None, 0), ...]
-        inner_variables: list[tuple[Variable, Placeholder, int], bool] = []
+        inner_variables: list[tuple[Normalization, bool]] = []
         for bound_variable, inclusive in unassigned_bound_variables:
-            standardization = standardize_variable(bound_variable)
-            standardized_variable, bound_placeholder, delta = standardization
-            if tighter_than(get_target_bound(standardized_variable), bound):
-                inner_variables.append((standardization, inclusive))
+            normalization = normalize_variable(bound_variable)
+            normalized_variable, bound_placeholder, delta = normalization
+            if tighter_than(get_target_bound(normalized_variable), bound):
+                inner_variables.append((normalization, inclusive))
 
         logging.debug(
             f"unassigned bound variables: {unassigned_bound_variables}")
@@ -461,8 +459,8 @@ class CountingContextFreeGrammar:
         # Update the bounds and the number of constant-indexed inner_variables
         # according to the placeholder-indexed inner variables
         number_of_inner_variables = 0
-        for standardization, inclusive in inner_variables:
-            inner_variable, inner_placeholder, delta = standardization
+        for normalization, inclusive in inner_variables:
+            inner_variable, inner_placeholder, delta = normalization
 
             # E.g., (b, None, 0) yields one inner variable between the variable
             # and the bound. And current bound considering it.
@@ -483,6 +481,7 @@ class CountingContextFreeGrammar:
                 number_of_inner_variables += number_of_indexed_inner_variables
                 if not inclusive:
                     bound = tighten(bound, number_of_indexed_inner_variables)
+                    bound = cast(int, bound)
             else:
                 raise NotImplementedError(
                     f"Constraint between {variable} and {inner_variable}")

@@ -9,6 +9,7 @@ from typing import (Union, Optional, Callable, TypeVar, cast, )
 ExtInt = Union[int, float]
 Variable = typing.NewType('Variable', str)
 Placeholder = typing.NewType('Placeholder', str)
+Normalization = tuple[Variable, Optional[Placeholder], int]
 
 TConstraint = TypeVar("TConstraint", bound="Constraint")
 TComparison = TypeVar("TComparison", bound="Comparison")
@@ -254,7 +255,7 @@ def _to_transitive_bound(
 
     visited.add(variable)
 
-    get_bound = Callable[[Constraint], ExtInt]
+    get_bound: Callable[[Constraint], ExtInt]
     update_bound: Callable[[ExtInt, bool], Constraint]
     bound_variables = None
     add_bound_variable: Callable[[Variable, bool], Comparison]
@@ -289,13 +290,13 @@ def _split(variable: Variable) -> tuple[str, Optional[str]]:
     return tmp[0], tmp[1]
 
 
-def _standardize_comparison(
+def _normalize_comparison(
     placeholder: Placeholder,
     comparison: Comparison,
     decrease: bool,
 ) -> Comparison:
 
-    standardized_comparison = Comparison()
+    normalized_comparison = Comparison()
 
     modify_subscript: Callable[[str], str]
     if decrease:
@@ -324,22 +325,22 @@ def _standardize_comparison(
 
     for lower_variable, inclusive in comparison.lower_variables:
         lower_variable = modify(lower_variable)
-        standardized_comparison.add_lower_variable(lower_variable, inclusive)
+        normalized_comparison.add_lower_variable(lower_variable, inclusive)
 
     for upper_variable, inclusive in comparison.upper_variables:
         upper_variable = modify(upper_variable)
-        standardized_comparison.add_upper_variable(upper_variable, inclusive)
+        normalized_comparison.add_upper_variable(upper_variable, inclusive)
 
     for inequal_variable in comparison.inequal_variables:
         inequal_variable = modify(inequal_variable)
-        standardized_comparison.add_inequal_variable(inequal_variable)
+        normalized_comparison.add_inequal_variable(inequal_variable)
 
-    return standardized_comparison
+    return normalized_comparison
 
 
-def standardize_variable(
+def normalize_variable(
     variable: Variable
-) -> tuple[Variable, Optional[Placeholder], int]:
+) -> Normalization:
     fragment, subscript = _split(variable)
     if subscript is None or len(subscript) < 3:
         return variable, None, 0
@@ -370,8 +371,8 @@ def parse(
         comparisons.setdefault(variable, Comparison())
         constraints.setdefault(variable, Constraint())
 
-    lower_visited = set()
-    upper_visited = set()
+    lower_visited: set[Variable] = set()
+    upper_visited: set[Variable] = set()
     for variable in variables:
         _to_transitive_bound(
             variable, constraints, comparisons, lower_visited)
@@ -390,8 +391,8 @@ def parse(
             placeholders.add(Placeholder(subscript))
 
     for variable in variables:
-        variable_standardization = standardize_variable(variable)
-        standardized_variable, placeholder, delta = variable_standardization
+        variable_normalization = normalize_variable(variable)
+        normalized_variable, placeholder, delta = variable_normalization
 
         if placeholder is None or delta == 0:
             continue
@@ -408,12 +409,12 @@ def parse(
 
         constraint = constraints[variable]
         constraint.update_constraint(
-            constraints.setdefault(standardized_variable, Constraint()))
+            constraints.setdefault(normalized_variable, Constraint()))
 
-        comparison = _standardize_comparison(
+        comparison = _normalize_comparison(
             placeholder, comparisons[variable], decrease)
         comparison.update_comparison(
-            comparisons.setdefault(standardized_variable, Comparison()))
+            comparisons.setdefault(normalized_variable, Comparison()))
 
         constraints.pop(variable, None)
         comparisons.pop(variable, None)

@@ -383,41 +383,15 @@ class CountingContextFreeGrammar:
 
         return constraint_form_variables, index
 
-    def _get_variable_bound(
+    def _get_bound_and_unassigneds(
         self,
-        variable: Variable,
-        assignment: Assignment,
+        bound_variables: set[tuple[Variable, bool]],
+        constraint_bound: ExtInt,
         indexing: Optional[tuple[Placeholder, int]],
-        reverse: bool = False
-    ) -> tuple[int, int]:
-        logging.debug(
-            f"Get {'lower' if reverse else 'upper'} bound of {variable}")
-
-        comparison = self.comparisons[variable]
-
-        constraint_bound: ExtInt
-        bound_variables: set[tuple[Variable, bool]]
-        tightest: Callable[[list[ExtInt]], ExtInt]
-        get_target_bound: Callable[[Variable], ExtInt]
-        tighter_than: Callable[[ExtInt, ExtInt], bool]
-        tighten: Callable[[ExtInt], ExtInt]
-        if not reverse:
-            constraint_bound = self.constraints[variable].lower_bound
-            bound_variables = comparison.lower_variables
-            tightest = max
-            def get_target_bound(e): return self.constraints[e].upper_bound
-            def tighter_than(a, b): return a >= b
-            def tighten(e, n=1): return e + n
-        else:
-            constraint_bound = self.constraints[variable].upper_bound
-            bound_variables = comparison.upper_variables
-            tightest = min
-            def get_target_bound(e): return self.constraints[e].lower_bound
-            def tighter_than(a, b): return a <= b
-            def tighten(e, n=1): return e - n
-
-        unassigned_bound_variables = []
-        bounds = [constraint_bound]
+        tighten: Callable[[ExtInt], ExtInt],
+        tightest: Callable[[list[ExtInt]], ExtInt],
+        assignment: Assignment,
+    ) -> tuple[ExtInt, set[tuple[Variable, bool]]]:
 
         index_variable: Callable[[Variable, int], Variable]
         if indexing is not None:
@@ -429,33 +403,40 @@ class CountingContextFreeGrammar:
             def index_variable(variable: Variable, delta: int = 0):
                 return variable
 
+        bounds = [constraint_bound]
+        unassigned_bound_variables = set()
         for bound_variable, inclusive in bound_variables:
             bound = assignment.get(index_variable(bound_variable), None)
             if bound is not None:
                 bounds.append(bound if inclusive else tighten(bound))
             else:
-                unassigned_bound_variables.append((bound_variable, inclusive))
-
+                unassigned_bound_variables.add((bound_variable, inclusive))
         bound = cast(int, tightest(bounds))
-        if bound in [math.inf, -math.inf]:
-            raise RuntimeError(f"Unbounded variable: {variable}")
+        return bound, unassigned_bound_variables
 
-        # If there exists unassigned variables whose bounds are intersect with
-        # the current variable, we have to consider them.
-
-        # E.g., For a variable (a_i, N) (= a_N), inner variables
-        # [(a_i, i, +1), (b, None, 0), ...]
-        inner_variables: list[tuple[Normalization, bool]] = []
+    def _filter_inner_variables(
+        self,
+        bound: int,
+        unassigned_bound_variables: set[tuple[Variable, bool]],
+        tighter_than: Callable[[ExtInt, ExtInt], bool],
+        get_target_bound: Callable[[Variable], ExtInt]
+    ) -> set[tuple[Normalization, bool]]:
+        inner_variables: set[tuple[Normalization, bool]] = set()
         for bound_variable, inclusive in unassigned_bound_variables:
             normalization = normalize_variable(bound_variable)
             normalized_variable, bound_placeholder, delta = normalization
             if tighter_than(get_target_bound(normalized_variable), bound):
-                inner_variables.append((normalization, inclusive))
+                inner_variables.add((normalization, inclusive))
+        return inner_variables
 
-        logging.debug(
-            f"unassigned bound variables: {unassigned_bound_variables}")
-        logging.debug(f"inner variables: {inner_variables}")
-
+    def _update_bound_and_count_inner_variables(
+        self,
+        variable: Variable,
+        bound: int,
+        indexing: Optional[tuple[Placeholder, int]],
+        inner_variables: set[tuple[Normalization, bool]],
+        tighten: Callable[[ExtInt, int], ExtInt]
+    ) -> tuple[int, int]:
         # Update the bounds and the number of constant-indexed inner_variables
         # according to the placeholder-indexed inner variables
         number_of_inner_variables = 0
@@ -472,19 +453,85 @@ class CountingContextFreeGrammar:
 
                 # If we are considering non decreasing placeholder (e.g.,
                 # a_i+1), we believe that a_N+1 must be assigned or not exists
-                if delta >= 0:
+                if indexing is None or delta >= 0:
                     continue
+
+                placeholder, index = cast(tuple[Placeholder, int], indexing)
 
                 # E.g., if a_i-1's are inner variables, a_N has N inner
                 # variables
                 number_of_indexed_inner_variables = index // (-delta)
                 number_of_inner_variables += number_of_indexed_inner_variables
                 if not inclusive:
-                    bound = tighten(bound, number_of_indexed_inner_variables)
-                    bound = cast(int, bound)
+                    opt_bound = tighten(
+                        bound, number_of_indexed_inner_variables)
+                    bound = cast(int, opt_bound)
             else:
                 raise NotImplementedError(
                     f"Constraint between {variable} and {inner_variable}")
+        return bound, number_of_inner_variables
+
+    def _get_variable_bound(
+        self,
+        variable: Variable,
+        assignment: Assignment,
+        indexing: Optional[tuple[Placeholder, int]],
+        reverse: bool = False
+    ) -> tuple[int, int]:
+        logging.debug(
+            f"Get {'lower' if reverse else 'upper'} bound of {variable}")
+
+        comparison = self.comparisons[variable]
+
+        bound_variables: set[tuple[Variable, bool]]
+        constraint_bound: ExtInt
+        get_target_bound: Callable[[Variable], ExtInt]
+        tighter_than: Callable[[ExtInt, ExtInt], bool]
+        tightest: Callable[[list[ExtInt]], ExtInt]
+        tighten: Callable[[ExtInt, int], ExtInt]
+        if not reverse:
+            constraint_bound = self.constraints[variable].lower_bound
+            bound_variables = comparison.lower_variables
+            tightest = max
+            def get_target_bound(e): return self.constraints[e].upper_bound
+            def tighter_than(a, b): return a >= b
+            def tighten(e, n=1): return e + n
+        else:
+            constraint_bound = self.constraints[variable].upper_bound
+            bound_variables = comparison.upper_variables
+            tightest = min
+            def get_target_bound(e): return self.constraints[e].lower_bound
+            def tighter_than(a, b): return a <= b
+            def tighten(e, n=1): return e - n
+
+        bound, unassigned_bound_variables = (
+            self._get_bound_and_unassigneds(
+                bound_variables, constraint_bound, indexing,
+                tighten, tightest,
+                assignment
+            )
+        )
+
+        if bound in [math.inf, -math.inf]:
+            raise RuntimeError(f"Unbounded variable: {variable}")
+        bound = cast(int, bound)
+
+        # If there exists unassigned variables whose bounds are intersect with
+        # the current variable, we have to consider them.
+
+        # E.g., For a variable (a_i, N) (= a_N), inner variables
+        # [(a_i, i, +1), (b, None, 0), ...]
+        inner_variables = self._filter_inner_variables(
+            bound, unassigned_bound_variables, tighter_than, get_target_bound)
+
+        logging.debug(
+            f"unassigned bound variables: {unassigned_bound_variables}")
+        logging.debug(f"inner variables: {inner_variables}")
+
+        bound, number_of_inner_variables = (
+            self._update_bound_and_count_inner_variables(
+                variable, bound, indexing, inner_variables, tighten)
+        )
 
         return bound, number_of_inner_variables
 

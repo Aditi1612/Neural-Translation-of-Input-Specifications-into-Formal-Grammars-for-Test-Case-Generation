@@ -464,7 +464,7 @@ class CountingContextFreeGrammar:
 
             # E.g., (b, None, 0) yields one inner variable between the variable
             # and the bound. And current bound considering it.
-            if bound_placeholder is None:
+            if inner_placeholder is None:
                 number_of_inner_variables += 1
 
             # E.g., (a_i, i, xx)

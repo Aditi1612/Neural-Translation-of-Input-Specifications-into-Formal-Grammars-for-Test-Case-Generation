@@ -2,8 +2,6 @@ import jsonlines
 import traceback
 from typing import (Optional, Callable, )
 
-from tqdm import tqdm  # type: ignore
-
 from counting_context_free_grammar import CountingContextFreeGrammar as CCFG
 from discriminator import discriminator as Discriminator
 from generator import test_case_generator as TestCaseGenerator
@@ -48,14 +46,14 @@ def test_generator(
     return None, ""
 
 
-def print_error(name: str, spec: dict, detail: str) -> None:
-    print()
+def print_error(name: str, idx: int, specification: dict, e: Exception):
     print("#" * 50)
-    print(f'{name} exception on idx: {problem_idx}')
-    print("Error:", e)
-    for k, v in spec.items():
-        print(k, v)
-    print(detail)
+    print(f'{name} exception on idx: {idx}')
+    print(f"{type(e).__name__}:", e)
+    print()
+    print("Spec:")
+    print(f"Grammar: {specification['grammer']}")
+    print(f"Constraints: {specification['constraints']}")
     print("#" * 50)
 
 
@@ -72,7 +70,7 @@ if __name__ == "__main__":
         discriminator = Discriminator("test")
         generator = TestCaseGenerator("test")
 
-        for problem in tqdm(problems):
+        for problem in problems:
             total += 1
 
             problem_idx = problem['name']['index']
@@ -115,9 +113,10 @@ if __name__ == "__main__":
                 generate_ccfg, None if parser_failed else parse)
             if isinstance(e, InvalidGrammarError):
                 grammar_errors.append((problem_idx, str(e)))
-            elif e is not None:
+
+            if e is not None:
                 ccfg_errors.append(problem_idx)
-                print_error("CCFG", specification, detail)
+                print_error("CCFG", problem_idx, specification, e)
 
     parser_passed = total - len(parser_errors)
     generator_passed = total - len(generator_errors)
@@ -134,6 +133,3 @@ if __name__ == "__main__":
     print(f"Generator only error {generator_only_error}")
     print(f"CCFG only error {ccfg_only_error}")
     print(f"Both error {both_error}")
-    print("Grammar error:")
-    for idx, msg in grammar_errors:
-        print(idx, msg)

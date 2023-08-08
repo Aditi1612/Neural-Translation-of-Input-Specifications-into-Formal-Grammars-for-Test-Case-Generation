@@ -1,21 +1,22 @@
-from enum import Enum
-from types import ModuleType
-from typing import (Optional, Callable, Union, cast, )
 import typing
 import logging
 import math
 import random
 import re
 import sys
+from enum import Enum
+from types import ModuleType
+from typing import (Optional, Callable, Union, cast, Protocol, )
+from functools import cmp_to_key
 
 import jsonlines
 
-import constraint
-from constraint import normalize_variable
-from constraint import (ExtInt, Variable, Placeholder, Normalization, )
-
-from invalid_grammar_error import InvalidConstraintError
-from invalid_grammar_error import InvalidProductionError
+from .constraint import normalize_variable
+from .constraint import (ExtInt, Variable, Placeholder, Normalization, )
+from .constraint import parse
+from .constraint import parse_comparand
+from .invalid_grammar_error import InvalidConstraintError
+from .invalid_grammar_error import InvalidProductionError
 
 sre_parse: ModuleType
 try:
@@ -31,6 +32,12 @@ Assignment = dict[Variable, int]
 Production = list[Token]
 
 TToken = typing.TypeVar('TToken', bound=Token)
+T = typing.TypeVar('T', contravariant=True)
+
+
+class Comparator(Protocol[T]):
+    def __call__(self, o1: T, o2: T) -> int: pass
+
 
 MAX_ITER = 100
 TESTMODE_VARIABLE_UPPER_BOUND = 50
@@ -95,7 +102,7 @@ class CountingContextFreeGrammar:
                 self.productions[Variable(lhs)].append(production)
 
         # Parse constraints and comparisons
-        parsed = constraint.parse(constraint_strings)
+        parsed = parse(constraint_strings)
         self.constraints, self.comparisons, self.placeholders = parsed
 
         # Add placeholders from constraints and comparisons
@@ -389,9 +396,12 @@ class CountingContextFreeGrammar:
         constraint_bound: ExtInt,
         indexing: Optional[tuple[Placeholder, int]],
         tighten: Callable[[ExtInt], ExtInt],
-        tightest: Callable[[list[ExtInt]], ExtInt],
+        tighter_than: Comparator[ExtInt],
         assignment: Assignment,
     ) -> tuple[ExtInt, set[tuple[Variable, bool]]]:
+
+        def tightest(bounds: list[ExtInt]) -> ExtInt:
+            return max(bounds, key=cmp_to_key(tighter_than))
 
         index_variable: Callable[[Variable, int], Variable]
         if indexing is not None:
@@ -418,14 +428,14 @@ class CountingContextFreeGrammar:
         self,
         bound: int,
         unassigned_bound_variables: set[tuple[Variable, bool]],
-        tighter_than: Callable[[ExtInt, ExtInt], bool],
+        tighter_than: Comparator[ExtInt],
         get_target_bound: Callable[[Variable], ExtInt]
     ) -> set[tuple[Normalization, bool]]:
         inner_variables: set[tuple[Normalization, bool]] = set()
         for bound_variable, inclusive in unassigned_bound_variables:
             normalization = normalize_variable(bound_variable)
             normalized_variable, bound_placeholder, delta = normalization
-            if tighter_than(get_target_bound(normalized_variable), bound):
+            if tighter_than(get_target_bound(normalized_variable), bound) >= 0:
                 inner_variables.add((normalization, inclusive))
         return inner_variables
 
@@ -486,28 +496,25 @@ class CountingContextFreeGrammar:
         bound_variables: set[tuple[Variable, bool]]
         constraint_bound: ExtInt
         get_target_bound: Callable[[Variable], ExtInt]
-        tighter_than: Callable[[ExtInt, ExtInt], bool]
-        tightest: Callable[[list[ExtInt]], ExtInt]
+        tighter_than: Comparator[ExtInt]
         tighten: Callable[[ExtInt, int], ExtInt]
         if not reverse:
             constraint_bound = self.constraints[variable].lower_bound
             bound_variables = comparison.lower_variables
-            tightest = max
             def get_target_bound(e): return self.constraints[e].upper_bound
-            def tighter_than(a, b): return a >= b
+            def tighter_than(a, b): return a - b
             def tighten(e, n=1): return e + n
         else:
             constraint_bound = self.constraints[variable].upper_bound
             bound_variables = comparison.upper_variables
-            tightest = min
             def get_target_bound(e): return self.constraints[e].lower_bound
-            def tighter_than(a, b): return a <= b
+            def tighter_than(a, b): return b - a
             def tighten(e, n=1): return e - n
 
         bound, unassigned_bound_variables = (
             self._get_bound_and_unassigneds(
                 bound_variables, constraint_bound, indexing,
-                tighten, tightest,
+                tighten, tighter_than,
                 assignment
             )
         )
@@ -673,7 +680,7 @@ class CountingContextFreeGrammar:
         assignment: Assignment
     ) -> int:
         if _RE_NUMBER_CBE.fullmatch(counter_operator):
-            parsed = constraint.parse_comparand(counter_operator)
+            parsed = parse_comparand(counter_operator)
             assert type(parsed) is int
             return parsed
         elif counter_operator in assignment:

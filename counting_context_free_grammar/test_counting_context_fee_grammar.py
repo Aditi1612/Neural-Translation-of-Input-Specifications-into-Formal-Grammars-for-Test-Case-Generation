@@ -3,9 +3,8 @@ import traceback
 from typing import (Optional, Callable, )
 
 from counting_context_free_grammar import CountingContextFreeGrammar as CCFG
-from discriminator import discriminator as Discriminator
-from generator import test_case_generator as TestCaseGenerator
-from invalid_grammar_error import InvalidGrammarError
+from counting_context_free_grammar import InvalidGrammarError
+from counting_context_free_grammar import Discriminator
 
 DEFAULT_MAX_ITER = 100
 
@@ -61,15 +60,12 @@ if __name__ == "__main__":
     total = 0
 
     grammar_errors = []
-    generator_errors = []
     parser_errors = []
     ccfg_errors = []
 
     with jsonlines.open('data/train_grammer.jsonl') as problems:
 
         discriminator = Discriminator("test")
-        generator = TestCaseGenerator("test")
-
         for problem in problems:
             total += 1
 
@@ -87,9 +83,6 @@ if __name__ == "__main__":
                 discriminator(grammar, constraints, testcase)
                 return True
 
-            def generate_generator():
-                return generator(grammar, constraints)
-
             def generate_ccfg():
                 ccfg = CCFG(grammar, constraints, testmode=True)
                 return ccfg.generate()
@@ -100,13 +93,6 @@ if __name__ == "__main__":
             if e is not None:
                 parser_failed = True
                 parser_errors.append(problem_idx)
-
-            # Test Generator
-            e, detail = test_generator(
-                generate_generator, None if parser_failed else parse)
-            if e is not None:
-                generator_errors.append(problem_idx)
-                # print_error("generator", specification, detail)
 
             # Test CCFG
             e, detail = test_generator(
@@ -119,17 +105,8 @@ if __name__ == "__main__":
                 print_error("CCFG", problem_idx, specification, e)
 
     parser_passed = total - len(parser_errors)
-    generator_passed = total - len(generator_errors)
     ccfg_passed = total - len(ccfg_errors)
 
     print(f"Parser: {parser_passed}/{total}")
-    print(f"Generator: {generator_passed}/{total}")
     print(f"CCFG: {ccfg_passed}/{total}")
-
-    generator_only_error = sorted(set(generator_errors) - set(ccfg_errors))
-    ccfg_only_error = sorted(set(ccfg_errors) - set(generator_errors))
-    both_error = sorted(set(generator_errors) & set(ccfg_errors))
-
-    print(f"Generator only error {generator_only_error}")
-    print(f"CCFG only error {ccfg_only_error}")
-    print(f"Both error {both_error}")
+    print(f"Errors: {parser_errors}")

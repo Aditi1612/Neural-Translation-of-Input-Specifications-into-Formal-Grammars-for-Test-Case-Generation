@@ -1,4 +1,7 @@
+from typing import (Optional, cast, )
+
 import torch
+import transformers  # type: ignore [import]
 
 from base.base_trainer import BaseTrainer
 
@@ -6,13 +9,13 @@ from base.base_trainer import BaseTrainer
 class T5Trainer(BaseTrainer):
     def __init__(
         self,
-        model,
-        optimizer,
-        device,
-        data_loader,
-        tokenizer,
-        valid_data_loader=None,
-        lr_scheduler=None,
+        model: transformers.T5ForConditionalGeneration,
+        optimizer: torch.optim.Optimizer,
+        device: str,
+        data_loader: torch.utils.data.DataLoader,
+        tokenizer: transformers.PreTrainedTokenizerBase,
+        valid_data_loader: Optional[torch.utils.data.DataLoader] = None,
+        lr_scheduler: None = None,
         *,
         epochs: int,
         save_dir: str,
@@ -22,6 +25,7 @@ class T5Trainer(BaseTrainer):
             model, optimizer,
             epochs=epochs, save_dir=save_dir, save_period=save_period
         )
+        self.model: transformers.T5ForConditionalGeneration = self.model
         self.device = device
         self.data_loader = data_loader
         self.tokenizer = tokenizer
@@ -61,6 +65,9 @@ class T5Trainer(BaseTrainer):
             self._valid_epoch(epoch)
 
     def _valid_epoch(self, epoch: int) -> None:
+
+        assert self.valid_data_loader is not None
+
         predictions = []
         actuals = []
         sources = []
@@ -87,7 +94,7 @@ class T5Trainer(BaseTrainer):
                 )
                 losses.append(self.model(input_ids=ids, labels=y).loss)
 
-                def tokenizer_decode(e):
+                def tokenizer_decode(e: int) -> str:
                     return self.tokenizer.decode(
                         e,
                         skip_special_tokens=True,  # XXX

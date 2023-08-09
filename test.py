@@ -1,83 +1,61 @@
-import sys
-import jsonlines
-from discriminator import discriminator
-from generator import test_case_generator
+import json
+from collections import OrderedDict
 
-file_name = sys.argv[1]
-# file_name = 'train_grammer'
-result_directory = "test_results"
-g_error_file = f"{result_directory}/result_{file_name}_error_list_g.txt"
-p_error_file = f"{result_directory}/result_{file_name}_error_list_p.txt"
-g_path_file = f"{result_directory}/result_{file_name}_pass_list_g.txt"
-p_path_file = f"{result_directory}/result_{file_name}_pass_list_p.txt"
-g_error_reason_file = f"{result_directory}/result_{file_name}_error_reason_g.txt"
-p_error_reason_file = f"{result_directory}/result_{file_name}_error_reason_p.txt"
+import torch
+from transformers import RobertaTokenizer  # type: ignore [import]
+from transformers import T5ForConditionalGeneration  # type: ignore [import]
 
-discriminator = discriminator('test')
-generator = test_case_generator('test')
-
-with open(p_path_file, 'w', encoding='utf-8') as write_file:
-    write_file.write('')
-with open(p_error_file, 'w', encoding='utf-8') as write_file:
-    write_file.write('')
-with open(p_error_reason_file, 'w', encoding='utf-8') as write_file:
-    write_file.write('')
-
-with open(g_path_file, 'w', encoding='utf-8') as write_file:
-    write_file.write('')
-with open(g_error_file, 'w', encoding='utf-8') as write_file:
-    write_file.write('')
-with open(g_error_reason_file, 'w', encoding='utf-8') as write_file:
-    write_file.write('')
+from data_loader import get_data_loader
 
 
-with jsonlines.open(f'data/{file_name}.jsonl') as f:
-    for p_idx, problem in enumerate(f, 1):
-        print(p_idx)
+def main() -> None:
 
-        # name, idx, _ = problem['name']
-        name = problem['name']['name']
-        print(name)
-        idx = problem['name']['index']
-        grammer = problem['spec']['grammer']
-        const = problem['spec']['constraints']
-        test_cases = problem['public_tests']['input']
-        try:
-            for test_case in test_cases:
-                res = discriminator(grammer, const, test_case)
-                if not res:
-                    print(res)
-                    break
-            else:
-                print(res)
+    with open('./config.json') as fp:
+        config = json.load(fp, object_hook=OrderedDict)
 
-            with open(f'{p_path_file}', 'a', encoding='utf-8') as write_file:
-                write_file.write(f'{name}, {idx}\n')
+    tokenizer = RobertaTokenizer.from_pretrained(config['pretrained'])
+    data_loader_args = config['data_loader']['args']
+    data_loader_args['shuffle'] = False
 
-        except Exception as e:
-            with open(p_error_file, 'a', encoding='utf-8') as write_file:
-                write_file.write(f'{name}, {idx}\n')
+    checkpoint = torch.load('./saved/checkpoint-epoch91.pth')
+    state_dict = checkpoint['model_state_dict']
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-            with open(p_error_reason_file, 'a', encoding='utf-8') as write_file:
-                write_file.write(f'{idx} {name}:\n' + test_case + ('' if test_case[-1] == '\n' else '\n'))
-                write_file.write('\t' + str(e) + '\n\n')
+    model = T5ForConditionalGeneration.from_pretrained(config['pretrained'])
+    model.load_state_dict(state_dict)
+    model = model.to(device)
 
-        try:
-            for i in range(3):
-                res = generator(grammer, const)
-                print(res)
-            print()
+    data_loader = get_data_loader(
+        'data/test_grammar.jsonl', tokenizer, **data_loader_args)
 
-            with open(g_path_file, 'a', encoding='utf-8') as write_file:
-                write_file.write(f'{name}, {idx}\n')
+    with torch.no_grad():
+        for idx, data in enumerate(data_loader, 1):
 
-        except Exception as e:
-            print("pass:", i)
-            print()
-            with open(g_error_file, 'a', encoding='utf-8') as write_file:
-                write_file.write(f'{name}, {idx}\n')
+            ys = data['target_ids']
+            ids = data['source_ids']
+            mask = data['source_mask']
+            ys, ids, mask = ys.to(device), ids.to(device), mask.to(device)
 
-            with open(g_error_reason_file, 'a', encoding='utf-8') as write_file:
-                write_file.write(f'{idx} {name}:\n' + test_case + ('' if test_case[-1] == '\n' else '\n'))
-                write_file.write('\t' + str(e) + '\n\n')
+            outputs = model.generate(
+                input_ids=ids,
+                attention_mask=mask,
+                max_length=10,
+                num_beams=10,
+                repetition_penalty=2.5,
+                length_penalty=1.0,
+                early_stopping=True,
+                num_return_sequences=10
+            )
 
+            for y, output in zip(ys, outputs):
+
+                print("Goal:")
+                print(tokenizer.decode(y, skip_special_tokens=True))
+
+                print("Output:")
+                print(output)
+                print(tokenizer.decode(output, skip_special_tokens=False))
+
+
+if __name__ == "__main__":
+    main()

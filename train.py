@@ -3,7 +3,8 @@ from collections import OrderedDict
 
 import torch
 import numpy as np
-from transformers import RobertaTokenizer, T5ForConditionalGeneration
+from transformers import RobertaTokenizer  # type: ignore [import]
+from transformers import T5ForConditionalGeneration  # type: ignore [import]
 
 from data_loader import get_data_loader
 from trainer import T5Trainer
@@ -18,7 +19,7 @@ torch.backends.cudnn.benchmark = False
 np.random.seed(SEED)  # numpy random seed
 
 
-def main():
+def main() -> None:
 
     with open('./config.json') as fp:
         config = json.load(fp, object_hook=OrderedDict)

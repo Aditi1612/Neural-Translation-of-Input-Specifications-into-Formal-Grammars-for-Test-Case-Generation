@@ -1,6 +1,7 @@
 import jsonlines
+import torch
 import pandas as pd
-from transformers import PreTrainedTokenizerBase
+from transformers import PreTrainedTokenizerBase  # type: ignore [import]
 from torch.utils.data import DataLoader
 
 from .my_dataset import MyDataset
@@ -9,8 +10,8 @@ from .my_dataset import MyDataset
 def _get_data_frame(
     file: str,
     tokenizer: PreTrainedTokenizerBase,
-    separator=' // ',
-    subseparator=' / '
+    separator: str = ' // ',
+    subseparator: str = ' / '
 ) -> pd.DataFrame:
 
     sources = []
@@ -47,7 +48,7 @@ def _get_data_frame(
 
 def get_data_loader(
     file: str,
-    tokenizer: PreTrainedTokenizerBase,
+    tokenizer: torch.nn.Module,
     separator: str = ' / ',
     subseparator: str = ' // ',
     *,

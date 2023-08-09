@@ -1,7 +1,7 @@
 from typing import (Any, )
 
 import torch
-import transformers
+import transformers  # type: ignore [import]
 import pandas as pd
 
 from torch.utils.data import Dataset
@@ -47,7 +47,7 @@ class MyDataset(Dataset):
     def __len__(self) -> int:
         return len(self.targets)
 
-    def __getitem__(self, index) -> dict[str, Any]:
+    def __getitem__(self, index: int) -> dict[str, Any]:
         """return the input ids, attention masks and target ids"""
 
         source_text = str(self.inputs[index])

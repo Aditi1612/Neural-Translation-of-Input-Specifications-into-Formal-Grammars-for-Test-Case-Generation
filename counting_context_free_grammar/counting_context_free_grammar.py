@@ -22,7 +22,7 @@ sre_parse: ModuleType
 try:
     import sre_parse
 except ImportError:
-    sre_parse = re.sre_parse  # type: ignore[attr-defined]
+    sre_parse = re.sre_parse  # type: ignore [attr-defined]
 
 Nonterminal = typing.NewType('Nonterminal', str)
 Terminal = typing.NewType('Terminal', str)

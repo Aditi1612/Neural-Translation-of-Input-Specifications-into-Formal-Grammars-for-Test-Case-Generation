@@ -1,7 +1,8 @@
-*.ipynb
+__pycache__/
 
-/test_results
-/.vscode
-__pycache__
+test_results
+.vscode
 .venv
-!.requirements.txt
+
+data/
+saved/

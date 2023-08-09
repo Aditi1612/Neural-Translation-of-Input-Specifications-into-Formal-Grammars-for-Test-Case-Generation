@@ -1,0 +1,30 @@
+{
+  "pretrained": "Salesforce/codet5-base",
+  "NUM_OF_BEAM_SAMPLE": 10,
+  "data_loader": {
+    "args": {
+      "batch_size": 8,
+      "shuffle": true,
+      "source_len": 512,
+      "target_len": 512,
+      "source_title": "source",
+      "target_title": "target",
+      "num_workers": 2
+    }
+  },
+  "optimizer": {
+    "type": "Adam",
+    "args":{
+      "lr": 1e-7
+    }
+  },
+  "metrics": [
+    "accuracy", "top_k_acc"
+  ],
+  "trainer": {
+    "epochs": 1000,
+
+    "save_dir": "saved/",
+    "save_period": 1
+  }
+}

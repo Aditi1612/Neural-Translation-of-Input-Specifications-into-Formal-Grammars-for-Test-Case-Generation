@@ -1,4 +1,5 @@
 import os
+from typing import (Any, cast, )
 
 import jsonlines
 import pandas as pd
@@ -18,8 +19,8 @@ class MyDataset(Dataset):
 
     def __init__(self, path: os.PathLike) -> None:
         # TODO: Load essential columns only
-        data = jsonlines.open(path)
 
+        data = cast(list[dict[Any, Any]], jsonlines.open(path))
         self.df = pd.json_normalize(data)
 
     def __len__(self) -> int:

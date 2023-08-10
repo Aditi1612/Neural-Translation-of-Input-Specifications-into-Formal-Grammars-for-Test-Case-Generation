@@ -1,9 +1,10 @@
 import os
 
-import transformers
+import transformers  # type: ignore [import]
 from torch.utils.data import DataLoader
 
 from .my_dataset import MyDataset
+from tokenizer import Tokenizer
 
 PREFIX = "summarize: "
 
@@ -11,7 +12,7 @@ PREFIX = "summarize: "
 def get_data_loader(
     path: os.PathLike,
     source_tokenizer: transformers.PreTrainedTokenizerBase,
-    target_tokenizer: transformers.PreTrainedTokenizerBase,
+    target_tokenizer: Tokenizer,
     *,
     batch_size: int,
     shuffle: bool,
@@ -33,7 +34,7 @@ def get_data_loader(
             return_tensors='pt',
             truncation=True,
         )
-        target_encodings = target_tokenizer(
+        target_encodings = target_tokenizer.batch_encode_plus(
             targets,
             padding=True,
             add_special_tokens=False,

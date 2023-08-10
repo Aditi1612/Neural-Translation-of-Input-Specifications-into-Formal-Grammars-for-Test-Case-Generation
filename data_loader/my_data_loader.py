@@ -1,76 +1,55 @@
-import jsonlines
-import torch
-import pandas as pd
-from transformers import PreTrainedTokenizerBase  # type: ignore [import]
+import os
+
+import transformers
 from torch.utils.data import DataLoader
 
 from .my_dataset import MyDataset
 
-
-def _get_data_frame(
-    file: str,
-    tokenizer: PreTrainedTokenizerBase,
-    separator: str = ' // ',
-    subseparator: str = ' / '
-) -> pd.DataFrame:
-
-    sources = []
-    targets = []
-    indexs = []
-    names = []
-
-    with jsonlines.open(file) as f:
-        for idx, obj in enumerate(f):
-
-            source = obj['description']['spec']
-            if source == '':
-                continue
-
-            indexs.append(obj['name']['index'])
-            names.append(obj['name']['name'])
-            sources.append(source)
-
-            target1 = subseparator.join(obj['spec']['grammer'])
-            target2 = subseparator.join(obj['spec']['constraints'])
-
-            target1 = target1.replace("<S>", "<R>").replace("<s>", "<p>")
-            target = target1 + ' // ' + target2
-            targets.append(target + tokenizer.eos_token)
-
-    df = pd.DataFrame()
-    df['index'] = indexs
-    df['name'] = names
-    df['source'] = sources
-    df['target'] = targets
-
-    return df
+PREFIX = "summarize: "
 
 
 def get_data_loader(
-    file: str,
-    tokenizer: torch.nn.Module,
-    separator: str = ' / ',
-    subseparator: str = ' // ',
+    path: os.PathLike,
+    source_tokenizer: transformers.PreTrainedTokenizerBase,
+    target_tokenizer: transformers.PreTrainedTokenizerBase,
     *,
     batch_size: int,
     shuffle: bool,
-    source_len: int,
-    target_len: int,
-    source_title: str,
-    target_title: str,
     num_workers: int
 ) -> DataLoader:
 
-    df = _get_data_frame(file, tokenizer)
-    dataset = MyDataset(
-        df, tokenizer, source_len, target_len, source_title, target_title
-    )
+    def collate_fn(
+        samples: list[dict[str, str]]
+    ) -> dict[str, transformers.tokenization_utils_base.BatchEncoding]:
+
+        sources = [PREFIX + sample['source'] for sample in samples]
+        targets = [sample['target'] for sample in samples]
+
+        source_encodings = source_tokenizer.batch_encode_plus(
+            sources,
+            add_special_tokens=False,
+            max_length=512,
+            padding='max_length',
+            return_tensors='pt',
+            truncation=True,
+        )
+        target_encodings = target_tokenizer(
+            targets,
+            padding=True,
+            add_special_tokens=False,
+            return_tensors='pt'
+        )
+
+        return {'sources': source_encodings, 'targets': target_encodings}
+
+    dataset = MyDataset(path)
 
     data_loader = DataLoader(
         dataset,
         batch_size=batch_size,
+        collate_fn=collate_fn,
+        num_workers=num_workers,
         shuffle=shuffle,
-        num_workers=num_workers
     )
 
     return data_loader

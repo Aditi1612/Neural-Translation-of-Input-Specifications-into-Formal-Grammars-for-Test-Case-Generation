@@ -1,14 +1,13 @@
 {
   "pretrained": "Salesforce/codet5-base",
-  "NUM_OF_BEAM_SAMPLE": 10,
+  "data_dir": "data/",
+  "train_data": "train_grammar.jsonl",
+  "valid_data": "test_grammar.jsonl",
+  "test_data": "test_grammar.jsonl",
   "data_loader": {
     "args": {
-      "batch_size": 8,
+      "batch_size": 16,
       "shuffle": true,
-      "source_len": 512,
-      "target_len": 512,
-      "source_title": "source",
-      "target_title": "target",
       "num_workers": 2
     }
   },
@@ -18,13 +17,11 @@
       "lr": 1e-7
     }
   },
-  "metrics": [
-    "accuracy", "top_k_acc"
-  ],
+  "metrics": [],
   "trainer": {
     "epochs": 1000,
-
     "save_dir": "saved/",
-    "save_period": 1
+    "save_period": 10,
+    "valid_period": 10
   }
 }

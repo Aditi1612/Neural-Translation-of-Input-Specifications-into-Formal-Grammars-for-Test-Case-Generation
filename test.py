@@ -17,7 +17,7 @@ def main() -> None:
     data_loader_args = config['data_loader']['args']
     data_loader_args['shuffle'] = False
 
-    checkpoint = torch.load('./saved/checkpoint-epoch91.pth')
+    checkpoint = torch.load('./saved/checkpoint-epoch695.pth')
     state_dict = checkpoint['model_state_dict']
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 

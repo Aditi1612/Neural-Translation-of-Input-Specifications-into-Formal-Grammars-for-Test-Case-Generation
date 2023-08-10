@@ -49,7 +49,7 @@ NEW_LINE_TOKEN = Terminal('<n>')
 SPACE_TOKEN = Terminal('<s>')
 BLANK_TOKEN = Terminal('ε')
 
-DERIVATE_TOKEN = '->'
+DERIVATE_TOKEN = ' -> '
 # SEP_TOKEN = '\t'
 
 

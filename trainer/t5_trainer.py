@@ -1,4 +1,5 @@
-from typing import (Optional, cast, )
+from typing import (Optional, )
+import random
 
 import torch
 import transformers  # type: ignore [import]
@@ -7,19 +8,30 @@ from base.base_trainer import BaseTrainer
 
 
 class T5Trainer(BaseTrainer):
+    """ See the following guideline
+    https://huggingface.co/docs/transformers/model_doc/t5#training
+    """
+    ignore_index = -100
+
     def __init__(
         self,
         model: transformers.T5ForConditionalGeneration,
         optimizer: torch.optim.Optimizer,
         device: str,
         data_loader: torch.utils.data.DataLoader,
-        tokenizer: transformers.PreTrainedTokenizerBase,
+        source_tokenizer: transformers.PreTrainedTokenizerBase,
+        target_tokenizer: transformers.PreTrainedTokenizerBase,
         valid_data_loader: Optional[torch.utils.data.DataLoader] = None,
         lr_scheduler: None = None,
         *,
         epochs: int,
         save_dir: str,
         save_period: int,
+        valid_period: int,
+        length_penalty: float = 1.0,
+        max_new_tokens: int = 150,
+        num_beams: int = 10,
+        repetition_penalty: float = 2.5,
     ) -> None:
         super().__init__(
             model, optimizer,
@@ -28,90 +40,102 @@ class T5Trainer(BaseTrainer):
         self.model: transformers.T5ForConditionalGeneration = self.model
         self.device = device
         self.data_loader = data_loader
-        self.tokenizer = tokenizer
+        self.source_tokenizer = source_tokenizer
+        self.target_tokenizer = target_tokenizer
         self.valid_data_loader = valid_data_loader
         self.do_validation = valid_data_loader is not None
         self.lr_scheduler = lr_scheduler
 
-        self.log_step = 10
+        self.valid_period = valid_period
+
+        self.length_penalty = length_penalty
+        self.max_new_tokens = max_new_tokens
+        self.num_beams = num_beams
+        self.repetition_penalty = repetition_penalty
 
     def _train_epoch(self, epoch: int) -> None:
         self.model.train()
-        for batch_idx, data in enumerate(self.data_loader):
+        for batch_idx, batch in enumerate(self.data_loader):
 
-            # XXX: I copied the below code without brain
-            y = data["target_ids"].to(self.device, dtype=torch.long)
-            y_ids = y[:, :-1].contiguous()
-            lm_labels = y[:, 1:].clone().detach()
-            lm_labels[y[:, 1:] == self.tokenizer.pad_token_id] = -100
-            ids = data["source_ids"].to(self.device, dtype=torch.long)
-            mask = data["source_mask"].to(self.device, dtype=torch.long)
+            sources = batch['sources']
+            targets = batch['targets']
+
+            input_ids = sources.input_ids.to(self.device)
+            attention_mask = sources.attention_mask.to(self.device)
+            labels = targets.input_ids.to(self.device)
+
+            pad_token_id = self.target_tokenizer.pad_token_id
+            pad_token_indexes = (labels == pad_token_id)
+            labels[pad_token_indexes] = self.ignore_index
 
             self.optimizer.zero_grad()
             output = self.model(
-                input_ids=ids,
-                attention_mask=mask,
-                decoder_input_ids=y_ids,
-                labels=lm_labels,
+                input_ids=input_ids,
+                attention_mask=attention_mask,
+                labels=labels
             )
-            loss = output[0]
+            loss = output.loss
+
             loss.backward()
             self.optimizer.step()
 
             # TODO: Use logger
-        print(f"Train epoch: {epoch} Loss: {loss.item():.6f}")
+            epoch_progress = batch_idx / len(self.data_loader)
+            log_message = "Train epoch: {} {:.2f}% Loss: {:.6f}".format(
+                    epoch, epoch_progress * 100, loss.item())
+            print(log_message)
 
-        if self.do_validation:
+        if self.do_validation and epoch % self.valid_period == 0:
             self._valid_epoch(epoch)
 
     def _valid_epoch(self, epoch: int) -> None:
 
         assert self.valid_data_loader is not None
 
-        predictions = []
-        actuals = []
-        sources = []
         losses = []
+        generated_decodings = []
 
         self.model.eval()
         with torch.no_grad():
-            for batch_idx, data in enumerate(self.valid_data_loader):
-                y = data['target_ids'].to(self.device, dtype=torch.long)
-                ids = data['source_ids'].to(self.device, dtype=torch.long)
-                mask = data['source_mask'].to(self.device, dtype=torch.long)
+            for batch_idx, batch in enumerate(self.valid_data_loader):
 
-                num_of_beam_sample = 10  # XXX
+                sources = batch['sources']
+                targets = batch['targets']
+
+                input_ids = sources.input_ids.to(self.device)
+                attention_mask = sources.attention_mask.to(self.device)
+                labels = targets.input_ids.to(self.device)
+
+                pad_token_id = self.target_tokenizer.pad_token_id
+                pad_token_indexes = (labels == pad_token_id)
+                labels[pad_token_indexes] = self.ignore_index
+
+                output = self.model(
+                    input_ids=input_ids,
+                    attention_mask=attention_mask,
+                    labels=labels
+                )
+                losses.append(output.loss)
 
                 generated_ids = self.model.generate(
-                    input_ids=ids,
-                    attention_mask=mask,
-                    max_length=10,  # XXX: max_target_text_length
-                    num_beams=10,
-                    repetition_penalty=2.5,
-                    length_penalty=1.0,
+                    input_ids=input_ids,
+                    attention_mask=attention_mask,
                     early_stopping=True,
-                    num_return_sequences=num_of_beam_sample
+                    length_penalty=self.length_penalty,
+                    max_new_tokens=self.max_new_tokens,
+                    num_beams=self.num_beams,
+                    repetition_penalty=self.repetition_penalty
                 )
-                losses.append(self.model(input_ids=ids, labels=y).loss)
 
-                def tokenizer_decode(e: int) -> str:
-                    return self.tokenizer.decode(
-                        e,
-                        skip_special_tokens=True,  # XXX
-                        clean_up_tokenization_spaces=True
-                    )
+                generated_batch_decodings = (
+                    self.target_tokenizer.batch_decode(
+                        generated_ids, skip_special_tokens=True)
+                )
+                generated_decodings.extend(generated_batch_decodings)
 
-                preds = [tokenizer_decode(g) for g in generated_ids]
-                target = [tokenizer_decode(t) for t in y]
-                source = [tokenizer_decode(i) for i in ids]
+        avg_loss = sum(losses) / len(losses)
+        sampled_decoding = random.choice(generated_decodings)
 
-                sources.extend(source)
-                actuals.extend(target)
-                num_of_problem = len(preds) // num_of_beam_sample
-                result = []
-                for i in range(num_of_problem):
-                    result.append(preds[:num_of_beam_sample])
-                    del preds[:num_of_beam_sample]
-                predictions.extend(result)
-        # XXX:
-        print(losses)
+        # XXX: Use logger
+        print(f"Avg. loss: {avg_loss}")
+        print(f"Sampled decoding: {sampled_decoding}")

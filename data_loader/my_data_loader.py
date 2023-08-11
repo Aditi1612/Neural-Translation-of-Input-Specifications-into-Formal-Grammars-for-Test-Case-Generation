@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 from .my_dataset import MyDataset
 from tokenizer import Tokenizer
 
+# NOTE: https://huggingface.co/docs/transformers/model_doc/t5#training
 PREFIX = "summarize: "
 
 

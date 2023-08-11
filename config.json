@@ -20,7 +20,7 @@
   "metrics": [],
   "trainer": {
     "epochs": 1000,
-    "save_dir": "saved/",
+    "save_dir": "saved/0810/",
     "save_period": 10,
     "valid_period": 10
   }

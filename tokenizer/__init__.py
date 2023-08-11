@@ -1,4 +1,4 @@
 from .counting_context_free_grammar_tokenizer import (
-    ContextFreeGrammarTokenizer
+    CountingContextFreeGrammarTokenizer
 )
 from ._typing import Tokenizer  # pylsp: noqa

@@ -24,6 +24,7 @@ try:
 except ImportError:
     sre_parse = re.sre_parse  # type: ignore [attr-defined]
 
+# TODO: Move to types
 Nonterminal = typing.NewType('Nonterminal', str)
 Terminal = typing.NewType('Terminal', str)
 
@@ -43,14 +44,15 @@ MAX_ITER = 100
 TESTMODE_VARIABLE_UPPER_BOUND = 50
 TESTMODE_MAXIMUM_TERMINAL_LEN = 50
 
-START_TOKEN = Variable('<S>')
-
 NEW_LINE_TOKEN = Terminal('<n>')
 SPACE_TOKEN = Terminal('<s>')
 BLANK_TOKEN = Terminal('ε')
 
-DERIVATE_TOKEN = ' -> '
+DERIVATE_TOKEN = '->'
 # SEP_TOKEN = '\t'
+
+_RE_REGEX_TERMINAL = re.compile(r'(.+?)\{([\w\-\*\^,]*)\}')
+_RE_NUMBER_CBE = re.compile(r'(?:(-?\d+)\*)?(-?\d+)(?:\^(-?\d+))?')
 
 
 class TokenType(Enum):
@@ -64,9 +66,9 @@ class SubscriptType(Enum):
     VARIABLE = 1  # X_N, X_N-1, <A_N>
     CONSTANT = 2  # X_3, <A_3>
     PLACEHOLDER_DECREASING = 3  # X_i-1
-    VARIABLE_DECREASING = 4  # X_i-1
+    VARIABLE_DECREASING = 4  # X_N-1
     PLACEHOLDER_INCREASING = 5  # X_i+1
-    VARIABLE_INCREASING = 6  # X_i+1
+    VARIABLE_INCREASING = 6  # X_N+1
 
 
 class CountingContextFreeGrammar:
@@ -88,18 +90,29 @@ class CountingContextFreeGrammar:
 
         # Parse productions
         self.productions: dict[Token, list[Production]] = {}
+        self.start_nonterminal = Nonterminal('<S>')
         for rule_string in production_strings:
             try:
                 lhs, rhss = rule_string.split(DERIVATE_TOKEN)
+                lhs = lhs.strip()
+                rhss = rhss.strip()
             except ValueError:
                 raise InvalidProductionError("Improper production form")
 
-            variable = Variable(lhs)
-            self.productions[variable] = []
+            token: Token
+            token_type = self._get_token_type(lhs)
+            if token_type == TokenType.NONTERMINAL:
+                token = Nonterminal(lhs)
+            elif token_type == TokenType.VARIABLE:
+                token = Variable(lhs)
+            else:
+                raise InvalidProductionError("Improper production form")
+
+            self.productions[token] = []
             for rhs in rhss.split('|'):
                 tokenize = CountingContextFreeGrammar._tokenize
                 production = [tokenize(e) for e in rhs.split()]
-                self.productions[Variable(lhs)].append(production)
+                self.productions[token].append(production)
 
         # Parse constraints and comparisons
         parsed = parse(constraint_strings)
@@ -107,10 +120,10 @@ class CountingContextFreeGrammar:
 
         # Add placeholders from constraints and comparisons
         for token in self.productions:
-            _, subscript = _split_token(token)
+            _, subscript = self._split_token(token)
             if subscript is None:
                 continue
-            if _is_placeholder(subscript):
+            if self._is_placeholder(subscript):
                 self.placeholders.add(cast(Placeholder, subscript))
 
         # Remove constraints and comparisons of placeholders
@@ -127,7 +140,7 @@ class CountingContextFreeGrammar:
 
         string = ''
 
-        derivation_queue: list[Token] = [START_TOKEN]
+        derivation_queue: list[Token] = [self.start_nonterminal]
         assignment: Assignment = {}
         while derivation_queue:
 
@@ -165,7 +178,7 @@ class CountingContextFreeGrammar:
                     raise InvalidConstraintError(
                         f"{variable} has no constraint")
 
-                if _is_counter(variable):
+                if self._is_counter(variable):
                     assignment_form_variable = Variable(variable[1:-1])
                     production = _production
                 elif _production is not None:
@@ -201,7 +214,7 @@ class CountingContextFreeGrammar:
             ``subscript``. Otherwise, return ``token``.
         """
 
-        fragment, subscript = _split_token(token)
+        fragment, subscript = self._split_token(token)
         if subscript is None:
             return token
 
@@ -237,7 +250,7 @@ class CountingContextFreeGrammar:
         self, nonterminal: Nonterminal, assignment: Assignment
     ) -> Production:
 
-        fragment, subscript = _split_token(nonterminal)
+        fragment, subscript = self._split_token(nonterminal)
 
         if subscript is None:
             return random.choice(self.productions[nonterminal])
@@ -314,7 +327,7 @@ class CountingContextFreeGrammar:
             self._to_constraint_form(variable))
 
         production_form_variables = constraint_form_variables
-        if _is_counter(variable):
+        if self._is_counter(variable):
             production_form_variables = [variable]
 
         # Sample value of the variable
@@ -366,9 +379,9 @@ class CountingContextFreeGrammar:
             form.
         """
 
-        fragment, subscript = _split_token(variable)
+        fragment, subscript = self._split_token(variable)
         if subscript is None:
-            if _is_counter(variable):
+            if self._is_counter(variable):
                 new_variable = Variable(variable[1:-1])
                 return [new_variable], None
             else:
@@ -559,7 +572,7 @@ class CountingContextFreeGrammar:
             constraints.
         """
 
-        _, placeholder = _split_token(variable)
+        _, placeholder = self._split_token(variable)
         assert (placeholder is None) == (index is None)
         indexing = None
         if placeholder is not None and index is not None:
@@ -712,7 +725,7 @@ class CountingContextFreeGrammar:
             return terminal
 
         # Parse regex operands
-        counter_operands = _parse_counter_oparands(match.group(1))
+        counter_operands = self._parse_counter_oparands(match.group(1))
         counter_operators = match.group(2).split(',')
 
         if len(counter_operators) > 2:
@@ -753,61 +766,58 @@ class CountingContextFreeGrammar:
             str(self.placeholders)
         ])
 
+    @staticmethod
+    def _split_token(token: TToken) -> tuple[str, Optional[str]]:
 
-_RE_REGEX_TERMINAL = re.compile(r'(.+?)\{([\w\-\*\^,]*)\}')
-_RE_NUMBER_CBE = re.compile(r'(?:(-?\d+)\*)?(-?\d+)(?:\^(-?\d+))?')
+        tmp_string = str(token)
+        if token[0] == '<' and token[-1] == '>':
+            tmp_string = token[1:-1]
 
+        tmp = tmp_string.rsplit('_', 1)
+        if len(tmp) != 2:
+            return token, None
+        else:
+            return tmp[0], tmp[1]
 
-def _split_token(token: TToken) -> tuple[str, Optional[str]]:
+    @staticmethod
+    def _get_alphabet_from_charclass(regexes: list) -> set[str]:
+        alphabet = set()
+        for opcode, value in regexes:
+            if str(opcode) == 'LITERAL':
+                alphabet.add(chr(value))
+            elif str(opcode) == 'RANGE':
+                for n in range(value[0], value[1]+1):
+                    alphabet.add(chr(n))
+            else:
+                raise ValueError(f'Unsupported opcode: {opcode}')
+        return alphabet
 
-    tmp_string = str(token)
-    if token[0] == '<' and token[-1] == '>':
-        tmp_string = token[1:-1]
+    @staticmethod
+    def _parse_counter_oparands(regex_string: str) -> set[str]:
+        counter_operands = set()
+        parsed = sre_parse.parse(regex_string)  # type: ignore[attr-defined]
 
-    tmp = tmp_string.rsplit('_', 1)
-    if len(tmp) != 2:
-        return token, None
-    else:
-        return tmp[0], tmp[1]
+        if len(parsed) != 1:
+            raise ValueError(f'Too many nodes: {regex_string}')
 
-
-def _get_alphabet_from_charclass(regexes: list) -> set[str]:
-    alphabet = set()
-    for opcode, value in regexes:
+        opcode, value = parsed[0]
         if str(opcode) == 'LITERAL':
-            alphabet.add(chr(value))
-        elif str(opcode) == 'RANGE':
-            for n in range(value[0], value[1]+1):
-                alphabet.add(chr(n))
+            counter_operands.add(chr(value))
+        elif str(opcode) == 'IN':
+            counter_operands |= (
+                CountingContextFreeGrammar._get_alphabet_from_charclass(value))
         else:
             raise ValueError(f'Unsupported opcode: {opcode}')
-    return alphabet
 
+        return counter_operands
 
-def _parse_counter_oparands(regex_string: str) -> set[str]:
-    counter_operands = set()
-    parsed = sre_parse.parse(regex_string)  # type: ignore[attr-defined]
+    @staticmethod
+    def _is_counter(variable: Variable) -> bool:
+        return variable[0] == '[' and variable[-1] == ']'
 
-    if len(parsed) != 1:
-        raise ValueError(f'Too many nodes: {regex_string}')
-
-    opcode, value = parsed[0]
-    if str(opcode) == 'LITERAL':
-        counter_operands.add(chr(value))
-    elif str(opcode) == 'IN':
-        counter_operands |= _get_alphabet_from_charclass(value)
-    else:
-        raise ValueError(f'Unsupported opcode: {opcode}')
-
-    return counter_operands
-
-
-def _is_counter(variable: Variable) -> bool:
-    return variable[0] == '[' and variable[-1] == ']'
-
-
-def _is_placeholder(subscript: str) -> bool:
-    return subscript is not None and not subscript.isdecimal()
+    @staticmethod
+    def _is_placeholder(subscript: str) -> bool:
+        return subscript is not None and not subscript.isdecimal()
 
 
 if __name__ == '__main__':

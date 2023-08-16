@@ -5,17 +5,25 @@ import jsonlines
 import pandas as pd
 
 from torch.utils.data import Dataset
+from tokenizer import CountingContextFreeGrammarTokenizer as CCFGTokenizer
+
+
+description_replaces = [
+    ('≤', '<='),
+    ('\\leq', '<='),
+]
 
 
 class MyDataset(Dataset):
 
-    description_title = "description.description"
-    # description_title = "spec.spec"
+    name_title = "name.name"
+    # description_title = "description.description"
+    description_title = "spec.spec"
     grammar_title = "spec.grammar"
     constraint_title = "spec.constraints"
 
-    separator = " // "
-    subseparator = " / "
+    separator = CCFGTokenizer.separator
+    subseparator = CCFGTokenizer.subseparator
 
     def __init__(self, path: os.PathLike) -> None:
         # TODO: Load essential columns only
@@ -30,13 +38,24 @@ class MyDataset(Dataset):
         """return the input ids, attention masks and target ids"""
 
         data = self.df.iloc[index]
+        name: str = data[self.name_title]
         description: str = data[self.description_title]
         grammar: list[str] = data[self.grammar_title]
         constraint: list[str] = data[self.constraint_title]
+
+        # XXX
+        constraint = []
+
+        for old, new in description_replaces:
+            description = description.replace(old, new)
 
         target: str = self.separator.join([
             self.subseparator.join(grammar),
             self.subseparator.join(constraint)
         ])
 
-        return {"source": description, "target": target}
+        return {
+            "name": name,
+            "source": description,
+            "target": target,
+        }

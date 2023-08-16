@@ -99,20 +99,12 @@ class CountingContextFreeGrammar:
             except ValueError:
                 raise InvalidProductionError("Improper production form")
 
-            token: Token
-            token_type = self._get_token_type(lhs)
-            if token_type == TokenType.NONTERMINAL:
-                token = Nonterminal(lhs)
-            elif token_type == TokenType.VARIABLE:
-                token = Variable(lhs)
-            else:
-                raise InvalidProductionError("Improper production form")
-
-            self.productions[token] = []
+            variable = Variable(lhs)
+            self.productions[variable] = []
             for rhs in rhss.split('|'):
                 tokenize = CountingContextFreeGrammar._tokenize
                 production = [tokenize(e) for e in rhs.split()]
-                self.productions[token].append(production)
+                self.productions[variable].append(production)
 
         # Parse constraints and comparisons
         parsed = parse(constraint_strings)

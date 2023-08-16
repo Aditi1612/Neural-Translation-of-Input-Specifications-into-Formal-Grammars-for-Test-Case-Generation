@@ -26,12 +26,13 @@ def get_data_loader(
 
         sources = [PREFIX + sample['source'] for sample in samples]
         targets = [sample['target'] for sample in samples]
+        names = [sample['name'] for sample in samples]
 
         source_encodings = source_tokenizer.batch_encode_plus(
             sources,
             add_special_tokens=False,
             max_length=512,
-            padding='max_length',
+            padding=True,
             return_tensors='pt',
             truncation=True,
         )
@@ -42,7 +43,13 @@ def get_data_loader(
             return_tensors='pt'
         )
 
-        return {'sources': source_encodings, 'targets': target_encodings}
+        return {
+            'names': names,
+            'sources_origin': sources,
+            'targets_origin': targets,
+            'sources': source_encodings,
+            'targets': target_encodings,
+        }
 
     dataset = MyDataset(path)
 

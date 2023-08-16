@@ -6,7 +6,7 @@
   "test_data": "test_grammar.jsonl",
   "data_loader": {
     "args": {
-      "batch_size": 16,
+      "batch_size": 32,
       "shuffle": true,
       "num_workers": 2
     }
@@ -20,7 +20,7 @@
   "metrics": [],
   "trainer": {
     "epochs": 1000,
-    "save_dir": "saved/custom_decoder/",
+    "save_dir": "saved/grammar_only2/",
     "save_period": 10,
     "valid_period": 10
   }

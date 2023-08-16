@@ -9,6 +9,7 @@ from transformers import T5ForConditionalGeneration  # type: ignore [import]
 
 from data_loader import get_data_loader
 from trainer import T5Trainer
+from tokenizer import CountingContextFreeGrammarTokenizer as CCFGTokenizer
 
 device = 'cuda:0'
 
@@ -27,7 +28,9 @@ def main() -> None:
 
     source_tokenizer = RobertaTokenizer.from_pretrained(config['pretrained'])
     source_tokenizer.truncation_side = 'left'
-    target_tokenizer = RobertaTokenizer.from_pretrained(config['pretrained'])
+
+    fallback_tokenizer = RobertaTokenizer.from_pretrained(config['pretrained'])
+    target_tokenizer = CCFGTokenizer(fallback_tokenizer)
 
     data_loader_args = config['data_loader']['args']
     data_dir = Path(config['data_dir'])

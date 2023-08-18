@@ -43,15 +43,15 @@ class MyDataset(Dataset):
         grammar: list[str] = data[self.grammar_title]
         constraint: list[str] = data[self.constraint_title]
 
-        # XXX
+        # XXX: We only uses grammar
         constraint = []
 
         for old, new in description_replaces:
             description = description.replace(old, new)
 
-        target: str = self.separator.join([
-            self.subseparator.join(grammar),
-            self.subseparator.join(constraint)
+        target: str = f" {self.separator} ".join([
+            f" {self.subseparator} ".join(grammar),
+            f" {self.subseparator} ".join(constraint)
         ])
 
         return {

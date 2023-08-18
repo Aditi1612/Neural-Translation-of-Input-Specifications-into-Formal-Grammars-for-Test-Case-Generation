@@ -6,10 +6,12 @@ from collections import OrderedDict
 from typing import (Any, )
 
 import torch
+import argparse
 from transformers import RobertaTokenizer  # type: ignore [import]
 from transformers import T5ForConditionalGeneration  # type: ignore [import]
 
 from data_loader import get_data_loader
+from tokenizer import CountingContextFreeGrammarTokenizer as CCFGTokenizer
 
 
 def main(config: dict[str, Any]) -> None:
@@ -31,14 +33,15 @@ def main(config: dict[str, Any]) -> None:
     data_loader_args['shuffle'] = False
 
     source_tokenizer = RobertaTokenizer.from_pretrained(config['pretrained'])
-    source_tokenizer.truncation_side = 'left'
-    target_tokenizer = RobertaTokenizer.from_pretrained(config['pretrained'])
+    fallback_tokenizer = RobertaTokenizer.from_pretrained(config['pretrained'])
+    target_tokenizer = CCFGTokenizer(fallback_tokenizer)
 
     data_loader_args = config['data_loader']['args']
     data_loader_args['shuffle'] = False
 
     data_dir = Path(config['data_dir'])
-    test_data_path = data_dir / config['valid_data']
+    # test_data_path = data_dir / config['valid_data']
+    test_data_path = data_dir / config['train_data']
 
     data_loader = get_data_loader(
         test_data_path, source_tokenizer, target_tokenizer,
@@ -57,15 +60,20 @@ def main(config: dict[str, Any]) -> None:
             outputs = model.generate(
                 input_ids=ids,
                 attention_mask=mask,
-                max_length=10,
+                max_length=256,
                 num_beams=10,
                 repetition_penalty=2.5,
-                length_penalty=1.0,
+                length_penalty=0,
                 early_stopping=True,
                 num_return_sequences=10
             )
 
             for y, output in zip(ys, outputs):
+                y_pad_token_indexes = (y == target_tokenizer.pad_token_id)
+                y = y[~y_pad_token_indexes]
+                output_pad_token_indexes = (
+                    output == target_tokenizer.pad_token_id)
+                output = output[~output_pad_token_indexes]
 
                 print("Goal:")
                 target_decoding = (
@@ -82,4 +90,11 @@ def main(config: dict[str, Any]) -> None:
 if __name__ == "__main__":
     with open('./config.json') as fp:
         config = json.load(fp, object_hook=OrderedDict)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--save-dir', type=Path)
+    args = parser.parse_args()
+    for k, v in vars(args).items():
+        if v is not None:
+            config['trainer'][k] = v
     main(config)

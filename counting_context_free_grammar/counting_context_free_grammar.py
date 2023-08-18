@@ -90,8 +90,8 @@ class CountingContextFreeGrammar:
 
         # Parse productions
         self.productions: dict[Token, list[Production]] = {}
-        self.start_nonterminal = Nonterminal('<S>')
-        for rule_string in production_strings:
+        self.start_nonterminal: Nonterminal
+        for i, rule_string in enumerate(production_strings):
             try:
                 lhs, rhss = rule_string.split(DERIVATE_TOKEN)
                 lhs = lhs.strip()
@@ -100,6 +100,8 @@ class CountingContextFreeGrammar:
                 raise InvalidProductionError("Improper production form")
 
             variable = Variable(lhs)
+            if i == 0:
+                self.start_nonterminal = Nonterminal(variable)
             self.productions[variable] = []
             for rhs in rhss.split('|'):
                 tokenize = CountingContextFreeGrammar._tokenize

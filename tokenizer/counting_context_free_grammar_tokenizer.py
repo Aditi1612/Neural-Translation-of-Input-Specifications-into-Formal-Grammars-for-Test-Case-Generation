@@ -9,17 +9,18 @@ from counting_context_free_grammar import CountingContextFreeGrammar as CCFG
 from counting_context_free_grammar.counting_context_free_grammar import (
     TokenType,
     SubscriptType,
-    Token,
     Terminal,
     Variable,
     Nonterminal,
     DERIVATE_TOKEN,
+    NEW_LINE_TOKEN,
+    SPACE_TOKEN,
 )
 
 
 class CountingContextFreeGrammarTokenizer(Tokenizer):
-    separator = "\n\n"
-    subseparator = "\n"
+    separator = ";"
+    subseparator = ","
 
     def __init__(self, fallback_tokenizer: PreTrainedTokenizerBase) -> None:
 
@@ -32,6 +33,8 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
         self.unk_token_id = self.fallback_tokenizer.unk_token_id
         self.pad_token_id = self.fallback_tokenizer.pad_token_id
 
+        self.terminal_token_encoding = (
+            self._fallback_encode("token"))
         self.nonterminal_token_encoding = (
             self._fallback_encode("symbol"))
         self.variable_token_encoding = (
@@ -40,9 +43,9 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
             self._fallback_encode("to"))
 
         self.separator_token_encoding = (
-            self._fallback_encode("\n"))
+            self._fallback_encode(self.separator))
         self.subseparator_token_encoding = (
-            self._fallback_encode(","))
+            self._fallback_encode(self.subseparator))
 
     def clear(self) -> None:
         self.nonterminal_table = {}
@@ -129,18 +132,28 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
         except Exception:
             return [self.unk_token_id]
 
-    def _fallback_encode(self, text: str):
+    def _fallback_encode(self, text: str) -> str:
         return self.fallback_tokenizer.encode(text, add_special_tokens=False)
 
-    def _fallback_decode(self, text: str):
+    def _fallback_decode(self, text: str) -> str:
         return self.fallback_tokenizer.decode(text, skip_special_tokens=True)
 
-    def _encode_terminal(self, terminal: Terminal):
-        return self._fallback_encode(terminal)
+    def _encode_terminal(self, terminal: Terminal) -> list[int]:
+        encoding: list[int] = []
+        encoding.extend(self.terminal_token_encoding)
 
-    def _encode_nonterminal(self, nonterminal: Nonterminal):
+        if terminal == NEW_LINE_TOKEN:
+            encoding.extend(self._fallback_encode("newline"))
+        elif terminal == SPACE_TOKEN:
+            encoding.extend(self._fallback_encode("blank"))
+        else:
+            encoding.extend(self._fallback_encode(terminal))
+
+        return encoding
+
+    def _encode_nonterminal(self, nonterminal: Nonterminal) -> list[int]:
         self.ccfg = cast(CCFG, self.ccfg)
-        encoding: list[str] = []
+        encoding: list[int] = []
         encoding.extend(self.nonterminal_token_encoding)
         fragment, placeholder = self.ccfg._split_token(nonterminal)
 
@@ -152,9 +165,9 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
             encoding.extend(self._fallback_encode(placeholder))
         return encoding
 
-    def _encode_variable(self, variable: str):
+    def _encode_variable(self, variable: str) -> list[int]:
         self.ccfg = cast(CCFG, self.ccfg)
-        encoding: list[str] = []
+        encoding: list[int] = []
         encoding.extend(self.variable_token_encoding)
         if self.ccfg._is_counter(variable):
             encoding.extend(self._fallback_encode("counter"))

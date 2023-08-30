@@ -1,5 +1,6 @@
-from typing import (Protocol, )
+from typing import (Protocol, Union, )
 
+import torch
 from transformers import BatchEncoding  # type: ignore [import]
 
 
@@ -17,8 +18,16 @@ class Tokenizer(Protocol):
     ) -> BatchEncoding:
         pass
 
-    def decode(self, token_ids: list[int], **kwargs) -> str:
+    def decode(
+        self,
+        token_ids: Union[list[int], torch.Tensor],
+        **kwargs
+    ) -> str:
         pass
 
-    def batch_decode(self, sequences: list[list[int]], **kwargs) -> list[str]:
+    def batch_decode(
+        self,
+        sequences: Union[list[list[int]], torch.Tensor],
+        **kwargs
+    ) -> list[str]:
         pass

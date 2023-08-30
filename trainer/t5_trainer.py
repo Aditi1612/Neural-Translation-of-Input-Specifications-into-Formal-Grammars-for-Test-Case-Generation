@@ -5,6 +5,7 @@ import torch
 import transformers  # type: ignore [import]
 
 from base.base_trainer import BaseTrainer
+from tokenizer import Tokenizer
 
 
 class T5Trainer(BaseTrainer):
@@ -19,8 +20,8 @@ class T5Trainer(BaseTrainer):
         optimizer: torch.optim.Optimizer,
         device: str,
         data_loader: torch.utils.data.DataLoader,
-        source_tokenizer: transformers.PreTrainedTokenizerBase,
-        target_tokenizer: transformers.PreTrainedTokenizerBase,
+        source_tokenizer: Tokenizer,
+        target_tokenizer: Tokenizer,
         valid_data_loader: Optional[torch.utils.data.DataLoader] = None,
         lr_scheduler: None = None,
         *,

@@ -23,66 +23,64 @@ def main(config: dict[str, Any]) -> None:
     print(f"Checkpoint: {latest_checkpoint_path}")
     checkpoint = torch.load(latest_checkpoint_path)
     state_dict = checkpoint['model_state_dict']
+
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     model = T5ForConditionalGeneration.from_pretrained(config['pretrained'])
     model.load_state_dict(state_dict)
     model = model.to(device)
 
-    data_loader_args = config['data_loader']['args']
-    data_loader_args['shuffle'] = False
-
     source_tokenizer = RobertaTokenizer.from_pretrained(config['pretrained'])
-    fallback_tokenizer = RobertaTokenizer.from_pretrained(config['pretrained'])
-    target_tokenizer = CCFGTokenizer(fallback_tokenizer)
-
-    data_loader_args = config['data_loader']['args']
-    data_loader_args['shuffle'] = False
+    target_tokenizer = CCFGTokenizer(source_tokenizer)
 
     data_dir = Path(config['data_dir'])
-    # test_data_path = data_dir / config['valid_data']
-    test_data_path = data_dir / config['train_data']
+    test_data_path = data_dir / config['valid_data']
+    # test_data_path = data_dir / config['train_data']
+
+    data_loader_args = config['data_loader']['args']
+    data_loader_args['batch_size'] = 1
 
     data_loader = get_data_loader(
         test_data_path, source_tokenizer, target_tokenizer,
         **data_loader_args
     )
 
+    length_penalty = 1.0
+    max_new_tokens = 150
+    num_beams = 10
+    repetition_penalty = 2.5
+
     with torch.no_grad():
-        for idx, data in enumerate(data_loader, 1):
+        for batch_idx, batch in enumerate(data_loader):
 
-            ys = data['targets']['input_ids']
-            ids = data['sources']['input_ids']
-            mask = data['sources']['attention_mask']
+            sources = batch['sources']
+            targets = batch['targets']
 
-            ys, ids, mask = ys.to(device), ids.to(device), mask.to(device)
+            input_ids = sources.input_ids.to(device)
+            attention_mask = sources.attention_mask.to(device)
+            labels = targets.input_ids.to(device)
 
             outputs = model.generate(
-                input_ids=ids,
-                attention_mask=mask,
-                max_length=256,
-                num_beams=10,
-                repetition_penalty=2.5,
-                length_penalty=0,
+                input_ids=input_ids,
+                attention_mask=attention_mask,
                 early_stopping=True,
-                num_return_sequences=10
+                length_penalty=length_penalty,
+                max_new_tokens=max_new_tokens,
+                num_beams=num_beams,
+                repetition_penalty=repetition_penalty,
             )
 
-            for y, output in zip(ys, outputs):
-                y_pad_token_indexes = (y == target_tokenizer.pad_token_id)
-                y = y[~y_pad_token_indexes]
-                output_pad_token_indexes = (
-                    output == target_tokenizer.pad_token_id)
-                output = output[~output_pad_token_indexes]
+            print(f'Batch {batch_idx}:')
+            for y, output in zip(labels.tolist(), outputs.tolist()):
 
                 print("Goal:")
-                target_decoding = (
-                    target_tokenizer.decode(y, skip_special_tokens=True))
+                target_decoding = target_tokenizer.decode(y)
                 print(target_decoding)
 
                 print("Output:")
-                output_decoding = (
-                    target_tokenizer.decode(output, skip_special_tokens=True))
+                output_decoding = target_tokenizer.decode(output)
+                eos = output_decoding.find(";;")
+                output_decoding = output_decoding[:eos+2]
                 print(output_decoding)
                 print()
 

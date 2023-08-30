@@ -1,4 +1,4 @@
-from typing import (cast, Optional, )
+from typing import (cast, Optional, Union)
 
 import torch
 from transformers import BatchEncoding  # type: ignore [import]
@@ -27,14 +27,14 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
 
     def __init__(self, fallback_tokenizer: PreTrainedTokenizerBase) -> None:
 
-        self.nonterminal_table: dict[str, int] = {}
+        self.nonterminal_table: dict[str, list[int]] = {}
         self.nonterminal_symbol_index = -1
         self.ccfg: Optional[CCFG] = None
 
         self.fallback_tokenizer = fallback_tokenizer
 
-        self.unk_token_id = self.fallback_tokenizer.unk_token_id
-        self.pad_token_id = self.fallback_tokenizer.pad_token_id
+        self.unk_token_id: int = self.fallback_tokenizer.unk_token_id
+        self.pad_token_id: int = self.fallback_tokenizer.pad_token_id
 
         self.terminal_token_encoding = (
             self._fallback_encode("token"))
@@ -55,7 +55,7 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
         self.space_token_encoding = self._fallback_encode("blank")
 
     def clear(self) -> None:
-        self.nonterminal_table = {}
+        self.nonterminal_table.clear()
         self.nonterminal_symbol_index = -1
         self.ccfg = None
 
@@ -96,19 +96,31 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
             'attention_mask': attention_mask
         })
 
-    def decode(self, token_ids: list[int], **kwargs) -> str:
+    def decode(
+        self,
+        token_ids: Union[list[int], torch.Tensor],
+        **kwargs
+    ) -> str:
+        if isinstance(token_ids, torch.Tensor):
+            token_ids = token_ids.tolist()
         encodings = self._split_encoding(token_ids)
         decodings = [self._decode_token(encoding) for encoding in encodings]
 
         return ' '.join(decodings)
 
-    def batch_decode(self, sequences: list[list[int]], **kwargs) -> list[str]:
-        return list(map(self.decode, sequences))
+    def batch_decode(
+        self,
+        sequences: Union[list[list[int]], torch.Tensor],
+        **kwargs
+    ) -> list[str]:
+        if isinstance(sequences, torch.Tensor):
+            sequences = sequences.tolist()
+        return list(map(lambda e: self.decode(e, **kwargs), sequences))
 
     def _split_encoding(self, token_ids: list[int]) -> list[list[int]]:
         splited_encoding = []
         indexes = []
-        split_points = [
+        split_points: list[list[int]] = [
             self.terminal_token_encoding,
             self.nonterminal_token_encoding,
             self.variable_token_encoding,
@@ -117,6 +129,7 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
             self.subseparator_token_encoding,
             [self.unk_token_id],
         ]
+
         i = 0
         while i < len(token_ids):
             split_point: list[int]
@@ -129,9 +142,8 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
                 indexes.append(i)
             i += len(split_point) if flag else 1
 
-        for start, end in zip(indexes, indexes[1:]):
+        for start, end in zip(indexes, indexes[1:] + [len(token_ids)]):
             splited_encoding.append(token_ids[start:end])
-        splited_encoding.append(token_ids[indexes[-1]:])
         return splited_encoding
 
     def _decode_token(self, token_ids: list[int]) -> str:
@@ -145,7 +157,7 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
             try:
                 return self._decode_ccfg_token(token_ids)
             except Exception:
-                return self._fallback_decode(token_ids[0])
+                return self._fallback_decode(token_ids)
 
     def _decode_ccfg_token(self, token_ids: list[int]) -> str:
         if startswith(token_ids, self.terminal_token_encoding):
@@ -214,7 +226,7 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
             except Exception:
                 return [self.unk_token_id]
 
-    def _fallback_encode(self, text: str) -> str:
+    def _fallback_encode(self, text: str) -> list[int]:
         return self.fallback_tokenizer.encode(
             text, add_special_tokens=False)
 
@@ -251,12 +263,12 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
             encoding.extend(self._fallback_encode('_' + placeholder))
         return encoding
 
-    def _encode_variable(self, variable: str) -> list[int]:
+    def _encode_variable(self, variable: Variable) -> list[int]:
         self.ccfg = cast(CCFG, self.ccfg)
         encoding: list[int] = []
         encoding.extend(self.variable_token_encoding)
         if self.ccfg._is_counter(variable):
             encoding.extend(self.counter_token_encoding)
-            variable = variable[1:-1]
+            variable = Variable(variable[1:-1])
         encoding.extend(self._fallback_encode(variable))
         return encoding

@@ -27,10 +27,7 @@ def main() -> None:
         config = json.load(fp, object_hook=OrderedDict)
 
     source_tokenizer = RobertaTokenizer.from_pretrained(config['pretrained'])
-    source_tokenizer.truncation_side = 'left'
-
-    fallback_tokenizer = RobertaTokenizer.from_pretrained(config['pretrained'])
-    target_tokenizer = CCFGTokenizer(fallback_tokenizer)
+    target_tokenizer = CCFGTokenizer(source_tokenizer)
 
     data_loader_args = config['data_loader']['args']
     data_dir = Path(config['data_dir'])

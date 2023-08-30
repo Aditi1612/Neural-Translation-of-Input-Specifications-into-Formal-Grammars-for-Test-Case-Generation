@@ -19,9 +19,9 @@
   },
   "metrics": [],
   "trainer": {
-    "epochs": 1000,
-    "save_dir": "saved/grammar_only2/",
-    "save_period": 10,
-    "valid_period": 10
+    "epochs": 10000,
+    "save_dir": "saved/0829/",
+    "save_period": 100,
+    "valid_period": 1000
   }
 }

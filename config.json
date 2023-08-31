@@ -1,9 +1,9 @@
 {
   "pretrained": "Salesforce/codet5-base",
   "data_dir": "data/",
-  "train_data": "train_grammar.jsonl",
-  "valid_data": "test_grammar.jsonl",
-  "test_data": "test_grammar.jsonl",
+  "train_data": "labeled/train_grammar.jsonl",
+  "valid_data": "labeled/test_grammar.jsonl",
+  "test_data": "labeled/test_grammar.jsonl",
   "data_loader": {
     "args": {
       "batch_size": 32,
@@ -22,6 +22,21 @@
     "epochs": 10000,
     "save_dir": "saved/0829/",
     "save_period": 100,
-    "valid_period": 1000
+    "valid_period": 1000,
+    "pseudo_label_period": 100
+  },
+  "generate": {
+    "unlabeled_data": "unlabeled/code_contests_train_python.jsonl",
+    "output": "data/generated_grammar.jsonl",
+    "args": {
+      "length_penalty": 1.0,
+      "max_new_tokens": 150,
+      "num_beams": 10,
+      "repetition_penalty": 2.5,
+      "early_stopping": true
+    }
+  },
+  "execute": {
+    "solution_dir": "data/solutions/"
   }
 }

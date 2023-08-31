@@ -45,11 +45,7 @@ def main(config: dict[str, Any]) -> None:
         **data_loader_args
     )
 
-    length_penalty = 1.0
-    max_new_tokens = 150
-    num_beams = 10
-    repetition_penalty = 2.5
-
+    generate_args = config['generate']['args']
     with torch.no_grad():
         for batch_idx, batch in enumerate(data_loader):
 
@@ -63,11 +59,7 @@ def main(config: dict[str, Any]) -> None:
             outputs = model.generate(
                 input_ids=input_ids,
                 attention_mask=attention_mask,
-                early_stopping=True,
-                length_penalty=length_penalty,
-                max_new_tokens=max_new_tokens,
-                num_beams=num_beams,
-                repetition_penalty=repetition_penalty,
+                **generate_args
             )
 
             print(f'Batch {batch_idx}:')

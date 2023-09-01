@@ -66,7 +66,7 @@ def main(config):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.WARN)
     with open('./config.json') as fp:
         config = json.load(fp, object_hook=OrderedDict)
     main(config)

@@ -424,7 +424,7 @@ def parse(
 
 _RE_COMPARATOR = re.compile(r'<=|>=|<|>|!=')
 _RE_NUMBER_CBE = re.compile(r'(?:(-?\d+)\*)?(-?\d+)(?:\^(-?\d+))?')
-_RE_MIN_OR_MAX = re.compile(r'(?:min|max)\((\w+),(\w+)\)')
+_RE_MIN_OR_MAX = re.compile(r'(?:min|max)\((\w+\(,\w+\)*)\)')
 
 
 def _comparator_to_str(comparator: int) -> str:
@@ -440,7 +440,7 @@ def _parse_comparands(text: str) -> list[Union[int, Variable]]:
     # FIXME: Currently, we do not consider minimum or maximum.
     match = _RE_MIN_OR_MAX.fullmatch(text)
     if match:
-        pieces = [match.group(1), match.group(2)]
+        pieces = match.group(1).split(',')
     else:
         pieces = text.split(',')
     return [parse_comparand(e) for e in pieces]

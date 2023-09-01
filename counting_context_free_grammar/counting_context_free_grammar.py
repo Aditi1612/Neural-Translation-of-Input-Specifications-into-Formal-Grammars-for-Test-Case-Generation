@@ -40,7 +40,9 @@ class Comparator(Protocol[T]):
     def __call__(self, o1: T, o2: T) -> int: pass
 
 
-MAX_ITER = 100
+MAX_SAMPLING_ITER = 2 ** 8
+MAX_DERIVATION_ITER = 2 ** 16
+
 TESTMODE_VARIABLE_UPPER_BOUND = 50
 TESTMODE_MAXIMUM_TERMINAL_LEN = 50
 
@@ -136,7 +138,11 @@ class CountingContextFreeGrammar:
 
         derivation_queue: list[Token] = [self.start_nonterminal]
         assignment: Assignment = {}
+        derivation_iter = 0
         while derivation_queue:
+            if derivation_iter > MAX_DERIVATION_ITER:
+                raise RuntimeError('Too many iterations')
+            derivation_iter += 1
 
             logging.debug(f'derivation_queue: {derivation_queue}')
             logging.debug(f'assignment:\n{assignment}')
@@ -185,6 +191,8 @@ class CountingContextFreeGrammar:
             if production is not None:
                 derivation_queue += production[::-1]
 
+        if string[-1] != '\n':
+            string += '\n'
         return string
 
     def _substitute(
@@ -618,7 +626,7 @@ class CountingContextFreeGrammar:
         k = lower_inner_variables
 
         # XXX: It depends on max iteration
-        for _ in range(MAX_ITER):
+        for _ in range(MAX_SAMPLING_ITER):
             values = [
                 random.randint(lower_bound, upper_bound) for _ in range(n)
             ]

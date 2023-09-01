@@ -15,7 +15,7 @@ class LanguageType(IntEnum):
 
 
 def main():
-    dataset_dir = Path('data')
+    dataset_dir = Path('data/unlabeled/')
 
     os.makedirs(dataset_dir, exist_ok=True)
 
@@ -29,7 +29,7 @@ def main():
                 name = data['name']
                 solutions = data['solutions']['solution']
 
-                solutions_dir = Path(f'data/solutions/{dataset_type}/{name}')
+                solutions_dir = Path(f'data/solutions/{name}')
                 os.makedirs(solutions_dir, exist_ok=True)
 
                 for idx, solution in enumerate(solutions):

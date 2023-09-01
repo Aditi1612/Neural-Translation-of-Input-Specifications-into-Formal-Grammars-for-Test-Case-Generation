@@ -76,8 +76,10 @@ def main():
     for dataset_type in ['train', 'test', 'valid']:
         raw_dataset_path = (
             raw_dataset_dir / f'code_contests_{dataset_type}.jsonl')
+        python_dataset_dir = dataset_dir / 'unlabeled'
+        os.makedirs(python_dataset_dir, exist_ok=True)
         python_dataset_path = (
-            dataset_dir / f'code_contests_{dataset_type}_python.jsonl')
+            python_dataset_dir / f'code_contests_{dataset_type}_python.jsonl')
 
         with jsonlines.open(raw_dataset_path, 'r') as raw_dataset:
             python_dataset = filter(has_python3_solution, raw_dataset)

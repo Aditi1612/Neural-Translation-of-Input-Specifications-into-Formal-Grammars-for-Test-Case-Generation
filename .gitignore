@@ -4,5 +4,6 @@ test_results
 .vscode
 .venv
 
-data/
-saved/
+data/*
+!data/labeled/
+saved/*

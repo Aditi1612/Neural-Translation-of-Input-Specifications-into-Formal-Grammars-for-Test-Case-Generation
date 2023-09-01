@@ -33,11 +33,6 @@ class discriminator():
         self.make_derivate_dict(grammer)
         self.make_constraints_dict(constraints)
         test_case = test_case.strip()
-        # print(self.const_dict)
-        # print(self.compare_dict)
-
-        # print(self.derivation_dict)
-
         return self.parsing(test_case)
 
     pass
@@ -415,8 +410,12 @@ class discriminator():
     def make_derivate_dict(self, grammer: list):
         for token in grammer:
             left_hand, right_hand = token.split(self.derivate_token)
+            left_hand = left_hand.strip()
+            right_hand = right_hand.strip()
+
             self.derivation_dict[left_hand] = []
             for token in right_hand.split('|'):
+                token = token.strip()
                 self.derivation_dict[left_hand].append(token)
 
     def make_constraints_dict(self, constraints:list):

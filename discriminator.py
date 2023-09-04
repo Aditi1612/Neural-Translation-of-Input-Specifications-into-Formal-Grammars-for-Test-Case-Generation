@@ -6,11 +6,17 @@ class discriminator():
     
     def __init__(self, generate_mode=None) -> None:
         
-        self.sep_token = '\t'
-        self.new_line_token = '<n>'
-        self.space_token = '<s>'
-        self.start_token = '<S>'
-        self.derivate_token = '->'
+        # self.sep_token = '\t'
+        # self.new_line_token = '<n>'
+        # self.space_token = '<s>'
+        # self.start_token = '<S>'
+        # self.derivate_token = '->'
+        # self.blink_token = 'ε'
+        
+        self.new_line_token = 'nl'
+        self.space_token = 'sp'
+        self.start_token = 'START'
+        self.derivate_token = ' -> '
         self.blink_token = 'ε'
         
         self.RE_INTEGER = self.re.compile(r'-?[0-9]+ *')
@@ -102,6 +108,32 @@ class discriminator():
                 
                 del self.derivation_queue[:2]
                 continue
+
+            # <T_i> 형태
+            if self.re.match(r'[^_]*_[^_]*', curr_variable):
+                nonterminal , counter = curr_variable.split('_')
+                # <T_N>
+                if ',' in counter:
+                    
+                    ...
+                if not self.RE_INTEGER.fullmatch(counter):
+                    # print(self.variable_dict)
+                    # print(curr_variable)
+                    counter = self.variable_dict[counter]
+                    counter = f'{counter}'
+                    curr_variable = nonterminal + '_' + counter
+                # <T_1> 등의 상황
+                if curr_variable in self.derivation_dict:
+                    counter = int(counter)
+                else:
+                    curr_variable = nonterminal + '_i'
+                    counter = int(counter)
+
+                if counter < 0:
+                    if self.generate_mode == "test": 
+                        raise Exception(f"Error10: counter have negative value")
+                    return False
+                
             
             # 기타 terminal 생성
             elif not self.RE_NONTERMINAL.fullmatch(curr_variable):
@@ -155,8 +187,8 @@ class discriminator():
                     
                     continue
                 else:
-                    # N, [N]의 형태
-                    if self.re.match(r'\[[^\[]*\]', curr_variable):
+                    # N, (N)의 형태
+                    if self.re.match(r'\([^\[]*\)', curr_variable):
                         curr_variable = curr_variable[1:-1]
                     
                     if curr_variable not in self.const_dict:
@@ -191,42 +223,20 @@ class discriminator():
                 
                 continue
             
-            # <T_i> 형태
-            if self.re.match(r'<[^_]*_[^_]*>', curr_variable):
-                nonterminal , counter = curr_variable.split('_')
-                # <T_N>
-                if ',' in counter:
-                    
-                    ...
-                if not self.RE_INTEGER.fullmatch(counter[:-1]):
-                    # print(self.variable_dict)
-                    # print(curr_variable)
-                    counter = self.variable_dict[counter[:-1]]
-                    counter = f'{counter}>'
-                    curr_variable = nonterminal + '_' + counter
-                # <T_1> 등의 상황
-                if curr_variable in self.derivation_dict:
-                    counter = int(counter[:-1])
-                else:
-                    curr_variable = nonterminal + '_i>'
-                    counter = int(counter[:-1])
-            if counter < 0:
-                if self.generate_mode == "test": 
-                    raise Exception(f"Error10: counter have negative value")
-                return False
+            
             # derivate
             next_variable = self.random.choice(self.derivation_dict[curr_variable])
             curr_list = []
             
             for variable in next_variable.split(' '):
                 # <T_i-1>이나 a_i가 생성되었을 때 counter가 필요함
-                if self.re.match(r'<.*_i-1>', variable):
+                if self.re.match(r'.*_i-1', variable):
                     nonterminal = variable.split('_')[0]
-                    variable = f'{nonterminal}_{counter-1}>'
-                elif self.re.match(r'<.*_i>', variable):
+                    variable = f'{nonterminal}_{counter-1}'
+                elif self.re.match(r'.*_i', variable):
                     nonterminal = variable.split('_')[0]
-                    variable = f'{nonterminal}_{counter}>'    
-                elif self.re.fullmatch(r'[^_<]*_.*', variable):
+                    variable = f'{nonterminal}_{counter}'    
+                elif self.re.fullmatch(r'[^_]*_.*', variable):
                     nonterminal = variable.split('_')[0]
                     variable = f'{nonterminal}_{counter}'
                 curr_list.append(variable)
@@ -484,10 +494,25 @@ class discriminator():
             elif self.re.fullmatch(r'[^=]*!=[^=]*', const):
                 variable1, variable2 = const.split('!=')
                 self.permutation_variable.append(variable1)
-        
- 
+
+def test():
+    test_grammer =  ["START -> (N) nl T_N", "T_i -> T_i-1 nl a_i", "T_1 -> a_i", "a_i -> [a-z]{1,10^2}"]
+    test_const = ["1<=N<=100"]
+    # "public_tests": "input": 
+    test_cases = ["4\nword\nlocalization\ninternationalization\npneumonoultramicroscopicsilicovolcanoconiosis\n","26\na\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz\n", "10\ngyartjdxxlcl\nfzsck\nuidwu\nxbymclornemdmtj\nilppyoapitawgje\ncibzc\ndrgbeu\nhezplmsdekhhbo\nfeuzlrimbqbytdu\nkgdco\n", "5\nabcdefgh\nabcdefghi\nabcdefghij\nabcdefghijk\nabcdefghijklm\n", "20\nlkpmx\nkovxmxorlgwaomlswjxlpnbvltfv\nhykasjxqyjrmybejnmeumzha\ntuevlumpqbbhbww\nqgqsphvrmupxxc\ntrissbaf\nqfgrlinkzvzqdryckaizutd\nzzqtoaxkvwoscyx\noswytrlnhpjvvnwookx\nlpuzqgec\ngyzqfwxggtvpjhzmzmdw\nrlxjgmvdftvrmvbdwudra\nvsntnjpepnvdaxiporggmglhagv\nxlvcqkqgcrbgtgglj\nlyxwxbiszyhlsrgzeedzprbmcpduvq\nyrmqqvrkqskqukzqrwukpsifgtdc\nxpuohcsjhhuhvr\nvvlfrlxpvqejngwrbfbpmqeirxlw\nsvmasocxdvadmaxtrpakysmeaympy\nyuflqboqfdt\n", "3\nnjfngnrurunrgunrunvurn\njfvnjfdnvjdbfvsbdubruvbubvkdb\nksdnvidnviudbvibd\n", "1\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij\n", "100\nm\nz\ns\nv\nd\nr\nv\ny\ny\ne\np\nt\nc\na\nn\nm\np\ng\ni\nj\nc\na\nb\nq\ne\nn\nv\no\nk\nx\nf\ni\nl\na\nq\nr\nu\nb\ns\nl\nc\nl\ne\nv\nj\nm\nx\nb\na\nq\nb\na\nf\nj\nv\nm\nq\nc\nt\nt\nn\nx\no\ny\nr\nu\nh\nm\nj\np\nj\nq\nz\ns\nj\no\ng\nc\nm\nn\no\nm\nr\no\ns\nt\nh\nr\np\nk\nb\nz\ng\no\nc\nc\nz\nz\ng\nr\n", "1\na\n", "1\ntcyctkktcctrcyvbyiuhihhhgyvyvyvyvjvytchjckt\n", "24\nyou\nare\nregistered\nfor\npractice\nyou\ncan\nsolve\nproblems\nunofficially\nresults\ncan\nbe\nfound\nin\nthe\ncontest\nstatus\nand\nin\nthe\nbottom\nof\nstandings\n"]
+    
+    parser = discriminator('test')
+
+    for test_case in test_cases:
+        print(parser(test_grammer, test_const, test_case))
+        ...
+
     
 if __name__ == '__main__':
+
+    test()
+    exit()
+
     import sys
     import jsonlines
     
@@ -533,10 +558,6 @@ if __name__ == '__main__':
     
     
     # "name" =  "71_A - 1"
-    test_grammer =  ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> [a-z]{1,10^2}", "<T_1>->[a-z]{1,10^2}"]
-    test_const = ["1<=N<=100"]
-    # "public_tests": "input": 
-    test_cases = ["4\nword\nlocalization\ninternationalization\npneumonoultramicroscopicsilicovolcanoconiosis\n","26\na\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz\n", "10\ngyartjdxxlcl\nfzsck\nuidwu\nxbymclornemdmtj\nilppyoapitawgje\ncibzc\ndrgbeu\nhezplmsdekhhbo\nfeuzlrimbqbytdu\nkgdco\n", "5\nabcdefgh\nabcdefghi\nabcdefghij\nabcdefghijk\nabcdefghijklm\n", "20\nlkpmx\nkovxmxorlgwaomlswjxlpnbvltfv\nhykasjxqyjrmybejnmeumzha\ntuevlumpqbbhbww\nqgqsphvrmupxxc\ntrissbaf\nqfgrlinkzvzqdryckaizutd\nzzqtoaxkvwoscyx\noswytrlnhpjvvnwookx\nlpuzqgec\ngyzqfwxggtvpjhzmzmdw\nrlxjgmvdftvrmvbdwudra\nvsntnjpepnvdaxiporggmglhagv\nxlvcqkqgcrbgtgglj\nlyxwxbiszyhlsrgzeedzprbmcpduvq\nyrmqqvrkqskqukzqrwukpsifgtdc\nxpuohcsjhhuhvr\nvvlfrlxpvqejngwrbfbpmqeirxlw\nsvmasocxdvadmaxtrpakysmeaympy\nyuflqboqfdt\n", "3\nnjfngnrurunrgunrunvurn\njfvnjfdnvjdbfvsbdubruvbubvkdb\nksdnvidnviudbvibd\n", "1\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij\n", "100\nm\nz\ns\nv\nd\nr\nv\ny\ny\ne\np\nt\nc\na\nn\nm\np\ng\ni\nj\nc\na\nb\nq\ne\nn\nv\no\nk\nx\nf\ni\nl\na\nq\nr\nu\nb\ns\nl\nc\nl\ne\nv\nj\nm\nx\nb\na\nq\nb\na\nf\nj\nv\nm\nq\nc\nt\nt\nn\nx\no\ny\nr\nu\nh\nm\nj\np\nj\nq\nz\ns\nj\no\ng\nc\nm\nn\no\nm\nr\no\ns\nt\nh\nr\np\nk\nb\nz\ng\no\nc\nc\nz\nz\ng\nr\n", "1\na\n", "1\ntcyctkktcctrcyvbyiuhihhhgyvyvyvyvjvytchjckt\n", "24\nyou\nare\nregistered\nfor\npractice\nyou\ncan\nsolve\nproblems\nunofficially\nresults\ncan\nbe\nfound\nin\nthe\ncontest\nstatus\nand\nin\nthe\nbottom\nof\nstandings\n"]
     
     # test_grammer = ["<S>->[01]{S} <n> [01]{S}"]
     # test_const = ["1<=S<=100"]

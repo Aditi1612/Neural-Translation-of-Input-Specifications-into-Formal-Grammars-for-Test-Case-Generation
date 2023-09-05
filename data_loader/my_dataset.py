@@ -1,61 +1,72 @@
 import os
+import copy
 from typing import (Any, cast, )
 
 import jsonlines
-import pandas as pd
 
 from torch.utils.data import Dataset
 from tokenizer import CountingContextFreeGrammarTokenizer as CCFGTokenizer
 
 
-description_replaces = [
-    ('≤', '<='),
-    ('\\leq', '<='),
-]
-
-
 class MyDataset(Dataset):
-
-    name_title = "name.name"
-    # description_title = "description.description"
-    description_title = "spec.spec"
-    grammar_title = "spec.grammar"
-    constraint_title = "spec.constraints"
-
-    separator = CCFGTokenizer.separator
-    subseparator = CCFGTokenizer.subseparator
-
     def __init__(self, path: os.PathLike) -> None:
-        # TODO: Load essential columns only
-
-        data = cast(list[dict[Any, Any]], jsonlines.open(path))
-        self.df = pd.json_normalize(data)
+        with jsonlines.open(path, 'r') as f:
+            self.data = cast(
+                list[dict[Any, Any]],
+                list(map(MyDataset.preprocess, f))
+            )
 
     def __len__(self) -> int:
-        return len(self.df)
+        return len(self.data)
 
     def __getitem__(self, index: int) -> dict[str, str]:
         """return the input ids, attention masks and target ids"""
+        return self.data[index]
 
-        data = self.df.iloc[index]
-        name: str = data[self.name_title]
-        description: str = data[self.description_title]
-        grammar: list[str] = data[self.grammar_title]
-        constraint: list[str] = data[self.constraint_title]
+    @staticmethod
+    def get_spec(description: str) -> str:
+        description = MyDataset.replace_description(description)
+        constraints_start_token = '\nconstraints\n'
+        input_start_token = '\ninput\n'
+        input_finish_token = '\noutput\n'
 
-        # XXX: We only uses grammar
-        constraint = []
+        constraints_idx = description.lower().find(constraints_start_token)
+        input_start_idx = description.lower().find(input_start_token)
+        input_finish_idx = description.lower().find(input_finish_token)
 
-        for old, new in description_replaces:
+        if input_start_idx < 0 or input_finish_idx < 0:
+            return description
+
+        if constraints_idx >= 0:
+            return description[constraints_idx:input_finish_idx].strip()
+        else:
+            return description[input_start_idx:input_finish_idx].strip()
+
+    @staticmethod
+    def replace_description(description: str) -> str:
+        description_replacements = [
+            ('≤', '<='),
+            ('\\leq', '<='),
+        ]
+        for old, new in description_replacements:
             description = description.replace(old, new)
+        return description
 
-        target: str = f" {self.separator} ".join([
-            f" {self.subseparator} ".join(grammar),
-            f" {self.subseparator} ".join(constraint)
+    @staticmethod
+    def stringify(grammar: dict[str, list[str]]) -> str:
+        productions = cast(str, grammar['productions'])
+        constraints = cast(str, grammar['constraints'])
+        return f" {CCFGTokenizer.separator} ".join([
+            f" {CCFGTokenizer.subseparator} ".join(productions),
+            f" {CCFGTokenizer.subseparator} ".join(constraints)
         ])
 
-        return {
-            "name": name,
-            "source": description,
-            "target": target,
-        }
+    @staticmethod
+    def preprocess(obj: dict[str, Any]) -> dict[str, Any]:
+        obj = copy.deepcopy(obj)
+
+        description = obj['description']
+        grammar = obj['grammar']
+        obj['specification'] = MyDataset.get_spec(description)
+        obj['stringified'] = MyDataset.stringify(grammar)
+        return obj

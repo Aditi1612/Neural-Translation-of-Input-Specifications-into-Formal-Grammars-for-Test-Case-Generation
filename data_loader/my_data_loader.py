@@ -2,6 +2,7 @@ import os
 
 import transformers  # type: ignore [import]
 from torch.utils.data import DataLoader
+from typing import (Any, )
 
 from .my_dataset import MyDataset
 from tokenizer import Tokenizer
@@ -21,11 +22,11 @@ def get_data_loader(
 ) -> DataLoader:
 
     def collate_fn(
-        samples: list[dict[str, str]]
+        samples: list[dict[str, Any]]
     ) -> dict[str, transformers.tokenization_utils_base.BatchEncoding]:
 
-        sources = [PREFIX + sample['source'] for sample in samples]
-        targets = [sample['target'] for sample in samples]
+        sources = [PREFIX + sample['specification'] for sample in samples]
+        targets = [sample['stringified'] for sample in samples]
         names = [sample['name'] for sample in samples]
 
         source_encodings = source_tokenizer.batch_encode_plus(

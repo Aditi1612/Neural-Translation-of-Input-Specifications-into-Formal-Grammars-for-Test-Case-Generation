@@ -77,23 +77,16 @@ class CountingContextFreeGrammar:
 
     def __init__(
         self,
-        production_strings: list[str],
-        constraint_strings: list[str],
+        productions: list[str],
+        constraints: list[str],
         testmode: bool = False,
     ):
-        """Counting context-free grammar.
-
-        Args:
-            production_strings: A list of strings describing productions.,
-            constraint_strings: A list of strings describing constraints.
-        """
-
         self.testmode = testmode
 
         # Parse productions
         self.productions: dict[Token, list[Production]] = {}
         self.start_nonterminal: Nonterminal
-        for i, rule_string in enumerate(production_strings):
+        for i, rule_string in enumerate(productions):
             try:
                 lhs, rhss = rule_string.split(DERIVATE_TOKEN)
                 lhs = lhs.strip()
@@ -111,7 +104,7 @@ class CountingContextFreeGrammar:
                 self.productions[variable].append(production)
 
         # Parse constraints and comparisons
-        parsed = parse(constraint_strings)
+        parsed = parse(constraints)
         self.constraints, self.comparisons, self.placeholders = parsed
 
         # Add placeholders from constraints and comparisons
@@ -831,8 +824,8 @@ if __name__ == '__main__':
     if len(sys.argv) < 1:
         raise ValueError("Invalid arguments")
 
-    production_strings: list[str]
-    constraint_strings: list[str]
+    productions: list[str]
+    constraints: list[str]
 
     with jsonlines.open('data/train_grammer.jsonl') as problems:
         for problem in problems:
@@ -842,13 +835,13 @@ if __name__ == '__main__':
                 continue
 
             specification = problem['spec']
-            production_strings = cast(list[str], specification['grammer'])
-            constraint_strings = cast(list[str], specification['constraints'])
+            productions = cast(list[str], specification['grammer'])
+            constraints = cast(list[str], specification['constraints'])
             break
 
-    print(production_strings)
-    print(constraint_strings)
+    print(productions)
+    print(constraints)
     ccfg = CountingContextFreeGrammar(
-        production_strings, constraint_strings, testmode=True)
+        productions, constraints, testmode=True)
     print(ccfg)
     print(ccfg.generate())

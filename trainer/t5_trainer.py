@@ -1,5 +1,6 @@
-from typing import (Optional, )
+import logging
 import random
+from typing import (Optional, )
 
 import torch
 import transformers  # type: ignore [import]
@@ -69,7 +70,6 @@ class T5Trainer(BaseTrainer):
             pad_token_indexes = (labels == pad_token_id)
             labels[pad_token_indexes] = self.ignore_index
 
-            self.optimizer.zero_grad()
             output = self.model(
                 input_ids=input_ids,
                 attention_mask=attention_mask,
@@ -77,6 +77,7 @@ class T5Trainer(BaseTrainer):
             )
             loss = output.loss
 
+            self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
 
@@ -84,7 +85,7 @@ class T5Trainer(BaseTrainer):
             epoch_progress = batch_idx / len(self.data_loader)
             log_message = "Train epoch: {} {:.2f}% Loss: {:.6f}".format(
                     epoch, epoch_progress * 100, loss.item())
-            print(log_message)
+            logging.info(log_message)
 
         if self.do_validation and epoch % self.valid_period == 0:
             self._valid_epoch(epoch)
@@ -138,5 +139,5 @@ class T5Trainer(BaseTrainer):
         sampled_decoding = random.choice(generated_decodings)
 
         # XXX: Use logger
-        print(f"Avg. loss: {avg_loss}")
-        print(f"Sampled decoding: {sampled_decoding}")
+        logging.info(f"Avg. loss: {avg_loss}")
+        logging.info(f"Sampled decoding: {sampled_decoding}")

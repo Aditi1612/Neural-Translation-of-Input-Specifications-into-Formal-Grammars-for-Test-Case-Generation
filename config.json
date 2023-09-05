@@ -4,11 +4,13 @@
   "train_data": "labeled/train.jsonl",
   "valid_data": "labeled/test.jsonl",
   "test_data": "labeled/test.jsonl",
+  "unlabeled_train_data": "unlabeled/code_contests_train_python.jsonl",
+  "unlabeled_test_data": "unlabeled/code_contests_train_python.jsonl",
   "data_loader": {
     "args": {
       "batch_size": 16,
       "shuffle": true,
-      "num_workers": 2
+      "num_workers": 4
     }
   },
   "optimizer": {
@@ -19,21 +21,29 @@
   },
   "metrics": [],
   "trainer": {
-    "epochs": 10000,
-    "save_dir": "saved/0831.productions_only/",
+    "epochs": 1000,
+    "save_dir": "saved/my_model/",
     "save_period": 100,
-    "valid_period": 100
+    "valid_period": 100,
+    "pseudo_label_period": 100
   },
-  "generate": {
-    "unlabeled_data": "unlabeled/code_contests_train_python.jsonl",
-    "output": "generated_grammar.jsonl",
+  "test": {
+    "model_dir": null
+  },
+  "generation": {
     "args": {
       "length_penalty": 1.0,
       "max_new_tokens": 150,
       "num_beams": 10,
       "repetition_penalty": 2.5,
-      "early_stopping": true
+      "early_stopping": true,
+      "num_return_sequences": 3
     }
+  },
+  "generate": {
+    "unlabeled_data": "unlabeled/code_contests_train_python.jsonl",
+    "output": "generated_grammar.jsonl",
+    "model_dir": "saved/0905/"
   },
   "execute": {
     "solution_dir": "data/solutions/"

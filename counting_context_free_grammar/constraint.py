@@ -436,7 +436,7 @@ def _parse_comparator(text: str) -> int:
 
 
 def _parse_comparands(text: str) -> list[Union[int, Variable]]:
-    pieces = []
+    pieces: list[str] = []
     # FIXME: Currently, we do not consider minimum or maximum.
     match = _RE_MIN_OR_MAX.fullmatch(text)
     if match:

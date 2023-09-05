@@ -91,6 +91,42 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
             'attention_mask': attention_mask
         })
 
+    def batch_encode_to_splited(
+        self,
+        batch_text_or_text_pairs: list[str]
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+
+        def split_encoding(encoding: list[int]) -> tuple[list[int], list[int]]:
+
+            index = encoding.index(self.separator_token_encoding[0])
+            return (
+                encoding[:index],
+                encoding[index+len(self.separator_token_encoding):]
+            )
+
+        encodings = map(self.encode, batch_text_or_text_pairs)
+        splited_encodings = list(map(split_encoding, encodings))
+        production_encodings = [
+            torch.tensor(e[0], dtype=torch.long)
+            for e in splited_encodings
+        ]
+        constraint_encodings = [
+            torch.tensor(e[1], dtype=torch.long)
+            for e in splited_encodings
+        ]
+
+        production_input_ids = torch.nn.utils.rnn.pad_sequence(
+                production_encodings,
+                batch_first=True,
+                padding_value=self.pad_token_id
+        )
+        constraint_input_ids = torch.nn.utils.rnn.pad_sequence(
+                constraint_encodings,
+                batch_first=True,
+                padding_value=self.pad_token_id
+        )
+        return production_input_ids, constraint_input_ids
+
     def decode(
         self,
         token_ids: Union[list[int], torch.Tensor],

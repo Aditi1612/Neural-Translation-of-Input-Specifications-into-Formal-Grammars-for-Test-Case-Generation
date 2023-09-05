@@ -1,6 +1,6 @@
 import os
 import copy
-from typing import (Any, cast, )
+from typing import (Any, Optional, cast, )
 
 import jsonlines
 
@@ -9,10 +9,14 @@ from tokenizer import CountingContextFreeGrammarTokenizer as CCFGTokenizer
 
 
 class MyDataset(Dataset):
-    def __init__(self, path: os.PathLike) -> None:
+    def __init__(self, path: Optional[os.PathLike] = None) -> None:
+        if path is None:
+            self.data: list[dict[str, Any]] = []
+            return
+
         with jsonlines.open(path, 'r') as f:
             self.data = cast(
-                list[dict[Any, Any]],
+                list[dict[str, Any]],
                 list(map(MyDataset.preprocess, f))
             )
 
@@ -22,6 +26,9 @@ class MyDataset(Dataset):
     def __getitem__(self, index: int) -> dict[str, str]:
         """return the input ids, attention masks and target ids"""
         return self.data[index]
+
+    def extend(self, dataset: list[dict[str, Any]]) -> None:
+        self.data.extend(map(MyDataset.preprocess, dataset))
 
     @staticmethod
     def get_spec(description: str) -> str:

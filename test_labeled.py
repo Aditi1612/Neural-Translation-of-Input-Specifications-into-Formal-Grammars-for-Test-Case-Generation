@@ -6,8 +6,8 @@ from pathlib import Path
 import jsonlines
 import tqdm
 
-from test_grammar import test_completeness
-from test_grammar import test_soundness
+from grammar_tester import test_completeness
+from grammar_tester import test_soundness
 
 
 def main(config):

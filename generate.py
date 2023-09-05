@@ -3,7 +3,7 @@ import os
 from glob import glob
 from pathlib import Path
 from collections import OrderedDict
-from typing import (Any, )
+from typing import (Any, Optional, cast, )
 from tqdm import tqdm
 
 import torch
@@ -13,35 +13,40 @@ from transformers import RobertaTokenizer  # type: ignore [import]
 from transformers import T5ForConditionalGeneration  # type: ignore [import]
 
 from tokenizer import CountingContextFreeGrammarTokenizer as CCFGTokenizer
-from utils import get_spec
+from counting_context_free_grammar import CountingContextFreeGrammar as CCFG
+from data_loader import MyDataset
 
 
-def spec_to_grammar(
+def specification_to_grammar(
     model: T5ForConditionalGeneration,
     device: torch.device,
     source_tokenizer: RobertaTokenizer,
     target_tokenizer: CCFGTokenizer,
-    spec: str,
-    **kwargs,
-) -> list[str]:
+    specification: str,
+    **kwargs
+) -> Optional[list[str]]:
 
     encoding = source_tokenizer.encode(
-        spec,
+        specification,
         max_length=512,
         truncation=True,
         add_special_tokens=False
     )
-    input_ids = torch.asarray([encoding]).to(device)
 
-    output = model.generate(input_ids, **kwargs)[0]
-    output_decoding = target_tokenizer.decode(output)
+    if len(encoding) == 0:
+        return None
 
-    grammar = (
-        output_decoding.split(CCFGTokenizer.separator)[0]
-    ).split(CCFGTokenizer.subseparator)
-    grammar = list(map(str.strip, grammar))
+    model_inputs = torch.asarray([encoding]).to(device)
+    sample_outputs = model.generate(model_inputs, **kwargs)
 
-    return grammar
+    for sample_output in sample_outputs:
+        grammar = target_tokenizer.decode_to_json(sample_output)
+        try:
+            CCFG(**grammar)
+        except Exception:
+            continue
+        return grammar
+    return None
 
 
 def label(
@@ -53,24 +58,22 @@ def label(
     **kwargs,
 ) -> dict[str, Any]:
     # unlabeled_data = {"name": name, "description": description}
-    name: str = unlabeled_data['name']
-    description: str = unlabeled_data['description']
+    name = cast(str, unlabeled_data['name'])
+    description = cast(str, unlabeled_data['description'])
 
-    spec: str = get_spec(description)
-    grammar = spec_to_grammar(
+    specification = MyDataset.get_spec(description)
+    grammar = specification_to_grammar(
         model,
         device,
         source_tokenizer,
         target_tokenizer,
-        spec,
+        specification,
         **kwargs
     )
     return {
         'name': name,
         'description': description,
-        'spec': spec,
         'grammar': grammar,
-        'constraints': [],
     }
 
 
@@ -99,7 +102,7 @@ def main(config: dict[str, Any]) -> None:
     unlabeled_data = jsonlines.open(unlabeled_data_path, 'r')
     generate_args = generate_config['args']
 
-    output_path = Path(generate_config['output'])
+    output_path = Path(config['data_dir']) / generate_config['output']
     output = jsonlines.open(output_path, 'w')
     # ouput = {"name": name, "spec": , "grammar": [], constraint: "": []}
 

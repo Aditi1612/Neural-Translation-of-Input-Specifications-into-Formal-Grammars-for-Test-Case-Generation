@@ -54,11 +54,6 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
         self.newline_token_encoding = self._fallback_encode("newline")
         self.space_token_encoding = self._fallback_encode("blank")
 
-    def clear(self) -> None:
-        self.nonterminal_table.clear()
-        self.nonterminal_symbol_index = -1
-        self.ccfg = None
-
     def encode(self, text: str, **kwargs) -> list[int]:
 
         productions_string, constraints_string = text.split(self.separator)
@@ -145,6 +140,30 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
         for start, end in zip(indexes, indexes[1:] + [len(token_ids)]):
             splited_encoding.append(token_ids[start:end])
         return splited_encoding
+
+    def clear(self) -> None:
+        self.nonterminal_table.clear()
+        self.nonterminal_symbol_index = -1
+        self.ccfg = None
+
+    def decode_to_json(self, encoding: list[int]) -> dict[str, list[str]]:
+        output_decoding = self.decode(encoding).strip()
+        splited_output = output_decoding.split(self.separator)
+        productions = list(filter(
+            lambda e: len(e) > 0,
+            map(str.strip, splited_output[0].split(self.subseparator))
+        ))
+        constraints = []
+        if len(splited_output) > 1:
+            constraints = list(filter(
+                lambda e: len(e) > 0,
+                map(str.strip,splited_output[1].split(self.subseparator))
+            ))
+        constraints = list(set(constraints))
+        return {
+            'productions': productions,
+            'constraints': constraints,
+        }
 
     def _decode_token(self, token_ids: list[int]) -> str:
         if startswith(token_ids, self.separator_token_encoding):

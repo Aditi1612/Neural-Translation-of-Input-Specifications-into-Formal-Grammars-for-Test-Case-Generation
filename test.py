@@ -12,6 +12,7 @@ from transformers import T5ForConditionalGeneration  # type: ignore [import]
 
 from data_loader import get_data_loader
 from tokenizer import CountingContextFreeGrammarTokenizer as CCFGTokenizer
+from counting_context_free_grammar import CountingContextFreeGrammar as CCFG
 
 
 def main(config: dict[str, Any]) -> None:
@@ -35,7 +36,6 @@ def main(config: dict[str, Any]) -> None:
 
     data_dir = Path(config['data_dir'])
     test_data_path = data_dir / config['valid_data']
-    # test_data_path = data_dir / config['train_data']
 
     data_loader_args = config['data_loader']['args']
     data_loader_args['batch_size'] = 1
@@ -70,11 +70,12 @@ def main(config: dict[str, Any]) -> None:
                 print(target_decoding)
 
                 print("Output:")
-                output_decoding = target_tokenizer.decode(output)
-                eos = output_decoding.find(";;")
-                output_decoding = output_decoding[:eos+2]
-                print(output_decoding)
-                print()
+                grammar = target_tokenizer.decode_to_json(output)
+                try:
+                    CCFG(**grammar)
+                    print(grammar)
+                except Exception:
+                    print("Invalid grammar")
 
 
 if __name__ == "__main__":

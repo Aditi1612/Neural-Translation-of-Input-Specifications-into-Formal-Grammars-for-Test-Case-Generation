@@ -11,9 +11,6 @@ from counting_context_free_grammar.counting_context_free_grammar import (
     Terminal,
     Variable,
     Nonterminal,
-    DERIVATE_TOKEN,
-    NEW_LINE_TOKEN,
-    SPACE_TOKEN,
 )
 
 
@@ -42,7 +39,7 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
             self._fallback_encode("symbol"))
         self.variable_token_encoding = (
             self._fallback_encode("variable"))
-        self.derivate_token_encoding = (
+        self.derivation_token_encoding = (
             self._fallback_encode("to"))
 
         self.separator_token_encoding = (
@@ -91,39 +88,36 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
             'attention_mask': attention_mask
         })
 
-    def batch_encode_to_splited(
-        self,
-        batch_text_or_text_pairs: list[str]
+    def encode_to_splited(
+        self, text: str
     ) -> tuple[torch.Tensor, torch.Tensor]:
 
-        def split_encoding(encoding: list[int]) -> tuple[list[int], list[int]]:
+        encoding = self.encode(text)
+        index = encoding.index(self.separator_token_encoding[0])
+        len_separator = len(self.separator_token_encoding)
+        production_encoding = (
+            torch.tensor(encoding[:index], dtype=torch.long))
+        constraint_encoding = (
+            torch.tensor(encoding[index+len_separator:], dtype=torch.long))
+        return production_encoding, constraint_encoding
 
-            index = encoding.index(self.separator_token_encoding[0])
-            return (
-                encoding[:index],
-                encoding[index+len(self.separator_token_encoding):]
-            )
+    def batch_encode_to_splited(
+        self, batch_text: list[str]
+    ) -> tuple[torch.Tensor, torch.Tensor]:
 
-        encodings = map(self.encode, batch_text_or_text_pairs)
-        splited_encodings = list(map(split_encoding, encodings))
-        production_encodings = [
-            torch.tensor(e[0], dtype=torch.long)
-            for e in splited_encodings
-        ]
-        constraint_encodings = [
-            torch.tensor(e[1], dtype=torch.long)
-            for e in splited_encodings
-        ]
+        splited_encodings = list(map(self.encode_to_splited, batch_text))
+        production_encodings = [e[0] for e in splited_encodings]
+        constraint_encodings = [e[1] for e in splited_encodings]
 
         production_input_ids = torch.nn.utils.rnn.pad_sequence(
-                production_encodings,
-                batch_first=True,
-                padding_value=self.pad_token_id
+            production_encodings,
+            batch_first=True,
+            padding_value=self.pad_token_id
         )
         constraint_input_ids = torch.nn.utils.rnn.pad_sequence(
-                constraint_encodings,
-                batch_first=True,
-                padding_value=self.pad_token_id
+            constraint_encodings,
+            batch_first=True,
+            padding_value=self.pad_token_id
         )
         return production_input_ids, constraint_input_ids
 
@@ -155,7 +149,7 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
             self.terminal_token_encoding,
             self.nonterminal_token_encoding,
             self.variable_token_encoding,
-            self.derivate_token_encoding,
+            self.derivation_token_encoding,
             self.separator_token_encoding,
             self.subseparator_token_encoding,
             [self.unk_token_id],
@@ -206,8 +200,8 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
             return self.separator
         elif startswith(token_ids, self.subseparator_token_encoding):
             return self.subseparator
-        elif startswith(token_ids, self.derivate_token_encoding):
-            return DERIVATE_TOKEN
+        elif startswith(token_ids, self.derivation_token_encoding):
+            return CCFG.derivation_token
         else:
             try:
                 return self._decode_ccfg_token(token_ids)
@@ -226,9 +220,9 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
     def _decode_terminal(self, token_ids: list[int]) -> str:
         start = len(self.terminal_token_encoding)
         if startswith(token_ids, self.newline_token_encoding, start):
-            return NEW_LINE_TOKEN
+            return CCFG.new_line_token
         elif startswith(token_ids, self.space_token_encoding, start):
-            return SPACE_TOKEN
+            return CCFG.space_token
         else:
             return self._fallback_decode(token_ids[start:])
 
@@ -238,7 +232,7 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
         return f"<{fragment}>"
 
     def _decode_variable(self, token_ids: list[int]) -> str:
-        start = len(self.derivate_token_encoding)
+        start = len(self.derivation_token_encoding)
         is_counter = False
         if startswith(token_ids, self.counter_token_encoding, start):
             is_counter = True
@@ -273,8 +267,8 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
             return self.separator_token_encoding
         elif token == self.subseparator:
             return self.subseparator_token_encoding
-        elif token == DERIVATE_TOKEN:
-            return self.derivate_token_encoding
+        elif token == CCFG.derivation_token:
+            return self.derivation_token_encoding
         else:
             try:
                 return self._encode_ccfg_token(token)
@@ -293,9 +287,9 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
         encoding: list[int] = []
         encoding.extend(self.terminal_token_encoding)
 
-        if terminal == NEW_LINE_TOKEN:
+        if terminal == CCFG.new_line_token:
             encoding.extend(self.newline_token_encoding)
-        elif terminal == SPACE_TOKEN:
+        elif terminal == CCFG.space_token:
             encoding.extend(self.space_token_encoding)
         else:
             encoding.extend(self._fallback_encode(terminal))

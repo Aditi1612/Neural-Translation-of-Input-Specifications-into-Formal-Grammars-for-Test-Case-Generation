@@ -46,13 +46,6 @@ MAX_DERIVATION_ITER = 2 ** 16
 TESTMODE_VARIABLE_UPPER_BOUND = 50
 TESTMODE_MAXIMUM_TERMINAL_LEN = 50
 
-NEW_LINE_TOKEN = Terminal('<n>')
-SPACE_TOKEN = Terminal('<s>')
-BLANK_TOKEN = Terminal('ε')
-
-DERIVATE_TOKEN = '->'
-# SEP_TOKEN = '\t'
-
 _RE_REGEX_TERMINAL = re.compile(r'(.+?)\{([\w\-\*\^,]*)\}')
 _RE_NUMBER_CBE = re.compile(r'(?:(-?\d+)\*)?(-?\d+)(?:\^(-?\d+))?')
 
@@ -75,6 +68,12 @@ class SubscriptType(Enum):
 
 class CountingContextFreeGrammar:
 
+    new_line_token = Terminal('<n>')
+    space_token = Terminal('<s>')
+    blank_token = Terminal('ε')
+
+    derivation_token = '->'
+
     def __init__(
         self,
         productions: list[str],
@@ -88,7 +87,7 @@ class CountingContextFreeGrammar:
         self.start_nonterminal: Nonterminal
         for i, rule_string in enumerate(productions):
             try:
-                lhs, rhss = rule_string.split(DERIVATE_TOKEN)
+                lhs, rhss = rule_string.split(self.derivation_token)
                 lhs = lhs.strip()
                 rhss = rhss.strip()
             except ValueError:
@@ -633,7 +632,11 @@ class CountingContextFreeGrammar:
 
     @staticmethod
     def _tokenize(string: str) -> Token:
-        if string in {NEW_LINE_TOKEN, SPACE_TOKEN, BLANK_TOKEN}:
+        if string in {
+            CountingContextFreeGrammar.new_line_token,
+            CountingContextFreeGrammar.space_token,
+            CountingContextFreeGrammar.blank_token
+        }:
             return Terminal(string)
         elif _RE_REGEX_TERMINAL.fullmatch(string):
             return Terminal(string)
@@ -644,7 +647,11 @@ class CountingContextFreeGrammar:
 
     def _get_token_type(self, token: str) -> TokenType:
         # raise DeprecationWarning("Now use typing instead")
-        if token in {NEW_LINE_TOKEN, SPACE_TOKEN, BLANK_TOKEN}:
+        if token in {
+            CountingContextFreeGrammar.new_line_token,
+            CountingContextFreeGrammar.space_token,
+            CountingContextFreeGrammar.blank_token
+        }:
             return TokenType.TERMINAL
         elif _RE_REGEX_TERMINAL.fullmatch(token):
             return TokenType.TERMINAL
@@ -708,11 +715,11 @@ class CountingContextFreeGrammar:
     def _sample_terminal(
         self, terminal: Terminal, assignment: Assignment
     ) -> str:
-        if terminal == NEW_LINE_TOKEN:
+        if terminal == CountingContextFreeGrammar.new_line_token:
             return '\n'
-        elif terminal == SPACE_TOKEN:
+        elif terminal == CountingContextFreeGrammar.space_token:
             return ' '
-        elif terminal == BLANK_TOKEN:
+        elif terminal == CountingContextFreeGrammar.blank_token:
             return ''
 
         match = _RE_REGEX_TERMINAL.fullmatch(terminal)
@@ -816,9 +823,6 @@ class CountingContextFreeGrammar:
 
 
 if __name__ == '__main__':
-    # 192, 1162
-    # Invalid Grammar: 1186, 1188
-
     logging.basicConfig(level=logging.DEBUG)
 
     if len(sys.argv) < 1:

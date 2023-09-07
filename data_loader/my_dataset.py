@@ -60,12 +60,17 @@ class MyDataset(Dataset):
         return description
 
     @staticmethod
+    def partial_stringify(productions_or_constraints: list[str]) -> str:
+        data = cast(list[str], productions_or_constraints)
+        return f" {CCFGTokenizer.subseparator} ".join(data)
+
+    @staticmethod
     def stringify(grammar: dict[str, list[str]]) -> str:
-        productions = cast(str, grammar['productions'])
-        constraints = cast(str, grammar['constraints'])
+        productions = cast(list[str], grammar['productions'])
+        constraints = cast(list[str], grammar['constraints'])
         return f" {CCFGTokenizer.separator} ".join([
-            f" {CCFGTokenizer.subseparator} ".join(productions),
-            f" {CCFGTokenizer.subseparator} ".join(constraints)
+            MyDataset.partial_stringify(productions),
+            MyDataset.partial_stringify(constraints)
         ])
 
     @staticmethod

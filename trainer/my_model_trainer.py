@@ -1,7 +1,8 @@
 import logging
 import random
 import copy
-from typing import (Optional, Any, )
+from collections import deque
+from typing import (Optional, Any, Protocol, )
 
 import torch
 from torch.utils.data import DataLoader
@@ -17,6 +18,15 @@ def _average(a: list[float]) -> float:
     return sum(a) / len(a)
 
 
+class PseudoLabeler(Protocol):
+    def __call__(
+        self,
+        specification: str,
+        model: MyModel
+    ) -> Optional[dict[str, list[str]]]:
+        ...
+
+
 class MyModelTrainer(BaseTrainer):
     """ See the following guideline
     https://huggingface.co/docs/transformers/model_doc/t5#training
@@ -28,9 +38,10 @@ class MyModelTrainer(BaseTrainer):
         model: MyModel,
         optimizer: torch.optim.Optimizer,
         device: torch.device,
-        labeled_data_loader: DataLoader,
+        data_loader: DataLoader,
         valid_data_loader: Optional[DataLoader] = None,
-        unlabeled_data_list: Optional[list[dict[str, Any]]] = None,
+        unlabeled_data_list: list[dict[str, Any]] = [],
+        pseudo_labeler: PseudoLabeler = lambda x, y: None,
         lr_scheduler: None = None,
         *,
         epochs: int,
@@ -42,6 +53,7 @@ class MyModelTrainer(BaseTrainer):
         max_new_tokens: int = 150,
         num_beams: int = 10,
         repetition_penalty: float = 2.5,
+        pseudo_label_samples: int = 100,
     ) -> None:
         super().__init__(
             model, optimizer,
@@ -49,12 +61,12 @@ class MyModelTrainer(BaseTrainer):
         )
         self.model = model
         self.device = device
-        self.data_loader = labeled_data_loader
-        self.unlabled_data_list = None
-        if unlabeled_data_list is not None:
-            self.unlabled_data_list = copy.deepcopy(unlabeled_data_list)
-            random.shuffle(self.unlabled_data_list)
+        self.data_loader = data_loader
         self.valid_data_loader = valid_data_loader
+        unlabled_data_list = copy.deepcopy(unlabeled_data_list)
+        random.shuffle(unlabled_data_list)
+        self.unlabeled_data_deque = deque(unlabled_data_list)
+        self.pseudo_labeler = pseudo_labeler
         self.lr_scheduler = lr_scheduler
 
         self.valid_period = valid_period
@@ -67,29 +79,27 @@ class MyModelTrainer(BaseTrainer):
         self.source_tokenizer = model.source_tokenizer
         self.target_tokenizer = model.target_tokenizer
         self.do_validation = valid_data_loader is not None
-        self.do_pseudo_labeling = unlabeled_data_list is not None
+        self.do_pseudo_labeling = len(unlabeled_data_list) > 0
         self.pseudo_labeled_dataset = None
         self.pseudo_labeled_data_loader = None
         if self.do_pseudo_labeling:
             self.pseudo_labeled_dataset = MyDataset()
+        self.pseudo_label_samples = pseudo_label_samples
 
     def _get_batch_loss(self, batch: Any) -> torch.Tensor:
         sources = batch['sources']
 
         input_ids = sources.input_ids.to(self.device)
-        production_labels = batch['productions'].to(self.device)
-        constraint_labels = batch['constraints'].to(self.device)
 
         pad_token_id = self.target_tokenizer.pad_token_id
-        production_pad_token_indexes = (production_labels == pad_token_id)
-        constraint_pad_token_indexes = (constraint_labels == pad_token_id)
 
-        production_labels[
-            production_pad_token_indexes
-        ] = self.ignore_index
-        constraint_labels[
-            constraint_pad_token_indexes
-        ] = self.ignore_index
+        production_labels = batch['productions'].to(self.device)
+        production_pad_token_indexes = (production_labels == pad_token_id)
+        production_labels[production_pad_token_indexes] = self.ignore_index
+
+        constraint_labels = batch['constraints'].to(self.device)
+        constraint_pad_token_indexes = (constraint_labels == pad_token_id)
+        constraint_labels[constraint_pad_token_indexes] = self.ignore_index
 
         production_output, constraint_output = self.model(
             input_ids, production_labels, constraint_labels)
@@ -172,14 +182,30 @@ class MyModelTrainer(BaseTrainer):
     def _pseudo_label(self, epoch: int) -> None:
 
         assert self.pseudo_labeled_dataset is not None
-        logging.warn("Pseudo labeling is not implemented yet")
+
+        pseudo_labeled_data_list = []
+        failed_data_list = []
+
+        pseudo_label_samples = min(
+            len(pseudo_labeled_data_list), self.pseudo_label_samples)
+
+        for _ in range(pseudo_label_samples):
+            unlabeled_data = self.unlabeled_data_deque.popleft()
+            specification = unlabeled_data['specification']
+            pseudo_label = self.pseudo_labeler(specification, self.model)
+            if pseudo_label is None:
+                failed_data_list.append(unlabeled_data)
+                continue
+            unlabeled_data['grammar'] = pseudo_label
+            pseudo_labeled_data_list.append(unlabeled_data)
+
+        self.unlabeled_data_deque.extend(failed_data_list)
 
         # TODO
-        pseudo_labeled_data = []
         logging.info(
             f"{len(self.pseudo_labeled_dataset)}"
-            + f"(+{len(pseudo_labeled_data)}) pseudo-labeled entries")
-        self.pseudo_labeled_dataset.extend(pseudo_labeled_data)
+            + f"(+{len(pseudo_labeled_data_list)}) pseudo-labeled entries")
+        self.pseudo_labeled_dataset.extend(pseudo_labeled_data_list)
 
         should_create_pseudo_labeled_data_loader = (
             self.pseudo_labeled_data_loader is None

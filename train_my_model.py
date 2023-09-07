@@ -2,18 +2,21 @@ import json
 import logging
 from collections import OrderedDict
 from pathlib import Path
-from typing import (Any, )
+from typing import (Any, Optional, )
 
 import torch
 import jsonlines
 import numpy as np
 from transformers import RobertaTokenizer  # type: ignore [import]
 from transformers import T5ForConditionalGeneration  # type: ignore [import]
+from transformers import GenerationConfig
 
+from counting_context_free_grammar import CountingContextFreeGrammar as CCFG
 from data_loader import get_my_data_loader
-from trainer import MyModelTrainer
-from tokenizer import CountingContextFreeGrammarTokenizer as CCFGTokenizer
 from model import MyModel
+from tokenizer import CountingContextFreeGrammarTokenizer as CCFGTokenizer
+from trainer import MyModelTrainer
+
 
 # Fix random seeds for reproducibility
 SEED = 42
@@ -68,6 +71,33 @@ def main() -> None:
 
     optimizer_args = config['optimizer']['args']
     optimizer = torch.optim.Adam(params=model.parameters(), **optimizer_args)
+
+    generation_config = GenerationConfig(**config['generation_config'])
+    source_encoding_args = {
+        'add_special_tokens': False,
+        'max_length': 512,
+        'padding': True,
+        'return_tensors': 'pt',
+        'truncation': True,
+    }
+    PREFIX = "summarize: "
+
+    def pseudo_labeler(
+        specification: str,
+        model: MyModel
+    ) -> Optional[dict[str, list[str]]]:
+        logging.info("Pseudo labeling...")
+
+        encoding = source_tokenizer.encode(
+            PREFIX + specification, **source_encoding_args)
+        input_ids = encoding.to(device)
+
+        grammar = model.generate(input_ids, generation_config)
+        try:
+            return CCFG(grammar)
+        except Exception:
+            return None
+
     trainer_args = config['trainer']
     trainer = MyModelTrainer(
         model,
@@ -76,6 +106,7 @@ def main() -> None:
         train_data_loader,
         valid_data_loader,
         unlabeled_data_list,
+        pseudo_labeler=pseudo_labeler,
         **trainer_args)
     trainer.train()
 

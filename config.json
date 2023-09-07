@@ -5,10 +5,10 @@
   "valid_data": "labeled/test.jsonl",
   "test_data": "labeled/test.jsonl",
   "unlabeled_train_data": "unlabeled/code_contests_train_python.jsonl",
-  "unlabeled_test_data": "unlabeled/code_contests_train_python.jsonl",
+  "unlabeled_test_data": "unlabeled/code_contests_test_python.jsonl",
   "data_loader": {
     "args": {
-      "batch_size": 16,
+      "batch_size": 8,
       "shuffle": true,
       "num_workers": 4
     }
@@ -22,23 +22,21 @@
   "metrics": [],
   "trainer": {
     "epochs": 1000,
-    "save_dir": "saved/my_model/",
-    "save_period": 100,
-    "valid_period": 100,
-    "pseudo_label_period": 100
+    "save_dir": "saved/pseudo_labeling/",
+    "save_period": 50,
+    "valid_period": 50,
+    "pseudo_label_period": 1
   },
   "test": {
     "model_dir": null
   },
-  "generation": {
-    "args": {
-      "length_penalty": 1.0,
-      "max_new_tokens": 150,
-      "num_beams": 10,
-      "repetition_penalty": 2.5,
-      "early_stopping": true,
-      "num_return_sequences": 3
-    }
+  "generation_config": {
+    "length_penalty": 1.0,
+    "max_new_tokens": 150,
+    "num_beams": 5,
+    "repetition_penalty": 2.5,
+    "early_stopping": true,
+    "num_return_sequences": 1
   },
   "generate": {
     "unlabeled_data": "unlabeled/code_contests_train_python.jsonl",

@@ -34,22 +34,20 @@ def get_my_data_loader(
             'truncation': True,
         }
 
-        stringifieds = [cast(str, sample['stringified']) for sample in samples]
-        sources = [PREFIX + sample['specification'] for sample in samples]
-        names = [sample['name'] for sample in samples]
+        # names = [sample['name'] for sample in samples]
 
+        sources = [PREFIX + sample['specification'] for sample in samples]
         source_encodings = source_tokenizer.batch_encode_plus(
             sources, **source_encoding_args)
-        production_input_ids, constraint_input_ids = (
+        stringifieds = [cast(str, sample['stringified']) for sample in samples]
+        production_encodings, constraint_encodings = (
             target_tokenizer.batch_encode_to_splited(stringifieds))
 
         return {
-            'names': names,
-            'sources_origin': sources,
-            'target_origin': stringifieds,
+            'samples': samples,
             'sources': source_encodings,
-            'productions': production_input_ids,
-            'constraints': constraint_input_ids,
+            'productions': production_encodings,
+            'constraints': constraint_encodings,
         }
 
     dataset = MyDataset(path)

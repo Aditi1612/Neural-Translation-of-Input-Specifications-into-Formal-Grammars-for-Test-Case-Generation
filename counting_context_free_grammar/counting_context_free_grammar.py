@@ -43,8 +43,8 @@ class Comparator(Protocol[T]):
 MAX_SAMPLING_ITER = 2 ** 8
 MAX_DERIVATION_ITER = 2 ** 16
 
-TESTMODE_VARIABLE_UPPER_BOUND = 50
-TESTMODE_MAXIMUM_TERMINAL_LEN = 50
+TESTMODE_VARIABLE_UPPER_BOUND = 64
+TESTMODE_MAXIMUM_TERMINAL_LEN = 512
 
 _RE_REGEX_TERMINAL = re.compile(r'(.+?)\{([\w\-\*\^,]*)\}')
 _RE_NUMBER_CBE = re.compile(r'(?:(-?\d+)\*)?(-?\d+)(?:\^(-?\d+))?')
@@ -748,7 +748,6 @@ class CountingContextFreeGrammar:
 
         if self.testmode:
             end = min(start, TESTMODE_MAXIMUM_TERMINAL_LEN)
-            end = max(start, end)
 
         terminal_len = random.choice(range(start, end+1))
         terminal_string = ""

@@ -12,7 +12,7 @@ from transformers import RobertaTokenizer  # type: ignore [import]
 from transformers import T5ForConditionalGeneration  # type: ignore [import]
 from transformers import GenerationConfig
 
-from tokenizer import CountingContextFreeGrammarTokenizer as CCFGTokenizer
+from tokenizer import CountingContextFreeGrammarTokenizer as CcfgTokenizer
 from counting_context_free_grammar import CountingContextFreeGrammar as CCFG
 from model import MyModel
 from data_loader import MyDataset
@@ -43,7 +43,7 @@ def main(config: dict[str, Any]) -> None:
 
     # Create a data loader
     source_tokenizer = RobertaTokenizer.from_pretrained(pretrained_model_name)
-    target_tokenizer = CCFGTokenizer(source_tokenizer)
+    target_tokenizer = CcfgTokenizer(source_tokenizer)
 
     # Load the model
     production_model = (
@@ -65,13 +65,7 @@ def main(config: dict[str, Any]) -> None:
     model.load_state_dict(state_dict)
     model = model.to(device)
 
-    source_encoding_args = {
-        'add_special_tokens': False,
-        'max_length': 512,
-        'padding': True,
-        'return_tensors': 'pt',
-        'truncation': True,
-    }
+    source_encoding_args = config['source_encoding']['args']
 
     def strinified_to_grammar(stringified: str):
         production_encoding, constraint_encoding = (

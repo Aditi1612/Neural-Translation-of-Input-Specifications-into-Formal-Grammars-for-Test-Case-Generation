@@ -5,7 +5,7 @@ from typing import (Any, Optional, cast, )
 import jsonlines
 
 from torch.utils.data import Dataset
-from tokenizer import CountingContextFreeGrammarTokenizer as CCFGTokenizer
+from tokenizer import CountingContextFreeGrammarTokenizer as CcfgTokenizer
 
 
 class MyDataset(Dataset):
@@ -31,7 +31,7 @@ class MyDataset(Dataset):
         self.data.extend(map(MyDataset.preprocess, dataset))
 
     @staticmethod
-    def get_spec(description: str) -> str:
+    def get_specification(description: str) -> str:
         description = MyDataset.replace_description(description)
         constraints_start_token = '\nconstraints\n'
         input_start_token = '\ninput\n'
@@ -62,13 +62,13 @@ class MyDataset(Dataset):
     @staticmethod
     def partial_stringify(productions_or_constraints: list[str]) -> str:
         data = cast(list[str], productions_or_constraints)
-        return f" {CCFGTokenizer.subseparator} ".join(data)
+        return f" {CcfgTokenizer.subseparator} ".join(data)
 
     @staticmethod
     def stringify(grammar: dict[str, list[str]]) -> str:
         productions = cast(list[str], grammar['productions'])
         constraints = cast(list[str], grammar['constraints'])
-        return f" {CCFGTokenizer.separator} ".join([
+        return f" {CcfgTokenizer.separator} ".join([
             MyDataset.partial_stringify(productions),
             MyDataset.partial_stringify(constraints)
         ])
@@ -79,6 +79,6 @@ class MyDataset(Dataset):
 
         description = obj['description']
         grammar = obj['grammar']
-        obj['specification'] = MyDataset.get_spec(description)
+        obj['specification'] = MyDataset.get_specification(description)
         obj['stringified'] = MyDataset.stringify(grammar)
         return obj

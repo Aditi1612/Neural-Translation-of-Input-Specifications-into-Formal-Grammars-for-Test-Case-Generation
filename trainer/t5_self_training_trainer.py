@@ -104,7 +104,7 @@ class T5SelfTrainingTrainer(T5Trainer):
                 "Train epoch: {} {:.2f}% Loss: {:.6f}"
                 .format(epoch, epoch_progress * 100, loss)
             )
-            logging.info(log_message)
+            logging.debug(log_message)
 
         pseudo_labeled_data_losses = []
         for batch_idx, batch in enumerate(self.pseudo_labeled_data_loader):
@@ -119,7 +119,7 @@ class T5SelfTrainingTrainer(T5Trainer):
                 "Train epoch: {} {:.2f}% Loss: {:.6f}"
                 .format(epoch, epoch_progress * 100, loss)
             )
-            logging.info(log_message)
+            logging.debug(log_message)
 
         if len(labeled_data_losses) > 0:
             logging.info(

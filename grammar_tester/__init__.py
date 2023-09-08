@@ -6,7 +6,7 @@ import tempfile
 from pathlib import Path
 from typing import (Optional, cast, )
 
-from counting_context_free_grammar import CountingContextFreeGrammar as CCFG
+from counting_context_free_grammar import CountingContextFreeGrammar as Ccfg
 from counting_context_free_grammar import Discriminator
 
 
@@ -84,7 +84,7 @@ def _test_soundness(
     productions = cast(list[str], grammar['productions'])
     constraints = cast(list[str], grammar['constraints'])
 
-    ccfg = CCFG(productions, constraints, testmode=True)
+    ccfg = Ccfg(productions, constraints, testmode=True)
     if not os.path.exists(solution_dir):
         # TODO: Use logger
         print(f'{solution_dir} not exists')

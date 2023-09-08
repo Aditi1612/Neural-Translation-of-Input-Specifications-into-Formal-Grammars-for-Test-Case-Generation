@@ -1,12 +1,13 @@
 import os
 
+import torch
 import transformers  # type: ignore [import]
 from torch.utils.data import DataLoader
 from typing import (Any, cast, )
 
 from .my_dataset import MyDataset
 from tokenizer import Tokenizer
-from tokenizer import CountingContextFreeGrammarTokenizer as CCFGTokenizer
+from tokenizer import CountingContextFreeGrammarTokenizer as CcfgTokenizer
 
 # NOTE: https://huggingface.co/docs/transformers/model_doc/t5#training
 PREFIX = "summarize: "
@@ -15,7 +16,8 @@ PREFIX = "summarize: "
 def get_my_data_loader(
     path: os.PathLike,
     source_tokenizer: transformers.PreTrainedTokenizerBase,
-    target_tokenizer: CCFGTokenizer,
+    target_tokenizer: CcfgTokenizer,
+    source_encoding_args: dict[str, Any],
     *,
     batch_size: int,
     shuffle: bool,
@@ -24,18 +26,8 @@ def get_my_data_loader(
 
     def collate_fn(
         samples: list[dict[str, Any]]
-    ) -> dict[str, transformers.tokenization_utils_base.BatchEncoding]:
-
-        source_encoding_args = {
-            'add_special_tokens': False,
-            'max_length': 512,
-            'padding': True,
-            'return_tensors': 'pt',
-            'truncation': True,
-        }
-
+    ) -> dict[str, torch.Tensor]:
         # names = [sample['name'] for sample in samples]
-
         sources = [PREFIX + sample['specification'] for sample in samples]
         source_encodings = source_tokenizer.batch_encode_plus(
             sources, **source_encoding_args)
@@ -67,6 +59,7 @@ def get_data_loader(
     path: os.PathLike,
     source_tokenizer: transformers.PreTrainedTokenizerBase,
     target_tokenizer: Tokenizer,
+    source_encoding_args: dict[str, Any],
     *,
     batch_size: int,
     shuffle: bool,
@@ -82,13 +75,7 @@ def get_data_loader(
         names = [sample['name'] for sample in samples]
 
         source_encodings = source_tokenizer.batch_encode_plus(
-            sources,
-            add_special_tokens=False,
-            max_length=512,
-            padding=True,
-            return_tensors='pt',
-            truncation=True,
-        )
+            sources, **source_encoding_args)
         target_encodings = target_tokenizer.batch_encode_plus(
             targets,
             padding=True,

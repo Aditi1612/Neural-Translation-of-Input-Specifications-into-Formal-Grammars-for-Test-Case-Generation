@@ -15,17 +15,16 @@
   },
   "optimizer": {
     "type": "Adam",
-    "args":{
-      "lr": 1e-7
-    }
+    "args":{}
   },
   "metrics": [],
   "trainer": {
-    "epochs": 1000,
-    "save_dir": "saved/pseudo_labeling/",
-    "save_period": 50,
-    "valid_period": 50,
-    "pseudo_label_period": 1
+    "epochs": 100,
+    "save_dir": "saved/pseudo_labeling.generatability.0908/",
+    "save_period": 10,
+    "valid_period": 10,
+    "pseudo_label_period": 5,
+    "pseudo_label_samples": 200
   },
   "test": {
     "model_dir": null
@@ -45,5 +44,14 @@
   },
   "execute": {
     "solution_dir": "data/solutions/"
+  },
+  "source_encoding": {
+    "args": {
+      "add_special_tokens": false,
+      "max_length": 512,
+      "padding": true,
+      "return_tensors": "pt",
+      "truncation": true
+    }
   }
 }

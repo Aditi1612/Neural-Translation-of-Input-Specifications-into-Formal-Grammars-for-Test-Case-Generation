@@ -2,7 +2,7 @@ import jsonlines
 import traceback
 from typing import (Optional, Callable, )
 
-from counting_context_free_grammar import CountingContextFreeGrammar as CCFG
+from counting_context_free_grammar import CountingContextFreeGrammar as Ccfg
 from counting_context_free_grammar import InvalidGrammarError
 from counting_context_free_grammar import Discriminator
 
@@ -84,7 +84,7 @@ if __name__ == "__main__":
                 return True
 
             def generate_ccfg():
-                ccfg = CCFG(grammar, constraints, testmode=True)
+                ccfg = Ccfg(grammar, constraints, testmode=True)
                 return ccfg.generate()
 
             # Test Discriminator

@@ -2,7 +2,7 @@ import logging
 import random
 import copy
 from collections import deque
-from typing import (Optional, Any, Protocol, )
+from typing import (Optional, Protocol, )
 
 import torch
 from torch.utils.data import DataLoader
@@ -40,7 +40,7 @@ class MyModelTrainer(BaseTrainer):
         device: torch.device,
         data_loader: DataLoader,
         valid_data_loader: Optional[DataLoader] = None,
-        unlabeled_data_list: list[dict[str, Any]] = [],
+        unlabeled_data_list: list[dict[str, list[str]]] = [],
         pseudo_labeler: PseudoLabeler = lambda x, y: None,
         lr_scheduler: None = None,
         *,
@@ -86,7 +86,7 @@ class MyModelTrainer(BaseTrainer):
             self.pseudo_labeled_dataset = MyDataset()
         self.pseudo_label_samples = pseudo_label_samples
 
-    def _get_batch_loss(self, batch: Any) -> torch.Tensor:
+    def _get_batch_loss(self, batch: dict[str, torch.Tensor]) -> torch.Tensor:
         sources = batch['sources']
 
         input_ids = sources.input_ids.to(self.device)
@@ -106,7 +106,7 @@ class MyModelTrainer(BaseTrainer):
         loss = production_output.loss + constraint_output.loss
         return loss
 
-    def _train_batch(self, batch: Any) -> float:
+    def _train_batch(self, batch: dict[str, torch.Tensor]) -> float:
         loss = self._get_batch_loss(batch)
 
         self.optimizer.zero_grad()
@@ -123,39 +123,43 @@ class MyModelTrainer(BaseTrainer):
             total_data_loader_len += len(self.pseudo_labeled_data_loader)
 
         labeled_data_losses: list[float] = []
-        for batch_idx, batch in enumerate(self.data_loader):
+        for batch_index, batch in enumerate(self.data_loader):
             loss = self._train_batch(batch)
             labeled_data_losses.append(loss)
 
-            epoch_progress = batch_idx / total_data_loader_len
+            epoch_progress = batch_index / total_data_loader_len
             log_message = (
                 "Train epoch: {} {:.2f}% Loss: {:.6f}"
                 .format(epoch, epoch_progress * 100, loss)
             )
-            logging.info(log_message)
+            logging.debug(log_message)
 
         pseudo_labeled_data_losses: list[float] = []
         if self.pseudo_labeled_data_loader is not None:
-            for batch_idx, batch in enumerate(
-                    len(self.data_loader), self.pseudo_labeled_data_loader):
+            for batch_index, batch in enumerate(
+                self.pseudo_labeled_data_loader,
+                start=len(self.data_loader)
+            ):
                 loss = self._train_batch(batch)
                 pseudo_labeled_data_losses.append(loss)
 
-                epoch_progress = batch_idx / total_data_loader_len
+                epoch_progress = batch_index / total_data_loader_len
                 log_message = (
                     "Train epoch: {} {:.2f}% Loss: {:.6f}"
                     .format(epoch, epoch_progress * 100, loss)
                 )
-                logging.info(log_message)
+                logging.debug(log_message)
 
         average_labeled_loss = _average(labeled_data_losses)
-        logging.info("Avg. labeled loss: {:.6f}".format(average_labeled_loss))
+        logging.info(
+            f"Train epoch: {epoch} "
+            + "Avg. labeled loss: {:.6f}".format(average_labeled_loss))
 
         if self.do_pseudo_labeling:
             average_pseudo_labeled_loss = _average(pseudo_labeled_data_losses)
             logging.info(
-                "Avg. pseudo-labeled loss: {:.6f}"
-                .format(average_pseudo_labeled_loss)
+                "Train epoch: {} Avg. pseudo-labeled loss: {:.6f}"
+                .format(epoch, average_pseudo_labeled_loss)
             )
 
         if self.do_validation and epoch % self.valid_period == 0:
@@ -171,13 +175,14 @@ class MyModelTrainer(BaseTrainer):
         losses = []
         self.model.eval()
         with torch.no_grad():
-            for batch_idx, batch in enumerate(self.valid_data_loader):
+            for batch_index, batch in enumerate(self.valid_data_loader):
 
                 loss = self._get_batch_loss(batch)
                 losses.append(loss.item())
 
         average_loss = _average(losses)
-        logging.info(f"Avg. valid loss: {average_loss}")
+        logging.info(
+            f"Train epoch: {epoch} Avg. valid loss: {average_loss}")
 
     def _pseudo_label(self, epoch: int) -> None:
 
@@ -187,21 +192,24 @@ class MyModelTrainer(BaseTrainer):
         failed_data_list = []
 
         pseudo_label_samples = min(
-            len(pseudo_labeled_data_list), self.pseudo_label_samples)
+            len(self.unlabeled_data_deque), self.pseudo_label_samples)
 
-        for _ in range(pseudo_label_samples):
+        for index in range(pseudo_label_samples):
+            logging.debug(
+                "Pseudo-labeling {:.2f}%".format(index/pseudo_label_samples))
             unlabeled_data = self.unlabeled_data_deque.popleft()
-            specification = unlabeled_data['specification']
+            description = unlabeled_data['description']
+            specification = MyDataset.get_specification(description)
             pseudo_label = self.pseudo_labeler(specification, self.model)
             if pseudo_label is None:
                 failed_data_list.append(unlabeled_data)
                 continue
             unlabeled_data['grammar'] = pseudo_label
+            unlabeled_data['specification'] = specification
             pseudo_labeled_data_list.append(unlabeled_data)
 
         self.unlabeled_data_deque.extend(failed_data_list)
 
-        # TODO
         logging.info(
             f"{len(self.pseudo_labeled_dataset)}"
             + f"(+{len(pseudo_labeled_data_list)}) pseudo-labeled entries")

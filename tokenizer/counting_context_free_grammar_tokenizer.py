@@ -1,3 +1,4 @@
+import logging
 from typing import (cast, Optional, Union)
 
 import torch
@@ -5,7 +6,7 @@ from transformers import BatchEncoding  # type: ignore [import]
 from transformers import PreTrainedTokenizerBase  # type: ignore [import]
 
 from ._typing import Tokenizer
-from counting_context_free_grammar import CountingContextFreeGrammar as CCFG
+from counting_context_free_grammar import CountingContextFreeGrammar as Ccfg
 from counting_context_free_grammar.counting_context_free_grammar import (
     TokenType,
     Terminal,
@@ -26,7 +27,7 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
 
         self.nonterminal_table: dict[str, list[int]] = {}
         self.nonterminal_symbol_index = -1
-        self.ccfg: Optional[CCFG] = None
+        self.ccfg: Optional[Ccfg] = None
 
         self.fallback_tokenizer = fallback_tokenizer
 
@@ -58,9 +59,10 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
         constraint_strings = constraints_string.split(self.subseparator)
 
         try:
-            self.ccfg = CCFG(production_strings, constraint_strings)
-        except Exception as e:
-            raise e
+            self.ccfg = Ccfg(production_strings, constraint_strings)
+        except Exception:
+            logging.warning(f"Invalid CCFG: {text}")
+            return self._fallback_encode(text)
         encoding = []
         for word in text.split():
             encoding.extend(self._encode_token(word))
@@ -201,7 +203,7 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
         elif startswith(token_ids, self.subseparator_token_encoding):
             return self.subseparator
         elif startswith(token_ids, self.derivation_token_encoding):
-            return CCFG.derivation_token
+            return Ccfg.derivation_token
         else:
             try:
                 return self._decode_ccfg_token(token_ids)
@@ -220,9 +222,9 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
     def _decode_terminal(self, token_ids: list[int]) -> str:
         start = len(self.terminal_token_encoding)
         if startswith(token_ids, self.newline_token_encoding, start):
-            return CCFG.new_line_token
+            return Ccfg.new_line_token
         elif startswith(token_ids, self.space_token_encoding, start):
-            return CCFG.space_token
+            return Ccfg.space_token
         else:
             return self._fallback_decode(token_ids[start:])
 
@@ -267,7 +269,7 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
             return self.separator_token_encoding
         elif token == self.subseparator:
             return self.subseparator_token_encoding
-        elif token == CCFG.derivation_token:
+        elif token == Ccfg.derivation_token:
             return self.derivation_token_encoding
         else:
             try:
@@ -287,9 +289,9 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
         encoding: list[int] = []
         encoding.extend(self.terminal_token_encoding)
 
-        if terminal == CCFG.new_line_token:
+        if terminal == Ccfg.new_line_token:
             encoding.extend(self.newline_token_encoding)
-        elif terminal == CCFG.space_token:
+        elif terminal == Ccfg.space_token:
             encoding.extend(self.space_token_encoding)
         else:
             encoding.extend(self._fallback_encode(terminal))
@@ -297,7 +299,7 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
         return encoding
 
     def _encode_nonterminal(self, nonterminal: Nonterminal) -> list[int]:
-        self.ccfg = cast(CCFG, self.ccfg)
+        self.ccfg = cast(Ccfg, self.ccfg)
         encoding: list[int] = []
         encoding.extend(self.nonterminal_token_encoding)
         fragment, placeholder = self.ccfg._split_token(nonterminal)
@@ -313,7 +315,7 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
         return encoding
 
     def _encode_variable(self, variable: Variable) -> list[int]:
-        self.ccfg = cast(CCFG, self.ccfg)
+        self.ccfg = cast(Ccfg, self.ccfg)
         encoding: list[int] = []
         encoding.extend(self.variable_token_encoding)
         if self.ccfg._is_counter(variable):

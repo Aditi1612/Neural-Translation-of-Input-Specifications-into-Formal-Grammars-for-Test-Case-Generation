@@ -1,6 +1,7 @@
 {
   "pretrained": "Salesforce/codet5-base",
   "data_dir": "data/",
+  "solution_dir": "data/solutions/",
   "train_data": "labeled/train.jsonl",
   "valid_data": "labeled/test.jsonl",
   "test_data": "labeled/test.jsonl",
@@ -19,8 +20,8 @@
   },
   "metrics": [],
   "trainer": {
-    "epochs": 100,
-    "save_dir": "saved/pseudo_labeling.generatability.0908/",
+    "epochs": 1000,
+    "save_dir": "saved/0909.tmp/",
     "save_period": 10,
     "valid_period": 10,
     "pseudo_label_period": 5,
@@ -41,9 +42,6 @@
     "unlabeled_data": "unlabeled/code_contests_train_python.jsonl",
     "output": "generated_grammar.jsonl",
     "model_dir": "saved/0905/"
-  },
-  "execute": {
-    "solution_dir": "data/solutions/"
   },
   "source_encoding": {
     "args": {

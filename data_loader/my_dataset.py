@@ -35,25 +35,29 @@ class MyDataset(Dataset):
         description = MyDataset.replace_description(description)
         constraints_start_token = '\nconstraints\n'
         input_start_token = '\ninput\n'
-        input_finish_token = '\noutput\n'
+        end_token = '\noutput\n'
 
-        constraints_idx = description.lower().find(constraints_start_token)
-        input_start_idx = description.lower().find(input_start_token)
-        input_finish_idx = description.lower().find(input_finish_token)
+        constraints_start = description.lower().find(constraints_start_token)
+        input_start = description.lower().find(input_start_token)
+        end = description.lower().find(end_token)
 
-        if input_start_idx < 0 or input_finish_idx < 0:
-            return description
+        constraints_start = (
+            len(description) if constraints_start < 0 else constraints_start)
+        input_start = len(description) if input_start < 0 else input_start
 
-        if constraints_idx >= 0:
-            return description[constraints_idx:input_finish_idx].strip()
-        else:
-            return description[input_start_idx:input_finish_idx].strip()
+        start = min(constraints_start, input_start)
+        start = 0 if start == len(description) else start
+        end = len(description) if end < 0 else end
+
+        specification = description[start:].strip()
+        return specification
 
     @staticmethod
     def replace_description(description: str) -> str:
         description_replacements = [
             ('≤', '<='),
             ('\\leq', '<='),
+            ('\\times', '*'),
         ]
         for old, new in description_replacements:
             description = description.replace(old, new)

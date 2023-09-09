@@ -18,6 +18,8 @@ from .constraint import parse_comparand
 from .invalid_grammar_error import InvalidConstraintError
 from .invalid_grammar_error import InvalidProductionError
 
+logger = logging.getLogger(__name__)
+
 sre_parse: ModuleType
 try:
     import sre_parse
@@ -136,16 +138,16 @@ class CountingContextFreeGrammar:
                 raise RuntimeError('Too many iterations')
             derivation_iter += 1
 
-            logging.debug(f'derivation_queue: {derivation_queue}')
-            logging.debug(f'assignment:\n{assignment}')
-            logging.debug(f'string:\n{string}')
+            logger.debug(f'derivation_queue: {derivation_queue}')
+            logger.debug(f'assignment:\n{assignment}')
+            logger.debug(f'string:\n{string}')
 
             token = derivation_queue.pop()
             production = None
             token_type = self._get_token_type(token)
 
-            logging.debug(f'Current token: {token}')
-            logging.debug(f'Token type: {token_type}')
+            logger.debug(f'Current token: {token}')
+            logger.debug(f'Token type: {token_type}')
 
             if token_type == TokenType.TERMINAL:
                 terminal = cast(Terminal, token)
@@ -495,7 +497,7 @@ class CountingContextFreeGrammar:
         indexing: Optional[tuple[Placeholder, int]],
         reverse: bool = False
     ) -> tuple[int, int]:
-        logging.debug(
+        logger.debug(
             f"Get {'lower' if reverse else 'upper'} bound of {variable}")
 
         comparison = self.comparisons[variable]
@@ -538,9 +540,9 @@ class CountingContextFreeGrammar:
         inner_variables = self._filter_inner_variables(
             bound, unassigned_bound_variables, tighter_than, get_target_bound)
 
-        logging.debug(
+        logger.debug(
             f"unassigned bound variables: {unassigned_bound_variables}")
-        logging.debug(f"inner variables: {inner_variables}")
+        logger.debug(f"inner variables: {inner_variables}")
 
         bound, number_of_inner_variables = (
             self._update_bound_and_count_inner_variables(
@@ -578,7 +580,7 @@ class CountingContextFreeGrammar:
         upper_bound, upper_inner_variables = self._get_variable_bound(
             variable, assignment, indexing, reverse=True)
 
-        logging.debug(
+        logger.debug(
             f"({variable}, {index}) in [{lower_bound}, {upper_bound}]")
 
         if self.testmode:
@@ -603,9 +605,9 @@ class CountingContextFreeGrammar:
 
         inequal = constraint.inequal_values | comparison_inequal
 
-        logging.debug(f'Sample a variable ({variable}, {index})')
-        logging.debug(f'[{lower_bound}, {upper_bound}]')
-        logging.debug(comparison)
+        logger.debug(f'Sample a variable ({variable}, {index})')
+        logger.debug(f'[{lower_bound}, {upper_bound}]')
+        logger.debug(comparison)
 
         # At this point, we knows follows:
         # * the target variable is in a bound [`lower_bound`, `upper_bound`],

@@ -27,11 +27,12 @@ class MyModel(torch.nn.Module):
     def forward(
         self,
         input_ids: torch.Tensor,
+        attention_mask: torch.Tensor,
         production_labels: Optional[torch.Tensor],
         constraint_labels: Optional[torch.Tensor],
     ) -> tuple[torch.Tensor, torch.Tensor]:
 
-        attention_mask = (input_ids != 0)
+        # attention_mask = (input_ids != 0)
 
         production_output = self.production_model(
                 input_ids, attention_mask, labels=production_labels)
@@ -97,8 +98,11 @@ class MyModel(torch.nn.Module):
 
         productions = filter_empty_string(productions)
         productions = MyModel._post_process_productions(productions)
+        productions = list(map(str.strip, productions))
+
         constraints = filter_empty_string(constraints)
         constraints = list(set(constraints))
+        constraints = list(map(str.strip, constraints))
 
         return productions, constraints
 

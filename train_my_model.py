@@ -14,9 +14,11 @@ from transformers import T5ForConditionalGeneration  # type: ignore [import]
 
 from counting_context_free_grammar import CountingContextFreeGrammar as Ccfg
 from data_loader import get_my_data_loader
+from data_loader import MyDataset
+from grammar_tester import test_soundness
 from model import MyModel
-from tokenizer import Tokenizer
 from tokenizer import CountingContextFreeGrammarTokenizer as CcfgTokenizer
+from tokenizer import Tokenizer
 from trainer import MyModelTrainer
 from trainer import PseudoLabeler
 
@@ -28,7 +30,30 @@ torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 np.random.seed(SEED)  # numpy random seed
 
-PREFIX = "summarize: "
+
+def get_pseudo_labeler_base(
+    tokenizer: Tokenizer,
+    generation_config: GenerationConfig,
+    device: torch.device,
+    encoding_args: dict[str, Any],
+) -> PseudoLabeler:
+
+    PREFIX = "summarize: "
+
+    def pseudo_labeler_base(
+        unlabeled_data: dict[str, Any], model: MyModel
+    ) -> Optional[dict[str, list[str]]]:
+        description = unlabeled_data['description']
+        specification = MyDataset.get_specification(description)
+        encoding = tokenizer.encode(PREFIX + specification, **encoding_args)
+        input_ids = encoding.to(device)
+
+        grammar = model.generate(input_ids, generation_config)
+        logging.debug("Grammar:")
+        logging.debug(grammar)
+        return grammar
+
+    return pseudo_labeler_base
 
 
 def get_pseudo_labeler_compilable(
@@ -38,79 +63,76 @@ def get_pseudo_labeler_compilable(
     encoding_args: dict[str, Any],
 ) -> PseudoLabeler:
 
-    def pseudo_labeler(
-        specification: str,
-        model: MyModel
-    ) -> Optional[dict[str, list[str]]]:
-        encoding = tokenizer.encode(
-            PREFIX + specification, **encoding_args)
-        input_ids = encoding.to(device)
+    pseudo_labeler_base = get_pseudo_labeler_base(
+        tokenizer, generation_config, device, encoding_args)
 
-        grammar = model.generate(input_ids, generation_config)
-        logging.debug("Grammar:")
-        logging.debug(grammar)
+    def pseudo_labeler_compilable(
+        unlabeled_data: dict[str, Any], model: MyModel
+    ) -> Optional[dict[str, list[str]]]:
+        grammar = pseudo_labeler_base(unlabeled_data, model)
         try:
             Ccfg(**grammar)
-            return grammar
         except Exception as e:
-            logging.debug("Pseudo labeling failed.")
-            logging.debug(e)
+            logging.debug(f"Pseudo labeling failed: {e}")
             return None
+        return grammar
 
-    return pseudo_labeler
+    return pseudo_labeler_compilable
 
 
-def get_pseudo_labeler_generatability(
+def get_pseudo_labeler_generatable(
     tokenizer: Tokenizer,
     generation_config: GenerationConfig,
     device: torch.device,
     encoding_args: dict[str, Any],
+    *,
+    num_testcases=10
 ) -> PseudoLabeler:
 
-    pseudo_labeler_compilable = get_pseudo_labeler_compilable(
+    pseudo_labeler_base = get_pseudo_labeler_base(
         tokenizer, generation_config, device, encoding_args)
 
-    def pseudo_labeler_generatability(
-        specification: str,
-        model: MyModel
+    def pseudo_labeler_generatable(
+        self, unlabeled_data: dict[str, Any], model: MyModel
     ) -> Optional[dict[str, list[str]]]:
-        grammar = pseudo_labeler_compilable(specification, model)
+        grammar = pseudo_labeler_base(unlabeled_data, model)
         try:
-            for _ in range(10):
+            for _ in range(num_testcases):
                 Ccfg(**grammar, testmode=True).generate()
-            return grammar
         except Exception as e:
-            logging.debug("Pseudo labeling failed.")
-            logging.debug(e)
+            logging.debug(f"Pseudo labeling failed: {e}")
             return None
+        return grammar
 
-    return pseudo_labeler_generatability
+    return pseudo_labeler_generatable
 
 
-def get_pseudo_labeler_soundness(
+def get_pseudo_labeler_sound(
     tokenizer: Tokenizer,
     generation_config: GenerationConfig,
     device: torch.device,
     encoding_args: dict[str, Any],
+    solution_dir: Path,
+    *,
+    num_testcases: Optional[int] = None,
 ) -> PseudoLabeler:
 
-    pseudo_labeler_compilable = get_pseudo_labeler_compilable(
+    pseudo_labeler_base = get_pseudo_labeler_base(
         tokenizer, generation_config, device, encoding_args)
 
-    def pseudo_labeler_soundness(
-        specification: str,
-        model: MyModel
+    def pseudo_labeler_sound(
+        unlabeled_data: dict[str, Any], model: MyModel
     ) -> Optional[dict[str, list[str]]]:
-        grammar = pseudo_labeler_compilable(specification, model)
-        try:
-            raise NotImplementedError("TODO: Implement soundness check")
-            return grammar
-        except Exception as e:
-            logging.debug("Pseudo labeling failed.")
-            logging.debug(e)
+        name = unlabeled_data['name']
+        grammar = pseudo_labeler_base(unlabeled_data, model)
+        is_sound = test_soundness(
+            grammar, solution_dir, name, num_testcases=num_testcases)
+        if not is_sound:
+            logging.debug("Pseudo labeling failed: Unsound grammar.")
             return None
+        return grammar
 
-    return pseudo_labeler_soundness
+    return pseudo_labeler_sound
 
 
 def main(config: dict[str, Any]) -> None:
@@ -123,6 +145,7 @@ def main(config: dict[str, Any]) -> None:
 
     data_loader_args = config['data_loader']['args']
     data_dir = Path(config['data_dir'])
+    solution_dir = Path(config['solution_dir'])
     pretrained = config['pretrained']
     trainer_args = config['trainer']
     optimizer_args = config['optimizer']['args']
@@ -160,8 +183,14 @@ def main(config: dict[str, Any]) -> None:
     model = model.to(device)
 
     optimizer = torch.optim.Adam(params=model.parameters(), **optimizer_args)
-    pseudo_labeler = get_pseudo_labeler_generatability(
-        source_tokenizer, generation_config, device, source_encoding_args)
+    # pseudo_labeler = get_pseudo_labeler_sound(
+    #     source_tokenizer,
+    #     generation_config,
+    #     device,
+    #     source_encoding_args,
+    #     solution_dir,
+    #     num_testcases=10
+    # )
 
     trainer = MyModelTrainer(
         model,
@@ -169,14 +198,17 @@ def main(config: dict[str, Any]) -> None:
         device,
         train_data_loader,
         valid_data_loader,
-        unlabeled_data_list,
-        pseudo_labeler=pseudo_labeler,
+        # unlabeled_data_list,
+        # pseudo_labeler=pseudo_labeler,
         **trainer_args)
     trainer.train()
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
+    ccfg_logger = logging.getLogger('counting_context_free_grammar')
+    ccfg_logger.setLevel(logging.INFO)
+
     with open('./config.json') as fp:
         config = json.load(fp, object_hook=OrderedDict)
     main(config)

@@ -2,7 +2,7 @@ import logging
 import random
 import copy
 from collections import deque
-from typing import (Optional, Protocol, )
+from typing import (Optional, Protocol, Any, )
 
 import torch
 from torch.utils.data import DataLoader
@@ -10,6 +10,9 @@ from torch.utils.data import DataLoader
 from base.base_trainer import BaseTrainer
 from data_loader import MyDataset
 from model import MyModel
+
+
+logger = logging.getLogger(__name__)
 
 
 def _average(a: list[float]) -> float:
@@ -20,11 +23,9 @@ def _average(a: list[float]) -> float:
 
 class PseudoLabeler(Protocol):
     def __call__(
-        self,
-        specification: str,
-        model: MyModel
+        self, unlabeled_data: dict[str, Any], model: MyModel
     ) -> Optional[dict[str, list[str]]]:
-        ...
+        pass
 
 
 class MyModelTrainer(BaseTrainer):
@@ -41,7 +42,7 @@ class MyModelTrainer(BaseTrainer):
         data_loader: DataLoader,
         valid_data_loader: Optional[DataLoader] = None,
         unlabeled_data_list: list[dict[str, list[str]]] = [],
-        pseudo_labeler: PseudoLabeler = lambda x, y: None,
+        pseudo_labeler: PseudoLabeler = lambda x, y, **z: None,
         lr_scheduler: None = None,
         *,
         epochs: int,
@@ -87,9 +88,8 @@ class MyModelTrainer(BaseTrainer):
         self.pseudo_label_samples = pseudo_label_samples
 
     def _get_batch_loss(self, batch: dict[str, torch.Tensor]) -> torch.Tensor:
-        sources = batch['sources']
-
-        input_ids = sources.input_ids.to(self.device)
+        input_ids = batch['input_ids'].to(self.device)
+        attention_mask = batch['attention_mask'].to(self.device)
 
         pad_token_id = self.target_tokenizer.pad_token_id
 
@@ -102,7 +102,7 @@ class MyModelTrainer(BaseTrainer):
         constraint_labels[constraint_pad_token_indexes] = self.ignore_index
 
         production_output, constraint_output = self.model(
-            input_ids, production_labels, constraint_labels)
+            input_ids, attention_mask, production_labels, constraint_labels)
         loss = production_output.loss + constraint_output.loss
         return loss
 
@@ -132,7 +132,7 @@ class MyModelTrainer(BaseTrainer):
                 "Train epoch: {} {:.2f}% Loss: {:.6f}"
                 .format(epoch, epoch_progress * 100, loss)
             )
-            logging.debug(log_message)
+            logger.debug(log_message)
 
         pseudo_labeled_data_losses: list[float] = []
         if self.pseudo_labeled_data_loader is not None:
@@ -148,16 +148,16 @@ class MyModelTrainer(BaseTrainer):
                     "Train epoch: {} {:.2f}% Loss: {:.6f}"
                     .format(epoch, epoch_progress * 100, loss)
                 )
-                logging.debug(log_message)
+                logger.debug(log_message)
 
         average_labeled_loss = _average(labeled_data_losses)
-        logging.info(
+        logger.info(
             f"Train epoch: {epoch} "
             + "Avg. labeled loss: {:.6f}".format(average_labeled_loss))
 
         if self.do_pseudo_labeling:
             average_pseudo_labeled_loss = _average(pseudo_labeled_data_losses)
-            logging.info(
+            logger.info(
                 "Train epoch: {} Avg. pseudo-labeled loss: {:.6f}"
                 .format(epoch, average_pseudo_labeled_loss)
             )
@@ -181,12 +181,13 @@ class MyModelTrainer(BaseTrainer):
                 losses.append(loss.item())
 
         average_loss = _average(losses)
-        logging.info(
+        logger.info(
             f"Train epoch: {epoch} Avg. valid loss: {average_loss}")
 
     def _pseudo_label(self, epoch: int) -> None:
 
         assert self.pseudo_labeled_dataset is not None
+        logger.info("Pseudo-labeling...")
 
         pseudo_labeled_data_list = []
         failed_data_list = []
@@ -195,12 +196,14 @@ class MyModelTrainer(BaseTrainer):
             len(self.unlabeled_data_deque), self.pseudo_label_samples)
 
         for index in range(pseudo_label_samples):
-            logging.debug(
-                "Pseudo-labeling {:.2f}%".format(index/pseudo_label_samples))
+            logger.debug(
+                "Pseudo-labeling {:.2f}%"
+                .format(index/pseudo_label_samples)
+            )
             unlabeled_data = self.unlabeled_data_deque.popleft()
             description = unlabeled_data['description']
             specification = MyDataset.get_specification(description)
-            pseudo_label = self.pseudo_labeler(specification, self.model)
+            pseudo_label = self.pseudo_labeler(unlabeled_data, self.model)
             if pseudo_label is None:
                 failed_data_list.append(unlabeled_data)
                 continue
@@ -210,7 +213,7 @@ class MyModelTrainer(BaseTrainer):
 
         self.unlabeled_data_deque.extend(failed_data_list)
 
-        logging.info(
+        logger.info(
             f"{len(self.pseudo_labeled_dataset)}"
             + f"(+{len(pseudo_labeled_data_list)}) pseudo-labeled entries")
         self.pseudo_labeled_dataset.extend(pseudo_labeled_data_list)

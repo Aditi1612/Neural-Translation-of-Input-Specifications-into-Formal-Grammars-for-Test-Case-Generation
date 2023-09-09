@@ -37,7 +37,8 @@ def get_my_data_loader(
 
         return {
             'samples': samples,
-            'sources': source_encodings,
+            'input_ids': source_encodings.input_ids,
+            'attention_mask': source_encodings.attention_mask,
             'productions': production_encodings,
             'constraints': constraint_encodings,
         }

@@ -2,6 +2,7 @@ import json
 import logging
 from collections import OrderedDict
 from pathlib import Path
+from typing import (Any, )
 
 import jsonlines
 import tqdm
@@ -10,12 +11,12 @@ from grammar_tester import test_completeness
 from grammar_tester import test_soundness
 
 
-def main(config):
-    execute_config = config['execute']
-    data_dir = Path(config['data_dir'])
-    solution_dir = Path(execute_config['solution_dir'])
+def main(config: dict[str, Any]):
 
-    labeled_path = data_dir / config['train_data']
+    data_dir = Path(config['data_dir'])
+    solution_dir = Path(config['solution_dir'])
+
+    labeled_path = data_dir / config['test_data']
     labeleds = jsonlines.open(labeled_path, 'r')
 
     testcases_path = data_dir
@@ -40,7 +41,7 @@ def main(config):
 
         is_sound = test_soundness(
             grammar,
-            solution_dir / name,
+            solution_dir,
             num_testcases=5,
             num_sampled_solutions=5,
             name=name

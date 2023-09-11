@@ -21,7 +21,7 @@
   "metrics": [],
   "trainer": {
     "epochs": 1000,
-    "save_dir": "saved/0911/",
+    "save_dir": "saved/0911.soundness/",
     "save_period": 10,
     "valid_period": 10,
     "pseudo_label_period": 5,
@@ -33,10 +33,10 @@
   "generation_config": {
     "length_penalty": 1.0,
     "max_new_tokens": 150,
-    "num_beams": 5,
+    "num_beams": 10,
     "repetition_penalty": 2.5,
     "early_stopping": true,
-    "num_return_sequences": 1
+    "num_return_sequences": 10
   },
   "generate": {
     "unlabeled_data": "unlabeled/code_contests_train_python.jsonl",

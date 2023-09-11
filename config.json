@@ -1,7 +1,7 @@
 {
   "pretrained": "Salesforce/codet5-base",
   "data_dir": "data/",
-  "solution_dir": "data/solutions/",
+  "solution_prefix": "data/solutions/",
   "train_data": "labeled/train.jsonl",
   "valid_data": "labeled/test.jsonl",
   "test_data": "labeled/test.jsonl",
@@ -16,12 +16,14 @@
   },
   "optimizer": {
     "type": "Adam",
-    "args":{}
+    "args":{
+      "lr": 5e-5
+    }
   },
   "metrics": [],
   "trainer": {
     "epochs": 1000,
-    "save_dir": "saved/0911.soundness/",
+    "save_dir": "saved/0911.correctness/",
     "save_period": 10,
     "valid_period": 10,
     "pseudo_label_period": 5,

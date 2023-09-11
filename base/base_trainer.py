@@ -15,7 +15,6 @@ class BaseTrainer:
         save_dir: str,
         save_period: int,
     ) -> None:
-        # TODO: Implement logging
 
         self.model = model
         self.optimizer = optimizer

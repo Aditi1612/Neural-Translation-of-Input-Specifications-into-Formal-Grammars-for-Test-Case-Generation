@@ -10,6 +10,10 @@ from counting_context_free_grammar import CountingContextFreeGrammar as Ccfg
 from tokenizer import CountingContextFreeGrammarTokenizer as CcfgTokenizer
 
 
+def _filter_empty_string(string_list: list[str]) -> list[str]:
+    return list(filter(lambda e: len(e) > 0, string_list))
+
+
 class MyModel(torch.nn.Module):
     def __init__(
         self,
@@ -60,51 +64,43 @@ class MyModel(torch.nn.Module):
         iterable = filter(lambda e: len(e) > 0, iterable)
         return list(iterable)
 
-    def _generate_list(
+    def _generate_lists(
         self,
         input_ids: torch.Tensor,
         generate_config: GenerationConfig,
-        model: T5ForConditionalGeneration
+        model: T5ForConditionalGeneration,
+
     ) -> list[str]:
-        decodings = self._generate_decodings(input_ids, generate_config, model)
-        decoding = decodings[0]
-        return self._decoding_to_list(decoding)
+        decodings = self._generate_decodings(
+            input_ids, generate_config, model)
+        return list(map(self._decoding_to_list, decodings))
 
     @staticmethod
     def _post_process_productions(productions: list[str]) -> list[str]:
+        productions = _filter_empty_string(productions)
         processed_productions: list[str] = []
         lhss: set[str] = set()
         for production in productions:
             splited_production = production.split(Ccfg.derivation_token)
             if len(splited_production) < 2:
                 continue
-            lhs = splited_production[0]
-            if lhs in lhss:
+            lhs = splited_production[0].strip()
+            is_nonterminal = (lhs[0] == '<' and lhs[-1] == '>')
+            is_counter = (lhs[0] == '[' and lhs[-1] == ']')
+            if not is_nonterminal and not is_counter:
                 continue
             lhss.add(lhs)
             production = Ccfg.derivation_token.join(splited_production[0:2])
             processed_productions.append(production)
+        processed_productions = list(map(str.strip, processed_productions))
         return processed_productions
 
     @staticmethod
-    def _post_process(
-        productions: list[str], constraints: list[str]
-    ) -> tuple[list[str], list[str]]:
-        productions = copy.deepcopy(productions)
-        constraints = copy.deepcopy(constraints)
-
-        def filter_empty_string(string_list: list[str]) -> list[str]:
-            return list(filter(lambda e: len(e) > 0, string_list))
-
-        productions = filter_empty_string(productions)
-        productions = MyModel._post_process_productions(productions)
-        productions = list(map(str.strip, productions))
-
-        constraints = filter_empty_string(constraints)
+    def _post_process_constraints(constraints: list[str]) -> list[str]:
+        constraints = _filter_empty_string(constraints)
         constraints = list(set(constraints))
         constraints = list(map(str.strip, constraints))
-
-        return productions, constraints
+        return constraints
 
     def generate(
         self,
@@ -112,11 +108,14 @@ class MyModel(torch.nn.Module):
         generate_config: GenerationConfig
     ) -> dict[str, list[str]]:
 
-        productions = self._generate_list(
+        productionss = self._generate_lists(
             input_ids, generate_config, self.production_model)
-        constraints = self._generate_list(
+        constraintss = self._generate_lists(
             input_ids, generate_config, self.constraint_model)
-        productions, constraints = (
-            MyModel._post_process(productions, constraints))
 
-        return {'productions': productions, 'constraints': constraints}
+        productionss = list(map(
+            MyModel._post_process_productions, productionss))
+        constraintss = list(map(
+            MyModel._post_process_constraints, constraintss))
+
+        return {'productionss': productionss, 'constraintss': constraintss}

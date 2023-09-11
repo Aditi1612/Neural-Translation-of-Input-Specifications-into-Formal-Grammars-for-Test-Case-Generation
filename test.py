@@ -2,7 +2,6 @@ import argparse
 import json
 import logging
 import os
-from glob import glob
 from pathlib import Path
 from collections import OrderedDict
 from typing import (Any, )
@@ -33,9 +32,8 @@ def main(config: dict[str, Any]) -> None:
     generation_config = GenerationConfig(**config['generation_config'])
     test_data_path = data_dir / config['test_data']
 
-    checkpoint_paths = glob(str(model_dir / '*'))
+    checkpoint_paths = model_dir.glob('*')
     latest_checkpoint_path = max(checkpoint_paths, key=os.path.getctime)
-    # latest_checkpoint_path = model_dir / 'checkpoint-epoch300.pth'
 
     logging.info(f"Use device: {device}")
     logging.info(f"Dataset: {test_data_path}")
@@ -150,13 +148,13 @@ def main(config: dict[str, Any]) -> None:
 
             logging.debug("Labeled Productions:")
             logging.debug(labeled_productions)
+            logging.debug("Generated Productions:")
+            logging.debug(generated_productionss[0])
+
             logging.debug("Labeled Constraints:")
             logging.debug(labeled_constraints)
-
-            # logging.debug("Generated Productions:")
-            # logging.debug(generated_productions)
-            # logging.debug("Generated Constraints:")
-            # logging.debug(generated_constraints)
+            logging.debug("Generated Constraints:")
+            logging.debug(generated_constraintss[0])
 
     exact_match = list(map(
         lambda e: e[0] and e[1],

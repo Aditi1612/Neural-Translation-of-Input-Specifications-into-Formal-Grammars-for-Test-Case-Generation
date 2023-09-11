@@ -28,8 +28,8 @@ def main(config: dict[str, Any]):
         for data in tqdm.tqdm(dataset, desc='Loading testcases'):
             name = data['name']
             testcases = data['public_tests']['input']
-            testcases.extend(data['private_tests']['input'])
-            testcases.extend(data['generated_tests']['input'])
+            # testcases.extend(data['private_tests']['input'])
+            # testcases.extend(data['generated_tests']['input'])
             testcases_dict[name] = testcases
 
     soundness = []
@@ -67,7 +67,7 @@ def main(config: dict[str, Any]):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.WARN)
+    logging.basicConfig(level=logging.WARNING)
     with open('./config.json') as fp:
         config = json.load(fp, object_hook=OrderedDict)
     main(config)

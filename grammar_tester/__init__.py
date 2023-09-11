@@ -10,6 +10,9 @@ from counting_context_free_grammar import CountingContextFreeGrammar as Ccfg
 from counting_context_free_grammar import Discriminator
 
 
+logger = logging.getLogger(__name__)
+
+
 # Fix random seeds for reproducibility
 SEED = 42
 random.seed(SEED)
@@ -25,8 +28,8 @@ def test_completeness(
     try:
         return _test_completeness(grammar, testcases, num_sampled_testcases)
     except Exception as e:
-        logging.warn(name)
-        logging.warn(e)
+        logger.warning(name)
+        logger.warning(e)
         return False
 
 
@@ -53,23 +56,23 @@ def _test_completeness(
 def test_soundness(
     grammar: dict[str, list[str]],
     solution_dir: Path,
+    name: str,
     *,
     num_sampled_solutions: Optional[int] = None,
     num_testcases: Optional[int],
     timeout: float = 2,
-    name: str = "no name",
 ) -> bool:
     try:
         return _test_soundness(
             grammar,
-            solution_dir,
+            solution_dir / name,
             num_sampled_solutions,
             num_testcases,
             timeout,
         )
     except Exception as e:
-        logging.info(name)
-        logging.info(e)
+        logger.info(name)
+        logger.info(e)
         return False
 
 
@@ -86,8 +89,7 @@ def _test_soundness(
 
     ccfg = Ccfg(productions, constraints, testmode=True)
     if not os.path.exists(solution_dir):
-        # TODO: Use logger
-        print(f'{solution_dir} not exists')
+        logger.warning(f'{solution_dir} not exists')
 
     solution_files = [
         solution_dir / filename

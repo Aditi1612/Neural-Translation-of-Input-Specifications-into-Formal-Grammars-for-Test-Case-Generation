@@ -93,7 +93,7 @@ def main(config: dict[str, Any]) -> None:
         source_encoding_args,
         get_solution_dir=solution_prefix.joinpath,
         get_testcases=testcases_dictionary.get,
-        num_generated_testcases=10,
+        num_testcase_generation=10,
         num_solution_sampling=10,
         num_testcase_sampling=10
     )

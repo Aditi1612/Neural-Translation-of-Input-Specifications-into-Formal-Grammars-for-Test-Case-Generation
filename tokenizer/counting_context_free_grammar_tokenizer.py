@@ -15,6 +15,9 @@ from counting_context_free_grammar.counting_context_free_grammar import (
 )
 
 
+logger = logging.getLogger(__name__)
+
+
 def startswith(a: list, b: list, i: int = 0) -> bool:
     return a[i:i+len(b)] == b
 
@@ -33,6 +36,7 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
 
         self.unk_token_id: int = self.fallback_tokenizer.unk_token_id
         self.pad_token_id: int = self.fallback_tokenizer.pad_token_id
+        self.eos_token_id: int = self.fallback_tokenizer.eos_token_id
 
         self.terminal_token_encoding = (
             self._fallback_encode("token"))
@@ -61,7 +65,7 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
         try:
             self.ccfg = Ccfg(production_strings, constraint_strings)
         except Exception:
-            logging.warning(f"Invalid CCFG: {text}")
+            logger.warning(f"Invalid CCFG: {text}")
             return self._fallback_encode(text)
         encoding = []
         for word in text.split():
@@ -98,9 +102,17 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
         index = encoding.index(self.separator_token_encoding[0])
         len_separator = len(self.separator_token_encoding)
         production_encoding = (
-            torch.tensor(encoding[:index], dtype=torch.long))
+            torch.tensor(
+                encoding[:index] + [self.eos_token_id],
+                dtype=torch.long
+            )
+        )
         constraint_encoding = (
-            torch.tensor(encoding[index+len_separator:], dtype=torch.long))
+            torch.tensor(
+                encoding[index+len_separator:] + [self.eos_token_id],
+                dtype=torch.long
+            )
+        )
         return production_encoding, constraint_encoding
 
     def batch_encode_to_splited(

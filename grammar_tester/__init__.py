@@ -149,7 +149,8 @@ def test_correctness(
     timeout: float = 2,
 ) -> bool:
     is_sound = test_soundness(
-        grammar, solution_dir, name,
+        grammar, solution_dir,
+        name=name,
         num_testcase_generation=num_testcase_generation,
         num_solution_sampling=num_solution_sampling,
         timeout=timeout,

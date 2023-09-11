@@ -29,7 +29,7 @@ def main(config: dict[str, Any]) -> None:
         if test_config['model_dir'] is not None
         else config['trainer']['save_dir']
     )
-    generation_config = GenerationConfig(**config['generation_config'])
+    generation_config = GenerationConfig(**test_config['generation_config'])
     test_data_path = data_dir / config['test_data']
 
     checkpoint_paths = model_dir.glob('*')
@@ -118,13 +118,12 @@ def main(config: dict[str, Any]) -> None:
                 PREFIX + specification, **source_encoding_args)
             input_ids = encoding.to(device)
 
-            generated_grammars = model.generate(input_ids, generation_config)
-            generated_productionss = generated_grammars["productionss"]
-            generated_productionss = list(
-                map(normalize_list, generated_productionss))
-            generated_constraintss = generated_grammars["constraintss"]
-            generated_constraintss = list(
-                map(normalize_list, generated_constraintss))
+            generated_productions_list, generated_constraints_list = (
+                model.generate(input_ids, generation_config))
+            generated_productions_list = list(
+                map(normalize_list, generated_productions_list))
+            generated_constraints_list = list(
+                map(normalize_list, generated_constraints_list))
 
             labeled_grammar = stringified_to_grammar(data['stringified'])
             labeled_productions = labeled_grammar["productions"]
@@ -135,12 +134,12 @@ def main(config: dict[str, Any]) -> None:
             exact_match_constraints.append(any(map(
                 lambda generated_constraints:
                     generated_constraints == labeled_constraints,
-                generated_constraintss
+                generated_constraints_list
             )))
             exact_match_productions.append(any(map(
                 lambda generated_productions:
                     generated_productions == labeled_productions,
-                generated_productionss
+                generated_productions_list
             )))
 
             logging.debug(f"Data {num} Specification:")
@@ -149,12 +148,12 @@ def main(config: dict[str, Any]) -> None:
             logging.debug("Labeled Productions:")
             logging.debug(labeled_productions)
             logging.debug("Generated Productions:")
-            logging.debug(generated_productionss[0])
+            logging.debug(generated_productions_list[0])
 
             logging.debug("Labeled Constraints:")
             logging.debug(labeled_constraints)
             logging.debug("Generated Constraints:")
-            logging.debug(generated_constraintss[0])
+            logging.debug(generated_constraints_list[0])
 
     exact_match = list(map(
         lambda e: e[0] and e[1],

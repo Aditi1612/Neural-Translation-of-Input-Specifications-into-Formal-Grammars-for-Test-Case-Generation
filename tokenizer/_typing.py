@@ -5,6 +5,8 @@ from transformers import BatchEncoding  # type: ignore [import]
 
 
 class Tokenizer(Protocol):
+    pad_token_id: int
+
     def __init__(self):
         pass
 

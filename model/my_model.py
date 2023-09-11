@@ -1,4 +1,3 @@
-import copy
 from typing import (Optional, Iterable, )
 
 import torch
@@ -70,7 +69,7 @@ class MyModel(torch.nn.Module):
         generate_config: GenerationConfig,
         model: T5ForConditionalGeneration,
 
-    ) -> list[str]:
+    ) -> list[list[str]]:
         decodings = self._generate_decodings(
             input_ids, generate_config, model)
         return list(map(self._decoding_to_list, decodings))
@@ -106,7 +105,7 @@ class MyModel(torch.nn.Module):
         self,
         input_ids: torch.Tensor,
         generate_config: GenerationConfig
-    ) -> dict[str, list[str]]:
+    ) -> tuple[list[list[str]], list[list[str]]]:
 
         productionss = self._generate_lists(
             input_ids, generate_config, self.production_model)
@@ -118,4 +117,4 @@ class MyModel(torch.nn.Module):
         constraintss = list(map(
             MyModel._post_process_constraints, constraintss))
 
-        return {'productionss': productionss, 'constraintss': constraintss}
+        return productionss, constraintss

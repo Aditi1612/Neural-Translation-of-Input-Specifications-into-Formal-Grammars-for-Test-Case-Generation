@@ -23,8 +23,8 @@ def test_completeness(
     try:
         return _test_completeness(grammar, testcases, num_testcase_sampling)
     except Exception as e:
-        logger.warning(name)
-        logger.warning(e)
+        logger.info(name)
+        logger.info(e)
         return False
 
 
@@ -143,7 +143,7 @@ def test_correctness(
     testcases: list[str],
     name: str,
     *,
-    num_testcase_generation: Optional[int],
+    num_testcase_generation: int,
     num_solution_sampling: Optional[int] = None,
     num_testcase_sampling: Optional[int] = None,
     timeout: float = 2,

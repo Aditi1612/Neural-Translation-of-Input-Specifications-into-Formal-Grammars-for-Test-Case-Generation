@@ -25,15 +25,18 @@ class BaseTrainer:
         self.save_period = save_period
 
     @abstractmethod
-    def _train_epoch(self, epoch: int) -> None:
+    def _train_epoch(self, epoch: int) -> dict[str, float]:
         raise NotImplementedError
 
-    def train(self) -> None:
+    def train(self) -> list[dict[str, float]]:
+        losses: list[dict[str, float]] = []
         for epoch in range(self.start_epoch, self.epochs + 1):
-            _ = self._train_epoch(epoch)
+            loss_dictionary = self._train_epoch(epoch)
+            losses.append(loss_dictionary)
 
             if epoch % self.save_period == 0:
                 self._save_checkpoint(epoch)
+        return losses
 
     def _save_checkpoint(self, epoch: int) -> None:
         arch = type(self.model).__name__

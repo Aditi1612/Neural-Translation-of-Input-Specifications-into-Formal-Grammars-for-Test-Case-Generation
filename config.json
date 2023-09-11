@@ -27,18 +27,30 @@
     "save_period": 10,
     "valid_period": 10,
     "pseudo_label_period": 5,
-    "pseudo_label_samples": 200
+    "pseudo_label_samples": 200,
+    "early_stopping_patience": 10
+  },
+  "train": {
+    "generation_config": {
+      "length_penalty": 1.0,
+      "max_new_tokens": 150,
+      "num_beams": 5,
+      "repetition_penalty": 2.5,
+      "early_stopping": true,
+      "num_return_sequences": 1
+    },
+    "loss_path": "./0911.correctness.loss.json"
   },
   "test": {
-    "model_dir": null
-  },
-  "generation_config": {
-    "length_penalty": 1.0,
-    "max_new_tokens": 150,
-    "num_beams": 10,
-    "repetition_penalty": 2.5,
-    "early_stopping": true,
-    "num_return_sequences": 10
+    "model_dir": null,
+    "generation_config": {
+      "length_penalty": 1.0,
+      "max_new_tokens": 150,
+      "num_beams": 10,
+      "repetition_penalty": 2.5,
+      "early_stopping": true,
+      "num_return_sequences": 10
+    }
   },
   "generate": {
     "unlabeled_data": "unlabeled/code_contests_train_python.jsonl",

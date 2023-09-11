@@ -26,7 +26,7 @@ def get_my_data_loader(
 
     def collate_fn(
         samples: list[dict[str, Any]]
-    ) -> dict[str, torch.Tensor]:
+    ) -> dict[str, Any]:
         # names = [sample['name'] for sample in samples]
         sources = [PREFIX + sample['specification'] for sample in samples]
         source_encodings = source_tokenizer.batch_encode_plus(

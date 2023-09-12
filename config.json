@@ -38,11 +38,22 @@
       "repetition_penalty": 2.5,
       "early_stopping": true,
       "num_return_sequences": 1
+    }
+  },
+  "test_labeling": {
+    "test_soundness": {
+      "args": {
+        "num_testcase_generation": 5,
+        "num_solution_sampling": 5
+      }
     },
-    "loss_path": "./0911.correctness.loss.json"
+    "test_completeness": {
+      "args": {
+        "num_testcase_sampling": 5
+      }
+    }
   },
   "test": {
-    "model_dir": null,
     "generation_config": {
       "length_penalty": 1.0,
       "max_new_tokens": 150,
@@ -52,10 +63,15 @@
       "num_return_sequences": 10
     }
   },
-  "generate": {
-    "unlabeled_data": "unlabeled/code_contests_train_python.jsonl",
-    "output": "generated_grammar.jsonl",
-    "model_dir": "saved/0905/"
+  "label": {
+    "generation_config": {
+      "length_penalty": 1.0,
+      "max_new_tokens": 150,
+      "num_beams": 10,
+      "repetition_penalty": 2.5,
+      "early_stopping": true,
+      "num_return_sequences": 10
+    }
   },
   "source_encoding": {
     "args": {

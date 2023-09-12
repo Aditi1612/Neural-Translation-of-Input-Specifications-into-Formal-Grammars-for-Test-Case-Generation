@@ -23,8 +23,9 @@ def test_completeness(
     try:
         return _test_completeness(grammar, testcases, num_testcase_sampling)
     except Exception as e:
-        logger.info(name)
-        logger.info(e)
+        logger.warning("Parsing Error")
+        logger.warning(name)
+        logger.warning(e)
         return False
 
 
@@ -67,8 +68,9 @@ def test_soundness(
             timeout,
         )
     except Exception as e:
-        logger.info(name)
-        logger.info(e)
+        logger.warning("Generation error")
+        logger.warning(name)
+        logger.warning(e)
         return False
 
 
@@ -155,6 +157,10 @@ def test_correctness(
         num_solution_sampling=num_solution_sampling,
         timeout=timeout,
     )
+
+    if not is_sound:
+        return False
+
     is_complete = test_completeness(
         grammar, testcases,
         name=name,

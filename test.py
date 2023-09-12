@@ -3,7 +3,6 @@ import json
 import logging
 import os
 from pathlib import Path
-from collections import OrderedDict
 from typing import (Any, )
 
 import torch
@@ -20,15 +19,13 @@ from tokenizer import CountingContextFreeGrammarTokenizer as CcfgTokenizer
 def main(config: dict[str, Any]) -> None:
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    logging.info(f"Use device: {device}")
 
+    # Set variables related to `test_config`
     test_config = config['test']
+    logging.info(test_config)
     data_dir = Path(config['data_dir'])
     pretrained_model_name = config['pretrained']
-    model_dir = Path(
-        test_config['model_dir']
-        if test_config['model_dir'] is not None
-        else config['trainer']['save_dir']
-    )
     generation_config = GenerationConfig(**test_config['generation_config'])
     test_data_path = data_dir / config['test_data']
 
@@ -148,7 +145,7 @@ def main(config: dict[str, Any]) -> None:
 
             logging.debug(f"Name: {name}")
 
-            logging.debug(f"Specification:")
+            logging.debug("Specification:")
             logging.debug(specification)
 
             logging.debug("Labeled Productions:")
@@ -180,15 +177,25 @@ def main(config: dict[str, Any]) -> None:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    with open('./config.json') as fp:
-        config = json.load(fp, object_hook=OrderedDict)
+    logging.basicConfig(level=logging.INFO)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model-dir', type=Path)
+    parser.add_argument('--model-dir')
     args = parser.parse_args()
-    for k, v in vars(args).items():
-        if v is not None:
-            config['test'][k] = v
-    logging.basicConfig(level=logging.INFO)
+
+    with open('./config.json') as fp:
+        config = json.load(fp)
+
+    trainer_config = config['trainer']
+    model_dir = trainer_config['save_dir']
+
+    defaults = {'model_dir', model_dir}
+
+    task = 'test'
+    task_config = config.setdefault(task, {})
+    for k in defaults.keys():
+        if getattr(args, k, None) is not None:
+            task_config[k] = getattr(args, k)
+        task_config.setdefault(k, defaults[k])
+
     main(config)

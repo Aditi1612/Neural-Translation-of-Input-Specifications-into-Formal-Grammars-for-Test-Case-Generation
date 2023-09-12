@@ -1,11 +1,11 @@
+import argparse
 import json
 import logging
-from collections import OrderedDict
 from pathlib import Path
 from typing import (Any, )
 
-import torch
 import jsonlines
+import torch
 import numpy as np
 from tqdm import tqdm
 from transformers import GenerationConfig  # type: ignore [import]
@@ -38,10 +38,13 @@ def main(config: dict[str, Any]) -> None:
     pretrained = config['pretrained']
     trainer_args = config['trainer']
     optimizer_args = config['optimizer']['args']
+    source_encoding_args = config['source_encoding']['args']
+
+    # Set variables related to `train_config`
     train_config = config['train']
+    logging.info(train_config)
     generation_config = GenerationConfig(**train_config['generation_config'])
     loss_path = Path(train_config.get('loss_path', './dev/null'))
-    source_encoding_args = config['source_encoding']['args']
 
     source_tokenizer = RobertaTokenizer.from_pretrained(config['pretrained'])
     target_tokenizer = CcfgTokenizer(source_tokenizer)
@@ -120,6 +123,20 @@ if __name__ == '__main__':
     ccfg_logger = logging.getLogger('counting_context_free_grammar')
     ccfg_logger.setLevel(logging.INFO)
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--loss-path')
+    args = parser.parse_args()
+
     with open('./config.json') as fp:
-        config = json.load(fp, object_hook=OrderedDict)
+        config = json.load(fp)
+
+    defaults = {'loss_path': './dev/null'}
+
+    task = 'train'
+    task_config = config.setdefault(task, {})
+    for k in defaults.keys():
+        if getattr(args, k, None) is not None:
+            task_config[k] = getattr(args, k)
+        task_config.setdefault(k, defaults[k])
+
     main(config)

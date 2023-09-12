@@ -41,7 +41,7 @@ def main(config: dict[str, Any]) -> None:
     logging.info(label_config)
     model_dir = Path(label_config['model_dir'])
     generation_config = GenerationConfig(**label_config['generation_config'])
-    unlabeled_data_path = Path(label_config['unlabeled_data_path'])
+    unlabeled_data_path = Path(label_config['unlabeled_data'])
     output_path = label_config['output']
 
     checkpoint_paths = model_dir.glob('*.pth')
@@ -120,7 +120,7 @@ if __name__ == "__main__":
         config = json.load(fp)
 
     data_dir = Path(config['data_dir'])
-    unlabeled_data_path = data_dir / config['unlabeled_test_data']
+    unlabeled_data = data_dir / config['unlabeled_test_data']
     trainer_config = config['trainer']
     model_dir = Path(trainer_config['save_dir'])
     if args.model_dir is None:
@@ -130,7 +130,7 @@ if __name__ == "__main__":
 
     defaults = {
         'model_dir': model_dir,
-        'unlabeled_data_path': unlabeled_data_path,
+        'unlabeled_data': unlabeled_data,
         'output': output
     }
 

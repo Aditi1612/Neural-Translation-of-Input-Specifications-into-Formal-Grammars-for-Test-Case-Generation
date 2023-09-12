@@ -1,14 +1,26 @@
 import argparse
 import json
 import logging
+import random
 from pathlib import Path
 from typing import (Any, )
 
 import jsonlines
+import torch
+import numpy as np
 from tqdm import tqdm
 
 from grammar_tester import test_completeness
 from grammar_tester import test_soundness
+
+
+# Fix random seeds for reproducibility
+SEED = 42
+torch.manual_seed(SEED)  # pytorch random seed
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
+np.random.seed(SEED)  # numpy random seed
+random.seed(SEED)  # python random seed
 
 
 def main(config: dict[str, Any]):
@@ -53,6 +65,8 @@ def main(config: dict[str, Any]):
             name=name,
             **test_completeness_args
         )
+        if is_sound and not is_complete:
+            print(grammar)
 
         soundness.append(is_sound)
         completeness.append(is_complete)
@@ -69,7 +83,7 @@ def main(config: dict[str, Any]):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.WARNING)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--labeled-data')

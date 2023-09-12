@@ -1,6 +1,7 @@
 import argparse
 import json
 import logging
+import random
 from pathlib import Path
 from typing import (Any, )
 
@@ -25,6 +26,7 @@ torch.manual_seed(SEED)  # pytorch random seed
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 np.random.seed(SEED)  # numpy random seed
+random.seed(SEED)  # python random seed
 
 
 def main(config: dict[str, Any]) -> None:

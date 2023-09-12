@@ -2,11 +2,13 @@ import argparse
 import json
 import logging
 import os
+import random
 from pathlib import Path
 from typing import (Any, )
 
 import jsonlines
 import torch
+import np
 from tqdm import tqdm
 from transformers import GenerationConfig
 from transformers import RobertaTokenizer  # type: ignore [import]
@@ -15,6 +17,15 @@ from transformers import T5ForConditionalGeneration  # type: ignore [import]
 from data_loader import MyDataset
 from model import MyModel
 from tokenizer import CountingContextFreeGrammarTokenizer as CcfgTokenizer
+
+
+# Fix random seeds for reproducibility
+SEED = 42
+torch.manual_seed(SEED)  # pytorch random seed
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
+np.random.seed(SEED)  # numpy random seed
+random.seed(SEED)  # python random seed
 
 
 def main(config: dict[str, Any]) -> None:

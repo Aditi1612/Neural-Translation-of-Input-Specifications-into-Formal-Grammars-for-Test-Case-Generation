@@ -31,6 +31,7 @@ class discriminator():
     def __call__(self, grammer: list, constraints: list, test_case: str) -> bool:
         self.__init__(self.generate_mode)
         self.start_token = grammer[0].split(self.derivate_token)[0].strip()
+        self.derivation_queue = [self.start_token]
         self.make_derivate_dict(grammer)
         self.make_constraints_dict(constraints)
         test_case = test_case.strip()

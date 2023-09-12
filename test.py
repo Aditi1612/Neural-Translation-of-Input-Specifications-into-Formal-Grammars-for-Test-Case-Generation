@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import (Any, )
 
 import torch
-import np
+import numpy as np
 from tqdm import tqdm
 from transformers import RobertaTokenizer  # type: ignore [import]
 from transformers import T5ForConditionalGeneration  # type: ignore [import]

@@ -8,7 +8,7 @@ from typing import (Any, )
 
 import jsonlines
 import torch
-import np
+import numpy as np
 from tqdm import tqdm
 from transformers import GenerationConfig
 from transformers import RobertaTokenizer  # type: ignore [import]

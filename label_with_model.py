@@ -112,7 +112,10 @@ if __name__ == "__main__":
     unlabeled_data_path = data_dir / config['unlabeled_test_data']
     trainer_config = config['trainer']
     model_dir = Path(trainer_config['save_dir'])
-    output = model_dir / 'labeled.jsonl'
+    if args.model_dir is None:
+        output = model_dir / 'labeled.jsonl'
+    else:
+        output = Path(args.model_dir) / 'labeled.jsonl'
 
     defaults = {
         'model_dir': model_dir,

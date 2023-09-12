@@ -21,13 +21,15 @@ def main(config: dict[str, Any]) -> None:
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logging.info(f"Use device: {device}")
 
+    data_dir = Path(config['data_dir'])
+    test_data_path = data_dir / config['test_data']
+    pretrained_model_name = config['pretrained']
+
     # Set variables related to `test_config`
     test_config = config['test']
     logging.info(test_config)
-    data_dir = Path(config['data_dir'])
-    pretrained_model_name = config['pretrained']
+    model_dir = Path(test_config['model_dir'])
     generation_config = GenerationConfig(**test_config['generation_config'])
-    test_data_path = data_dir / config['test_data']
 
     checkpoint_paths = model_dir.glob('*')
     latest_checkpoint_path = max(checkpoint_paths, key=os.path.getctime)
@@ -189,7 +191,7 @@ if __name__ == "__main__":
     trainer_config = config['trainer']
     model_dir = trainer_config['save_dir']
 
-    defaults = {'model_dir', model_dir}
+    defaults = {'model_dir': model_dir}
 
     task = 'test'
     task_config = config.setdefault(task, {})

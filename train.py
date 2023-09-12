@@ -17,7 +17,6 @@ from model import MyModel
 from tokenizer import CountingContextFreeGrammarTokenizer as CcfgTokenizer
 from trainer import MyModelTrainer
 from pseudo_labeler import get_pseudo_labeler_correct
-from pseudo_labeler import get_pseudo_labeler_generatable
 
 
 # Fix random seeds for reproducibility
@@ -100,8 +99,6 @@ def main(config: dict[str, Any]) -> None:
         num_solution_sampling=10,
         num_testcase_sampling=10
     )
-    pseudo_labeler = get_pseudo_labeler_generatable(
-        source_tokenizer, generation_config, device, source_encoding_args)
 
     trainer = MyModelTrainer(
         model,

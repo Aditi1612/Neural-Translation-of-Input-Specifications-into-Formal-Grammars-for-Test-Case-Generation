@@ -84,6 +84,8 @@ class MyModel(torch.nn.Module):
             if len(splited_production) < 2:
                 continue
             lhs = splited_production[0].strip()
+            if len(lhs) < 1:
+                continue
             is_nonterminal = (lhs[0] == '<' and lhs[-1] == '>')
             is_counter = (lhs[0] == '[' and lhs[-1] == ']')
             if not is_nonterminal and not is_counter:

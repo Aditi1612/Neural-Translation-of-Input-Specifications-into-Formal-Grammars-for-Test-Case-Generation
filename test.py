@@ -81,8 +81,8 @@ def main(config: dict[str, Any]) -> None:
         grammar = {'productions': productions, 'constraints': constraints}
         return grammar
 
-    exact_match_productions = []
-    exact_match_constraints = []
+    exact_match_productions: list[int] = []
+    exact_match_constraints: list[int] = []
 
     def normalize_list(str_list: list[str]) -> list[str]:
         str_list = list(filter(lambda e: len(e) > 0, str_list))
@@ -90,29 +90,39 @@ def main(config: dict[str, Any]) -> None:
         return sorted(list(set(str_list)))
 
     def log_result(
-        exact_match: list[bool],
+        exact_match: list[int],
         legend: str,
+        *,
+        k: int = 1,
         level=logging.INFO
     ) -> None:
-        sum_exact_match = sum(exact_match)
-        len_exact_match = len(exact_match)
-        average_exact_match = sum_exact_match / len_exact_match
+        top_k_exact_match = [(k > e and e >= 0) for e in exact_match]
+        top_k_sum_exact_match = sum(top_k_exact_match)
+        top_k_len_exact_match = len(top_k_exact_match)
+        average_exact_match = top_k_sum_exact_match / top_k_len_exact_match
         logging.log(
             logging.INFO,
-            "Exact match of {}: {:.3f}%({}/{})"
+            "Top-{} exact match of {}: {:.3f}%({}/{})"
             .format(
-                legend,
+                k, legend,
                 average_exact_match*100,
-                sum_exact_match,
-                len_exact_match
+                top_k_sum_exact_match,
+                top_k_len_exact_match
             )
         )
+
+    def find(item: Any, list_: list[Any]) -> int:
+        try:
+            return list_.index(item)
+        except ValueError:
+            return -1
 
     test_dataset = MyDataset(test_data_path)
     PREFIX = "summarize: "
     with torch.no_grad():
-        for num, data in enumerate(tqdm(test_dataset)):
+        for data in tqdm(test_dataset):
 
+            name = data['name']
             specification = data['specification']
             encoding = source_tokenizer.encode(
                 PREFIX + specification, **source_encoding_args)
@@ -131,18 +141,14 @@ def main(config: dict[str, Any]) -> None:
             labeled_constraints = labeled_grammar["constraints"]
             labeled_constraints = normalize_list(labeled_constraints)
 
-            exact_match_constraints.append(any(map(
-                lambda generated_constraints:
-                    generated_constraints == labeled_constraints,
-                generated_constraints_list
-            )))
-            exact_match_productions.append(any(map(
-                lambda generated_productions:
-                    generated_productions == labeled_productions,
-                generated_productions_list
-            )))
+            exact_match_productions.append(
+                find(labeled_productions, generated_productions_list))
+            exact_match_constraints.append(
+                find(labeled_constraints, generated_constraints_list))
 
-            logging.debug(f"Data {num} Specification:")
+            logging.debug(f"Name: {name}")
+
+            logging.debug(f"Specification:")
             logging.debug(specification)
 
             logging.debug("Labeled Productions:")
@@ -156,12 +162,21 @@ def main(config: dict[str, Any]) -> None:
             logging.debug(generated_constraints_list[0])
 
     exact_match = list(map(
-        lambda e: e[0] and e[1],
+        lambda e: max(e[0], e[1]) if (e[0] >= 0 and e[1] >= 0) else -1,
         zip(exact_match_productions, exact_match_constraints)
     ))
-    log_result(exact_match_productions, "productions")
-    log_result(exact_match_constraints, "constraints")
-    log_result(exact_match, "grammar")
+
+    log_result(exact_match_productions, "productions", k=1)
+    log_result(exact_match_constraints, "constraints", k=1)
+    log_result(exact_match, "grammar", k=1)
+
+    log_result(exact_match_productions, "productions", k=5)
+    log_result(exact_match_constraints, "constraints", k=5)
+    log_result(exact_match, "grammar", k=5)
+
+    log_result(exact_match_productions, "productions", k=10)
+    log_result(exact_match_constraints, "constraints", k=10)
+    log_result(exact_match, "grammar", k=10)
 
 
 if __name__ == "__main__":

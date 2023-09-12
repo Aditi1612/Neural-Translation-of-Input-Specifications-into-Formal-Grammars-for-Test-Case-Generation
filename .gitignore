@@ -8,4 +8,5 @@ data/**/*.jsonl
 data/solutions
 !data/labeled/*
 !data/raw/
-saved/*
+saved/**/*.pth
+!saved/**/labeled.jsonl

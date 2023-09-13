@@ -22,12 +22,12 @@ test-human-labeled-data: \  ## Test the human-labeled data
 		test-human-labeled-data-train test-human-labeled-data-test
 
 test-human-labeled-data-train:  ## Test the human-labeled train data
-	python test_labeling.py \
+	python validate_labeling.py \
 		--labeled-data data/labeled/train.jsonl \
 		--testcase data/unlabeled/code_contests_train_python.jsonl
 
 test-human-labeled-data-test:  ## Test the human-labeled test data
-	python test_labeling.py \
+	python validate_labeling.py \
 		--labeled-data data/labeled/test.jsonl \
 		--testcase data/unlabeled/code_contests_train_python.jsonl
 

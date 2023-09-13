@@ -114,19 +114,24 @@ if __name__ == "__main__":
     parser.add_argument('--model-dir')
     parser.add_argument('--unlabeled-data')
     parser.add_argument('--output')
+    parser.add_argument('--test', action='store_true')
     args = parser.parse_args()
 
     with open('./config.json') as fp:
         config = json.load(fp)
 
     data_dir = Path(config['data_dir'])
-    unlabeled_data = data_dir / config['unlabeled_test_data']
+    unlabeled_valid_data = data_dir / config['unlabeled_valid_data']
+    unlabeled_test_data = data_dir / config['unlabeled_test_data']
+    unlabeled_data = unlabeled_test_data if args.test else unlabeled_valid_data
     trainer_config = config['trainer']
     model_dir = Path(trainer_config['save_dir'])
-    if args.model_dir is None:
-        output = model_dir / 'labeled.jsonl'
-    else:
-        output = Path(args.model_dir) / 'labeled.jsonl'
+    output_base = (
+        'model_labeled_test_data.jsonl' if args.test
+        else 'model_labeled_valid_data.jsonl'
+    )
+    output = (
+        (Path(args.model_dir) if args.model_dir else model_dir) / output_base)
 
     defaults = {
         'model_dir': model_dir,

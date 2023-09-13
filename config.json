@@ -6,6 +6,7 @@
   "valid_data": "labeled/test.jsonl",
   "test_data": "labeled/test.jsonl",
   "unlabeled_train_data": "unlabeled/code_contests_train_python.jsonl",
+  "unlabeled_valid_data": "unlabeled/code_contests_valid_python.jsonl",
   "unlabeled_test_data": "unlabeled/code_contests_test_python.jsonl",
   "data_loader": {
     "args": {
@@ -17,13 +18,13 @@
   "optimizer": {
     "type": "Adam",
     "args":{
-      "lr": 5e-5
+      "lr": 1e-5
     }
   },
   "metrics": [],
   "trainer": {
     "epochs": 1000,
-    "save_dir": "saved/0911.correctness/",
+    "save_dir": "saved/0912.pseudo_labeling/",
     "save_period": 10,
     "valid_period": 10,
     "pseudo_label_period": 5,
@@ -40,7 +41,7 @@
       "num_return_sequences": 1
     }
   },
-  "test_labeling": {
+  "validate_labeling": {
     "test_soundness": {
       "args": {
         "num_testcase_generation": 5,

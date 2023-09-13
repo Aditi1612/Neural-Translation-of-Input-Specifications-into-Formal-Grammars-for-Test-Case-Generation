@@ -1,6 +1,12 @@
-*.txt
-*.ipynb
+__pycache__/
 
-/data
-/.vscode
-/__pycache__
+test_results
+.vscode
+.venv
+
+data/**/*.jsonl
+data/solutions
+!data/labeled/*
+!data/raw/
+saved/**/*.pth
+!saved/**/labeled.jsonl

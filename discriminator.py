@@ -6,17 +6,11 @@ class discriminator():
     
     def __init__(self, generate_mode=None) -> None:
         
-        # self.sep_token = '\t'
-        # self.new_line_token = '<n>'
-        # self.space_token = '<s>'
-        # self.start_token = '<S>'
-        # self.derivate_token = '->'
-        # self.blink_token = 'ε'
-        
-        self.new_line_token = 'nl'
-        self.space_token = 'sp'
-        self.start_token = 'START'
-        self.derivate_token = ' -> '
+        self.sep_token = '\t'
+        self.new_line_token = '<n>'
+        self.space_token = '<s>'
+        self.start_token = '<S>'
+        self.derivate_token = '->'
         self.blink_token = 'ε'
         
         self.RE_INTEGER = self.re.compile(r'-?[0-9]+ *')
@@ -53,6 +47,7 @@ class discriminator():
         # print(1)
         
         while self.derivation_queue:
+            # print(self.derivation_queue)
             curr_variable = self.derivation_queue[0]
             # print(self.derivation_queue)
             
@@ -108,32 +103,6 @@ class discriminator():
                 
                 del self.derivation_queue[:2]
                 continue
-
-            # <T_i> 형태
-            if self.re.match(r'[^_]*_[^_]*', curr_variable):
-                nonterminal , counter = curr_variable.split('_')
-                # <T_N>
-                if ',' in counter:
-                    
-                    ...
-                if not self.RE_INTEGER.fullmatch(counter):
-                    # print(self.variable_dict)
-                    # print(curr_variable)
-                    counter = self.variable_dict[counter]
-                    counter = f'{counter}'
-                    curr_variable = nonterminal + '_' + counter
-                # <T_1> 등의 상황
-                if curr_variable in self.derivation_dict:
-                    counter = int(counter)
-                else:
-                    curr_variable = nonterminal + '_i'
-                    counter = int(counter)
-
-                if counter < 0:
-                    if self.generate_mode == "test": 
-                        raise Exception(f"Error10: counter have negative value")
-                    return False
-                
             
             # 기타 terminal 생성
             elif not self.RE_NONTERMINAL.fullmatch(curr_variable):
@@ -187,10 +156,18 @@ class discriminator():
                     
                     continue
                 else:
-                    # N, (N)의 형태
-                    if self.re.match(r'\([^\[]*\)', curr_variable):
+                    # N, [N]의 형태
+                    if self.re.match(r'\[[^\[]*\]', curr_variable):
                         curr_variable = curr_variable[1:-1]
                     
+                    # reset compare dict
+                    if curr_variable in self.variable_dict and curr_variable in self.compare_dict:
+                        target = self.compare_dict[curr_variable]['target']
+                        self.variable_dict.pop(curr_variable)
+                        self.variable_dict.pop(target)
+
+
+
                     if curr_variable not in self.const_dict:
                         
                         if curr_variable in self.derivation_dict:
@@ -217,26 +194,48 @@ class discriminator():
                     if not start <= int(curr_token) <= end: 
                         # print(8)
                         if self.generate_mode == "test": 
-                            raise Exception(f"Error9: variable is out of range\n\texpected: {start}<=len<={end}\n\treal: {curr_token}")
+                            raise Exception(f"Error9: variable is out of range\n\texpected: {start}<={curr_variable}<={end}\n\treal: {curr_token}")
                         return False
                     self.variable_dict[curr_variable] = int(curr_token)
                 
                 continue
             
-            
+            # <T_i> 형태
+            if self.re.match(r'<[^_]*_[^_]*>', curr_variable):
+                nonterminal , counter = curr_variable.split('_')
+                # <T_N>
+                if ',' in counter:
+                    
+                    ...
+                if not self.RE_INTEGER.fullmatch(counter[:-1]):
+                    # print(self.variable_dict)
+                    # print(curr_variable)
+                    counter = self.variable_dict[counter[:-1]]
+                    counter = f'{counter}>'
+                    curr_variable = nonterminal + '_' + counter
+                # <T_1> 등의 상황
+                if curr_variable in self.derivation_dict:
+                    counter = int(counter[:-1])
+                else:
+                    curr_variable = nonterminal + '_i>'
+                    counter = int(counter[:-1])
+            if counter < 0:
+                if self.generate_mode == "test": 
+                    raise Exception(f"Error10: counter have negative value")
+                return False
             # derivate
             next_variable = self.random.choice(self.derivation_dict[curr_variable])
             curr_list = []
             
             for variable in next_variable.split(' '):
                 # <T_i-1>이나 a_i가 생성되었을 때 counter가 필요함
-                if self.re.match(r'.*_i-1', variable):
+                if self.re.match(r'<.*_i-1>', variable):
                     nonterminal = variable.split('_')[0]
-                    variable = f'{nonterminal}_{counter-1}'
-                elif self.re.match(r'.*_i', variable):
+                    variable = f'{nonterminal}_{counter-1}>'
+                elif self.re.match(r'<.*_i>', variable):
                     nonterminal = variable.split('_')[0]
-                    variable = f'{nonterminal}_{counter}'    
-                elif self.re.fullmatch(r'[^_]*_.*', variable):
+                    variable = f'{nonterminal}_{counter}>'    
+                elif self.re.fullmatch(r'[^_<]*_.*', variable):
                     nonterminal = variable.split('_')[0]
                     variable = f'{nonterminal}_{counter}'
                 curr_list.append(variable)
@@ -313,8 +312,11 @@ class discriminator():
         derivate_range = [start, end]
         # print('d', type(derivate_range[0]))
         if variable in self.compare_dict:
-            range_index = 0 if self.compare_dict[variable]['symbol'] == '<' else 1
+            target = self.compare_dict[variable]['target']
             
+            if target not in self.variable_dict: return derivate_range[0], derivate_range[1]
+
+            range_index = 0 if self.compare_dict[variable]['symbol'] == '<' else 1
             # print('d1', type(derivate_range[0]))
             # print('i', range_index)
             if self.compare_dict[variable]['type'] == 'same_variable':
@@ -494,27 +496,101 @@ class discriminator():
             elif self.re.fullmatch(r'[^=]*!=[^=]*', const):
                 variable1, variable2 = const.split('!=')
                 self.permutation_variable.append(variable1)
-
+        
+ 
 def test():
-    test_grammer =  ["START -> (N) nl T_N", "T_i -> T_i-1 nl a_i", "T_1 -> a_i", "a_i -> [a-z]{1,10^2}"]
-    test_const = ["1<=N<=100"]
-    # "public_tests": "input": 
-    test_cases = ["4\nword\nlocalization\ninternationalization\npneumonoultramicroscopicsilicovolcanoconiosis\n","26\na\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz\n", "10\ngyartjdxxlcl\nfzsck\nuidwu\nxbymclornemdmtj\nilppyoapitawgje\ncibzc\ndrgbeu\nhezplmsdekhhbo\nfeuzlrimbqbytdu\nkgdco\n", "5\nabcdefgh\nabcdefghi\nabcdefghij\nabcdefghijk\nabcdefghijklm\n", "20\nlkpmx\nkovxmxorlgwaomlswjxlpnbvltfv\nhykasjxqyjrmybejnmeumzha\ntuevlumpqbbhbww\nqgqsphvrmupxxc\ntrissbaf\nqfgrlinkzvzqdryckaizutd\nzzqtoaxkvwoscyx\noswytrlnhpjvvnwookx\nlpuzqgec\ngyzqfwxggtvpjhzmzmdw\nrlxjgmvdftvrmvbdwudra\nvsntnjpepnvdaxiporggmglhagv\nxlvcqkqgcrbgtgglj\nlyxwxbiszyhlsrgzeedzprbmcpduvq\nyrmqqvrkqskqukzqrwukpsifgtdc\nxpuohcsjhhuhvr\nvvlfrlxpvqejngwrbfbpmqeirxlw\nsvmasocxdvadmaxtrpakysmeaympy\nyuflqboqfdt\n", "3\nnjfngnrurunrgunrunvurn\njfvnjfdnvjdbfvsbdubruvbubvkdb\nksdnvidnviudbvibd\n", "1\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij\n", "100\nm\nz\ns\nv\nd\nr\nv\ny\ny\ne\np\nt\nc\na\nn\nm\np\ng\ni\nj\nc\na\nb\nq\ne\nn\nv\no\nk\nx\nf\ni\nl\na\nq\nr\nu\nb\ns\nl\nc\nl\ne\nv\nj\nm\nx\nb\na\nq\nb\na\nf\nj\nv\nm\nq\nc\nt\nt\nn\nx\no\ny\nr\nu\nh\nm\nj\np\nj\nq\nz\ns\nj\no\ng\nc\nm\nn\no\nm\nr\no\ns\nt\nh\nr\np\nk\nb\nz\ng\no\nc\nc\nz\nz\ng\nr\n", "1\na\n", "1\ntcyctkktcctrcyvbyiuhihhhgyvyvyvyvjvytchjckt\n", "24\nyou\nare\nregistered\nfor\npractice\nyou\ncan\nsolve\nproblems\nunofficially\nresults\ncan\nbe\nfound\nin\nthe\ncontest\nstatus\nand\nin\nthe\nbottom\nof\nstandings\n"]
-    
+    import jsonlines
     parser = discriminator('test')
-
-    for test_case in test_cases:
-        print(parser(test_grammer, test_const, test_case))
-        ...
-
+    # file = ''
     
+    with open('res.txt', 'w', encoding='utf-8') as write_file:
+        for file_name in ['train', 'test']:
+            # print(file_name)
+            with jsonlines.open(f'data/{file_name}_grammar.jsonl') as f:
+                for p in f:
+                    passed = True
+                    # if p['name']['index'] <= 350: continue
+                    # print(p['name']['name'], '-', p['name']['index'])
+
+                    test_cases = p['public_tests']['input']
+                    # test_cases.extend(p['private_tests']['input'])
+                    grammar = p['spec']['grammer']
+                    const = p['spec']['constraints']
+
+                    for test_case in test_cases:
+                        # print(parser(grammar, const, test_case))
+                        try:
+                            res = parser(grammar, const, test_case)
+                        except Exception as e:
+                            if passed:
+                                name = p['name']['name']
+                                index = p['name']['index']
+
+                                write_file.write(f'{name} - {index}')
+                                write_file.write('\n')        
+                        
+                                print(p['name']['name'], '-', p['name']['index'])        
+
+                            passed = False
+                            # break
+                            write_file.write(e.__str__())
+                            write_file.write('\n')
+                            print(e)
+                    
+                    if not passed:
+                    #     print(p['name']['name'], '-', p['name']['index'])
+                        print()
+                        write_file.write('\n')
+            
+
+
+
+
+    ...
+
+def test_one(problem_idx):
+    
+    import jsonlines
+    parser = discriminator('test')
+    # file = ''
+    
+    for file_name in ['train', 'test']:
+        # print(file_name)
+        with jsonlines.open(f'data/{file_name}_grammar.jsonl') as f:
+            for p in f:
+                if p['name']['index'] != problem_idx: continue
+
+                # if p['name']['index'] <= 350: continue
+                # print(p['name']['name'], '-', p['name']['index'])
+
+                test_cases = p['public_tests']['input']
+                # test_cases.extend(p['private_tests']['input'])
+                grammar = p['spec']['grammer']
+                const = p['spec']['constraints']
+                print(p['name']['name'], '-', p['name']['index']) 
+
+                for test_case in test_cases:
+                    
+                    print(test_case)
+                    res = parser(grammar, const, test_case)
+                    # print()
+                    # print(parser(grammar, const, test_case))
+                    try:
+                        res = parser(grammar, const, test_case)
+                        print(res)
+                    except Exception as e:
+                        print(e)
+                    print()
+                return
+            
+
 if __name__ == '__main__':
-
-    test()
-    exit()
-
     import sys
     import jsonlines
+
+    test()
+    # test_one(210)
+    exit()
     
     file_name = sys.argv[1]
     error_file = f"result_{file_name}_error_list.txt"
@@ -558,6 +634,10 @@ if __name__ == '__main__':
     
     
     # "name" =  "71_A - 1"
+    test_grammer =  ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> [a-z]{1,10^2}", "<T_1>->[a-z]{1,10^2}"]
+    test_const = ["1<=N<=100"]
+    # "public_tests": "input": 
+    test_cases = ["4\nword\nlocalization\ninternationalization\npneumonoultramicroscopicsilicovolcanoconiosis\n","26\na\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz\n", "10\ngyartjdxxlcl\nfzsck\nuidwu\nxbymclornemdmtj\nilppyoapitawgje\ncibzc\ndrgbeu\nhezplmsdekhhbo\nfeuzlrimbqbytdu\nkgdco\n", "5\nabcdefgh\nabcdefghi\nabcdefghij\nabcdefghijk\nabcdefghijklm\n", "20\nlkpmx\nkovxmxorlgwaomlswjxlpnbvltfv\nhykasjxqyjrmybejnmeumzha\ntuevlumpqbbhbww\nqgqsphvrmupxxc\ntrissbaf\nqfgrlinkzvzqdryckaizutd\nzzqtoaxkvwoscyx\noswytrlnhpjvvnwookx\nlpuzqgec\ngyzqfwxggtvpjhzmzmdw\nrlxjgmvdftvrmvbdwudra\nvsntnjpepnvdaxiporggmglhagv\nxlvcqkqgcrbgtgglj\nlyxwxbiszyhlsrgzeedzprbmcpduvq\nyrmqqvrkqskqukzqrwukpsifgtdc\nxpuohcsjhhuhvr\nvvlfrlxpvqejngwrbfbpmqeirxlw\nsvmasocxdvadmaxtrpakysmeaympy\nyuflqboqfdt\n", "3\nnjfngnrurunrgunrunvurn\njfvnjfdnvjdbfvsbdubruvbubvkdb\nksdnvidnviudbvibd\n", "1\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij\n", "100\nm\nz\ns\nv\nd\nr\nv\ny\ny\ne\np\nt\nc\na\nn\nm\np\ng\ni\nj\nc\na\nb\nq\ne\nn\nv\no\nk\nx\nf\ni\nl\na\nq\nr\nu\nb\ns\nl\nc\nl\ne\nv\nj\nm\nx\nb\na\nq\nb\na\nf\nj\nv\nm\nq\nc\nt\nt\nn\nx\no\ny\nr\nu\nh\nm\nj\np\nj\nq\nz\ns\nj\no\ng\nc\nm\nn\no\nm\nr\no\ns\nt\nh\nr\np\nk\nb\nz\ng\no\nc\nc\nz\nz\ng\nr\n", "1\na\n", "1\ntcyctkktcctrcyvbyiuhihhhgyvyvyvyvjvytchjckt\n", "24\nyou\nare\nregistered\nfor\npractice\nyou\ncan\nsolve\nproblems\nunofficially\nresults\ncan\nbe\nfound\nin\nthe\ncontest\nstatus\nand\nin\nthe\nbottom\nof\nstandings\n"]
     
     # test_grammer = ["<S>->[01]{S} <n> [01]{S}"]
     # test_const = ["1<=S<=100"]

@@ -27,7 +27,6 @@ class discriminator():
 
         self.generate_mode = 'generate' if generate_mode == None else generate_mode
 
-
     def __call__(self, grammer: list, constraints: list, test_case: str) -> bool:
         self.__init__(self.generate_mode)
         self.start_token = grammer[0].split(self.derivate_token)[0].strip()
@@ -44,9 +43,9 @@ class discriminator():
         # print(1)
 
         while self.derivation_queue:
+            # print(self.derivation_queue)
             curr_variable = self.derivation_queue[0]
             # print(self.derivation_queue)
-
 
             if curr_variable == self.start_token:
                 self.derivation_queue = self.derivation_dict[curr_variable][0].split(' ')
@@ -159,6 +158,12 @@ class discriminator():
                     if self.re.match(r'\[[^\[]*\]', curr_variable):
                         curr_variable = curr_variable[1:-1]
 
+                    # reset compare dict
+                    if curr_variable in self.variable_dict and curr_variable in self.compare_dict:
+                        target = self.compare_dict[curr_variable]['target']
+                        self.variable_dict.pop(curr_variable)
+                        self.variable_dict.pop(target)
+
                     if curr_variable not in self.const_dict:
 
                         if curr_variable in self.derivation_dict:
@@ -180,12 +185,11 @@ class discriminator():
 
                         continue
 
-
                     start, end = self.get_range(curr_variable)
                     if not start <= int(curr_token) <= end:
                         # print(8)
                         if self.generate_mode == "test":
-                            raise Exception(f"Error9: variable is out of range\n\texpected: {start}<=len<={end}\n\treal: {curr_token}")
+                            raise Exception(f"Error9: variable is out of range\n\texpected: {start}<={curr_variable}<={end}\n\treal: {curr_token}")
                         return False
                     self.variable_dict[curr_variable] = int(curr_token)
 
@@ -247,7 +251,6 @@ class discriminator():
 
         return False
 
-
     def get_sep_token(self):
         if len(self.derivation_queue) <= 1:
             return '___'
@@ -255,7 +258,8 @@ class discriminator():
             return '\n'
         elif self.derivation_queue[1] == self.space_token:
             return ' '
-        else: return -1
+        else:
+            return -1
 
     def get_addition(self, token):
 
@@ -280,12 +284,13 @@ class discriminator():
         addition = 0
         start, addition = self.get_addition(curr_token_const['start'])
         if start in self.variable_dict:
-            if counter != None:
+            if counter is not None:
                 start = self.variable_dict[start][start.split('_')[0] + f'_{counter}']
                 # print(start)
             else:
                 start = self.variable_dict[start]
-        else: start = self.get_value(start)
+        else:
+            start = self.get_value(start)
 
         start = int(start) + addition
 
@@ -303,8 +308,11 @@ class discriminator():
         derivate_range = [start, end]
         # print('d', type(derivate_range[0]))
         if variable in self.compare_dict:
-            range_index = 0 if self.compare_dict[variable]['symbol'] == '<' else 1
+            target = self.compare_dict[variable]['target']
 
+            if target not in self.variable_dict: return derivate_range[0], derivate_range[1]
+
+            range_index = 0 if self.compare_dict[variable]['symbol'] == '<' else 1
             # print('d1', type(derivate_range[0]))
             # print('i', range_index)
             if self.compare_dict[variable]['type'] == 'same_variable':
@@ -407,7 +415,7 @@ class discriminator():
             return int(num)
 
     def is_terminal(self, token):
-       return not self.RE_NONTERMINAL.fullmatch(token)
+        return not self.RE_NONTERMINAL.fullmatch(token)
 
     def make_derivate_dict(self, grammer: list):
         for token in grammer:
@@ -420,7 +428,7 @@ class discriminator():
                 token = token.strip()
                 self.derivation_dict[left_hand].append(token)
 
-    def make_constraints_dict(self, constraints:list):
+    def make_constraints_dict(self, constraints: list):
         for const in constraints:
             if self.re.match(r'[^<]*<=?[^<]*<=?[^<]*', const):
 
@@ -490,10 +498,93 @@ class discriminator():
                 self.permutation_variable.append(variable1)
 
 
+def test():
+    import jsonlines
+    parser = discriminator('test')
+    # file = ''
+
+    with open('res.txt', 'w', encoding='utf-8') as write_file:
+        for file_name in ['train', 'test']:
+            # print(file_name)
+            with jsonlines.open(f'data/{file_name}_grammar.jsonl') as f:
+                for p in f:
+                    passed = True
+                    # if p['name']['index'] <= 350: continue
+                    # print(p['name']['name'], '-', p['name']['index'])
+
+                    test_cases = p['public_tests']['input']
+                    # test_cases.extend(p['private_tests']['input'])
+                    grammar = p['spec']['grammer']
+                    const = p['spec']['constraints']
+
+                    for test_case in test_cases:
+                        # print(parser(grammar, const, test_case))
+                        try:
+                            res = parser(grammar, const, test_case)
+                        except Exception as e:
+                            if passed:
+                                name = p['name']['name']
+                                index = p['name']['index']
+
+                                write_file.write(f'{name} - {index}')
+                                write_file.write('\n')
+
+                                print(p['name']['name'], '-', p['name']['index'])
+
+                            passed = False
+                            # break
+                            write_file.write(e.__str__())
+                            write_file.write('\n')
+                            print(e)
+
+                    if not passed:
+                        print()
+                        write_file.write('\n')
+
+
+def test_one(problem_idx):
+
+    import jsonlines
+    parser = discriminator('test')
+    # file = ''
+
+    for file_name in ['train', 'test']:
+        # print(file_name)
+        with jsonlines.open(f'data/{file_name}_grammar.jsonl') as f:
+            for p in f:
+                if p['name']['index'] != problem_idx: continue
+
+                # if p['name']['index'] <= 350: continue
+                # print(p['name']['name'], '-', p['name']['index'])
+
+                test_cases = p['public_tests']['input']
+                # test_cases.extend(p['private_tests']['input'])
+                grammar = p['spec']['grammer']
+                const = p['spec']['constraints']
+                print(p['name']['name'], '-', p['name']['index'])
+
+                for test_case in test_cases:
+
+                    print(test_case)
+                    res = parser(grammar, const, test_case)
+                    # print()
+                    # print(parser(grammar, const, test_case))
+                    try:
+                        res = parser(grammar, const, test_case)
+                        print(res)
+                    except Exception as e:
+                        print(e)
+                    print()
+                return
+
 
 if __name__ == '__main__':
     import sys
     import jsonlines
+
+    test()
+    # test_one(210)
+    exit()
 
     file_name = sys.argv[1]
     error_file = f"result_{file_name}_error_list.txt"
@@ -510,7 +601,6 @@ if __name__ == '__main__':
 
     with open(error_reason_file, 'w', encoding='utf-8') as write_file:
         write_file.write('')
-
 
     with jsonlines.open(f'data/{file_name}.jsonl') as f:
         for p_idx, problem in enumerate(f, 1):
@@ -533,8 +623,6 @@ if __name__ == '__main__':
                 with open(error_reason_file, 'a', encoding='utf-8') as write_file:
                     write_file.write(f'{idx} {name}:\n' + test_case + ('' if test_case[-1] == '\n' else '\n'))
                     write_file.write('\t' + str(e) + '\n\n')
-
-
 
     # "name" =  "71_A - 1"
     test_grammer =  ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> [a-z]{1,10^2}", "<T_1>->[a-z]{1,10^2}"]

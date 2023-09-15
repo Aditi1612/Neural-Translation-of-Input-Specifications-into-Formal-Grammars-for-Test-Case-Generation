@@ -1,8 +1,7 @@
+import re
+import random
 
 class discriminator():
-
-    import re
-    import random
 
     def __init__(self, generate_mode=None) -> None:
 
@@ -13,9 +12,9 @@ class discriminator():
         self.derivate_token = '->'
         self.blink_token = 'ε'
 
-        self.RE_INTEGER = self.re.compile(r'-?[0-9]+ *')
-        self.RE_NONTERMINAL = self.re.compile(r'(<[^<]*>)')
-        self.RE_STRING = self.re.compile(r'\[[^\[]*\]\{.*\}')
+        self.RE_INTEGER = re.compile(r'-?[0-9]+ *')
+        self.RE_NONTERMINAL = re.compile(r'(<[^<]*>)')
+        self.RE_STRING = re.compile(r'\[[^\[]*\]\{.*\}')
 
         self.const_dict = {}
         self.variable_dict = {}
@@ -29,11 +28,12 @@ class discriminator():
 
     def __call__(self, grammer: list, constraints: list, test_case: str) -> bool:
         self.__init__(self.generate_mode)
-        self.start_token = grammer[0].split(self.derivate_token)[0].strip()
+        # self.start_token = grammer[0].split(self.derivate_token)[0].strip()
         self.derivation_queue = [self.start_token]
         self.make_derivate_dict(grammer)
         self.make_constraints_dict(constraints)
         test_case = test_case.strip()
+        # print(self.const_dict)
         return self.parsing(test_case)
 
     pass
@@ -44,6 +44,8 @@ class discriminator():
 
         while self.derivation_queue:
             # print(self.derivation_queue)
+            # print(test_case, '\n')
+            # print(self.variable_dict)
             curr_variable = self.derivation_queue[0]
             # print(self.derivation_queue)
 
@@ -53,6 +55,21 @@ class discriminator():
             if curr_variable == self.blink_token:
                 del self.derivation_queue[0]
                 continue
+            if curr_variable == self.space_token:
+                if test_case[0] == ' ':
+                    test_case = test_case[1:]
+                    del self.derivation_queue[0]
+                    continue
+                else:
+                    raise("Error")
+            if curr_variable == self.new_line_token:
+                if test_case[0] == '\n':
+                    test_case = test_case[1:]
+                    del self.derivation_queue[0]
+                    continue
+                else:
+                    raise("Error")
+            
             if self.RE_STRING.fullmatch(curr_variable):
                 curr_sep = self.get_sep_token()
                 if curr_sep == -1:
@@ -90,7 +107,7 @@ class discriminator():
                     curr_variable = curr_variable.split('{')[0] + '{'
                     curr_variable = f'{curr_variable}{start},{end}' + '}'
 
-                if not self.re.match(curr_variable, curr_token):
+                if not re.match(curr_variable, curr_token):
 
                     if self.generate_mode == "test":
                         raise Exception(
@@ -117,7 +134,7 @@ class discriminator():
                 del self.derivation_queue[:2]
 
                 # a_i 형태
-                if self.re.match(r'.*_.*', curr_variable):
+                if re.match(r'.*_.*', curr_variable):
                     # print('c', curr_variable)
                     variable, counter = curr_variable.split('_')
                     variable += '_i'
@@ -133,7 +150,7 @@ class discriminator():
                         start, end = self.get_range(variable, counter)
                         if not start <= int(curr_token) <= end:
                             if self.generate_mode == "test":
-                                raise Exception(f"Error5: Number is out of value: {curr_token}\n\texpectd: {start} ~ {end}\n\treal   : {curr_token}")
+                                raise Exception(f"Error5: Number is out of value: {variable}\n\texpectd: {start} ~ {end}\n\treal   : {curr_token}")
                             return False
                     if variable not in self.variable_dict or curr_variable in self.variable_dict[variable]:
                         self.variable_dict[variable] = {}
@@ -155,7 +172,7 @@ class discriminator():
                     continue
                 else:
                     # N, [N]의 형태
-                    if self.re.match(r'\[[^\[]*\]', curr_variable):
+                    if re.match(r'\[[^\[]*\]', curr_variable):
                         curr_variable = curr_variable[1:-1]
 
                     # reset compare dict
@@ -165,6 +182,7 @@ class discriminator():
                         self.variable_dict.pop(target)
 
                     if curr_variable not in self.const_dict:
+                        # print(curr_variable)
 
                         if curr_variable in self.derivation_dict:
                             if curr_token not in self.derivation_dict[curr_variable]:
@@ -196,7 +214,7 @@ class discriminator():
                 continue
 
             # <T_i> 형태
-            if self.re.match(r'<[^_]*_[^_]*>', curr_variable):
+            if re.match(r'<[^_]*_[^_]*>', curr_variable):
                 nonterminal , counter = curr_variable.split('_')
                 # <T_N>
                 if ',' in counter:
@@ -205,7 +223,10 @@ class discriminator():
                 if not self.RE_INTEGER.fullmatch(counter[:-1]):
                     # print(self.variable_dict)
                     # print(curr_variable)
-                    counter = self.variable_dict[counter[:-1]]
+                    if '-' in counter or '+' in counter or '*' in counter:
+                        counter = self.get_value(counter[:-1])
+                    else:
+                        counter = self.variable_dict[counter[:-1]]
                     counter = f'{counter}>'
                     curr_variable = nonterminal + '_' + counter
                 # <T_1> 등의 상황
@@ -219,18 +240,18 @@ class discriminator():
                     raise Exception(f"Error10: counter have negative value")
                 return False
             # derivate
-            next_variable = self.random.choice(self.derivation_dict[curr_variable])
+            next_variable = random.choice(self.derivation_dict[curr_variable])
             curr_list = []
 
             for variable in next_variable.split(' '):
                 # <T_i-1>이나 a_i가 생성되었을 때 counter가 필요함
-                if self.re.match(r'<.*_i-1>', variable):
+                if re.match(r'<.*_i-1>', variable):
                     nonterminal = variable.split('_')[0]
                     variable = f'{nonterminal}_{counter-1}>'
-                elif self.re.match(r'<.*_i>', variable):
+                elif re.match(r'<.*_i>', variable):
                     nonterminal = variable.split('_')[0]
                     variable = f'{nonterminal}_{counter}>'
-                elif self.re.fullmatch(r'[^_<]*_.*', variable):
+                elif re.fullmatch(r'[^_<]*_.*', variable):
                     nonterminal = variable.split('_')[0]
                     variable = f'{nonterminal}_{counter}'
                 curr_list.append(variable)
@@ -251,6 +272,51 @@ class discriminator():
 
         return False
 
+    def calculate(self, token):
+        # print('t', token)
+        is_negative = False
+        if token[0] == '-':
+            token = token[1:]
+            is_negative = True
+        values = re.split(r'[-+*^]', token)
+        operators = re.findall(r'[-+*^]', token)
+        # print(values)
+        # print(operators)
+
+        if re.fullmatch(r'[-+]?[0-9]*', values[0]):
+            res = int(values[0])
+        elif re.fullmatch(r'[-+]?[0-9]*\.[0-9]*', values[0]): 
+            res = float(values[0])
+        else:
+            if values[0] not in self.variable_dict:
+                return False
+            if re.fullmatch(r'[a-zA-Z]*_[0-9]*', values[0]):
+                variable, counter = values[0].split('_')
+                res = self.variable_dict[f'{variable}_i'][values[0]]
+            res = self.variable_dict[values[0]]
+        del values[0]
+
+        for value, operator in zip(values, operators):
+            if self.RE_INTEGER.fullmatch(value):
+                operend = int(value)
+            else:
+                if value not in self.variable_dict:
+                    return False
+                if re.fullmatch(r'[a-zA-Z]*_[0-9]*', value):
+                    variable, counter = value.split('_')
+                    res = self.variable_dict[f'{variable}_i'][value]
+                operend = self.variable_dict[value]
+            if operator == '+':
+                res += operend
+            if operator == '-':
+                res -= operend
+            if operator == '*':
+                res *= operend
+            if operator == '^':
+                res **= operend
+            # print('v', value, operator, res)
+        return res * (-1 if is_negative else 1)
+
     def get_sep_token(self):
         if len(self.derivation_queue) <= 1:
             return '___'
@@ -263,10 +329,10 @@ class discriminator():
 
     def get_addition(self, token):
 
-        if self.re.match(r'[^+]+\+[0-9]+', token):
+        if re.match(r'[^+]+\+[0-9]+', token):
             token, addition = token.split('+')
             return token, int(addition)
-        elif self.re.match(r'[^-]+-[0-9]+', token):
+        elif re.match(r'[^-]+-[0-9]+', token):
             token, addition = token.split('-')
             return token, int(addition) * -1
         else:
@@ -282,31 +348,37 @@ class discriminator():
         include1 = curr_token_const['include1']
         include2 = curr_token_const['include2']
         addition = 0
-        start, addition = self.get_addition(curr_token_const['start'])
-        if start in self.variable_dict:
-            if counter is not None:
-                start = self.variable_dict[start][start.split('_')[0] + f'_{counter}']
-                # print(start)
-            else:
-                start = self.variable_dict[start]
-        else:
-            start = self.get_value(start)
 
-        start = int(start) + addition
+        start = self.get_value(curr_token_const['start'])  
+
+        # start, addition = self.get_addition(curr_token_const['start'])
+        # if start in self.variable_dict:
+        #     if counter is not None:
+        #         start = self.variable_dict[start][start.split('_')[0] + f'_{counter}']
+        #         # print(start)
+        #     else:
+        #         start = self.variable_dict[start]
+        # else:
+        #     start = self.get_value(start)
+
+        # start = int(start) + addition
 
         start += 0 if include1 else 1
 
-        end, addition = self.get_addition(curr_token_const['end'])
+        end = self.get_value(curr_token_const['end'])  
 
-        end = self.get_value(end)
+        # end, addition = self.get_addition(curr_token_const['end'])
 
-        end = end + addition
+        # end = self.get_value(end)
+
+        # end = end + addition
         # constraint가 "variable < end"의 형태이면
         # "variable <= end-1"과 같다
         end -= 0 if include2 else 1
 
         derivate_range = [start, end]
         # print('d', type(derivate_range[0]))
+
         if variable in self.compare_dict:
             target = self.compare_dict[variable]['target']
 
@@ -325,7 +397,7 @@ class discriminator():
             else:
                 # print('d2', type(derivate_range[0]))
                 target = self.compare_dict[variable]['target']
-                if self.re.match(r'.*_.*', target):
+                if re.match(r'.*_.*', target):
                     # print('d3', type(derivate_range[0]))
                     symbol = target.split('_')[0]
                     symbol += f'_{counter}'
@@ -337,69 +409,75 @@ class discriminator():
 
         return derivate_range[0], derivate_range[1]
 
-    def get_string(self, variable):
-        '''
-        * string 만들어서 return하고
-        * variable_dict에 list 넣기
-        '''
-        return_str = ''
-
-        variable_range, string_len = variable.split(']{')
-        variable_range = variable_range[1:]
-        string_len = string_len[:-1]
-
-        if string_len in self.variable_dict:
-            string_len = int(self.variable_dict[string_len])
-        elif ',' in string_len:
-            start, end = string_len.split(',')
-            string_len = self.random.randint(self.get_value(start), self.get_value(end))
-        elif self.RE_INTEGER.fullmatch(string_len):
-            string_len = int(string_len)
-        else:
-            start, end = self.get_range(string_len)
-            variable = string_len
-            string_len = self.random.randint(start, end)
-            self.variable_dict[variable] = string_len
-
-        if variable in self.derivation_dict:
-            variable_list = self.derivation_dict[variable]
-        else:
-            variable_list = []
-            while '-' in variable_range:
-                idx = variable_range.find('-')
-                char_range = variable_range[idx-1:idx+2]
-
-                start, end = char_range.split('-')
-                start = ord(start)
-                end = ord(end)+1
-                for ch in range(start, end):
-                    variable_list.append(chr(ch))
-                if idx == 1: variable_range = variable_range[3:]
-                # elif
-                else: variable_range = variable_range[:idx-1] + variable_range[idx+2:]
-            for ch in variable_range:
-                variable_list.append(ch)
-            self.derivation_dict[variable] = variable_list
-
-        for _ in range(string_len):
-            return_str += self.random.choice(variable_list)
-
-        return return_str
-
     def get_value(self, num):
+        negative = False
+        # print('n', num)
+        if num[0] == '-':
+            negative = True
+            num = num[1:]
+
+        num = num.replace('min', '$').replace('max', '&')
+
+        
+        values = [x.strip() for x in re.split('[-*/+^\(\)$&,]', num)]
+        operators = [x.strip() for x in re.findall('[-*/+^\(\)$&,]', num)]
+        # print(values)
+
+        # values_num = []
+        for idx, value in enumerate(values):
+            if not value:
+                continue
+            if re.fullmatch(r'[-+]?[0-9]*', value):
+                continue
+            elif re.fullmatch(r'[-+]?[0-9]*\.[0-9]*', value): 
+                continue
+            else:
+                if re.fullmatch(r'[a-zA-Z]*_[0-9]*', value):
+                    # print('vv', value)
+                    variable, counter = value.split('_')
+                    values[idx] = str(self.variable_dict[f'{variable}_i'][value])
+                else:
+                    values[idx] = str(self.variable_dict[value])
+
+        num = ''
+        # print('v', values)
+
+        for value, operator in zip(values, operators):
+            # operator = operator if operator != '^' else '**'
+            if operator == '^':
+                operator = '**'
+            elif operator == '$':
+                operator = 'min'
+            elif operator == '&':
+                operator = 'max'
+            num += (value + operator)
+        num += values[-1]
+        # print('e', eval(num))
+        # print('n', num)
+        return eval(num) * (-1 if negative else 1)
+
+        '''
         if num in self.variable_dict:
             return self.variable_dict[num]
 
         elif 'min' in num:
-            num = self.re.findall(r'\(.*,.*\)', num)[0]
-            a, b = self.get_value(num.split(',')[0][1:]), self.get_value(num.split(',')[1][:-1])
-            return min(a,b)
+            num = re.findall(r'min\(.*\)', num)[0][4:-1]
+            num = [self.calculate(x.strip()) for x in num.split(',')]
+
+            # a, b = self.get_value(num.split(',')[0][1:]), self.get_value(num.split(',')[1][:-1])
+            # print('123', num)
+            return min(num)
 
         elif 'max' in num:
-            num = self.re.findall(r'\(.*,.*\)', num)[0]
-            a, b = self.get_value(num.split(',')[0][1:]), self.get_value(num.split(',')[1][:-1])
-            return max(a,b)
+            num = re.findall(r'max\(.*\)', num)[0][4:-1]
+            num = [self.calculate(x.strip()) for x in num.split(',')]
 
+            # a, b = self.get_value(num.split(',')[0][1:]), self.get_value(num.split(',')[1][:-1])
+            return max(num)
+
+        return self.calculate(num)'''
+
+        '''
         elif '^' in num:
             if '*' in num:
                 bias, num = num.split('*')
@@ -413,7 +491,7 @@ class discriminator():
             return res
         else:
             return int(num)
-
+        '''
     def is_terminal(self, token):
         return not self.RE_NONTERMINAL.fullmatch(token)
 
@@ -430,20 +508,20 @@ class discriminator():
 
     def make_constraints_dict(self, constraints: list):
         for const in constraints:
-            if self.re.match(r'[^<]*<=?[^<]*<=?[^<]*', const):
+            if re.match(r'[^<]*<=?[^<]*<=?[^<]*', const):
 
-                variables = self.re.split(r'[<>]=?', const)
+                variables = re.split(r'[<>]=?', const)
 
                 start, end = variables[0], variables[-1]
 
                 del variables[0]
                 del variables[-1]
 
-                compare_symbols = self.re.findall(r'[<>]=?', const)
+                compare_symbols = re.findall(r'[<>]=?', const)
 
                 for variable_token in variables:
                     for variable in variable_token.split(','):
-                        # start, variable, end = self.re.split(r'<=?', const)
+                        # start, variable, end = re.split(r'<=?', const)
                         self.const_dict[variable.strip()] = {
                             'start': start.strip(), 'end': end.strip(),
                             'include1': compare_symbols[0] == '<=',
@@ -461,11 +539,11 @@ class discriminator():
                             'type': 'different_variable'
                         }
 
-            elif self.re.fullmatch(r'[^<>]*[<>]=?[^<>]*', const):
+            elif re.fullmatch(r'[^<>]*[<>]=?[^<>]*', const):
 
-                variable1, variable2 = self.re.split(r'[<>]=?', const)
+                variable1, variable2 = re.split(r'[<>]=?', const)
                 variable1, variable2 = variable1.strip(), variable2.strip()
-                compare_symbol = self.re.findall(r'[<>]=?', const)[0]
+                compare_symbol = re.findall(r'[<>]=?', const)[0]
                 if '=' not in compare_symbol:
                     v1_const = self.const_dict[variable1]
                     v2_const = self.const_dict[variable2]
@@ -493,7 +571,7 @@ class discriminator():
                                         'type': 'different_variable'
                                         }
 
-            elif self.re.fullmatch(r'[^=]*!=[^=]*', const):
+            elif re.fullmatch(r'[^=]*!=[^=]*', const):
                 variable1, variable2 = const.split('!=')
                 self.permutation_variable.append(variable1)
 
@@ -503,14 +581,14 @@ def test():
     parser = discriminator('test')
     # file = ''
 
-    with open('res.txt', 'w', encoding='utf-8') as write_file:
+    with open('res1.txt', 'w', encoding='utf-8') as write_file:
         for file_name in ['train', 'test']:
             # print(file_name)
             with jsonlines.open(f'data/{file_name}_grammar.jsonl') as f:
                 for p in f:
                     passed = True
                     # if p['name']['index'] <= 350: continue
-                    # print(p['name']['name'], '-', p['name']['index'])
+                    print(p['name']['name'], '-', p['name']['index'])
 
                     test_cases = p['public_tests']['input']
                     # test_cases.extend(p['private_tests']['input'])
@@ -531,6 +609,8 @@ def test():
 
                                 print(p['name']['name'], '-', p['name']['index'])
 
+                            write_file.write(test_case + '\n')
+
                             passed = False
                             # break
                             write_file.write(e.__str__())
@@ -545,6 +625,7 @@ def test():
 def test_one(problem_idx):
 
     import jsonlines
+    import re
     parser = discriminator('test')
     # file = ''
 
@@ -552,6 +633,7 @@ def test_one(problem_idx):
         # print(file_name)
         with jsonlines.open(f'data/{file_name}_grammar.jsonl') as f:
             for p in f:
+                # print(re.split(r'[. ]', p['name']))
                 if p['name']['index'] != problem_idx: continue
 
                 # if p['name']['index'] <= 350: continue
@@ -583,7 +665,7 @@ if __name__ == '__main__':
     import jsonlines
 
     test()
-    # test_one(210)
+    # test_one(192)
     exit()
 
     file_name = sys.argv[1]

@@ -9,6 +9,7 @@ import jsonlines
 import torch
 import numpy as np
 from tqdm import tqdm
+from tqdm.contrib.logging import tqdm_logging_redirect
 
 from grammar_tester import test_completeness
 from grammar_tester import test_soundness
@@ -117,4 +118,5 @@ if __name__ == "__main__":
             task_config[k] = getattr(args, k)
         task_config.setdefault(k, defaults[k])
 
-    main(config)
+    with tqdm_logging_redirect():
+        main(config)

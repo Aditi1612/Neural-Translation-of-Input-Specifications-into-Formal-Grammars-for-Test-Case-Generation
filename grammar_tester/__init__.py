@@ -25,6 +25,7 @@ def test_completeness(
     except Exception as e:
         logger.warning("Parsing Error")
         logger.warning(name)
+        logger.warning(grammar)
         logger.warning(e)
         return False
 
@@ -70,6 +71,7 @@ def test_soundness(
     except Exception as e:
         logger.warning("Generation error")
         logger.warning(name)
+        logger.warning(grammar)
         logger.warning(e)
         return False
 

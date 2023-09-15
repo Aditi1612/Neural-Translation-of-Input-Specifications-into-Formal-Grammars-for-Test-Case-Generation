@@ -138,9 +138,9 @@ class CountingContextFreeGrammar:
                 raise RuntimeError('Too many iterations')
             derivation_iter += 1
 
-            logger.debug(f'derivation_queue: {derivation_queue}')
+            logger.debug(f'derivation_queue: {len(derivation_queue)}')
             logger.debug(f'assignment:\n{assignment}')
-            logger.debug(f'string:\n{string}')
+            # logger.debug(f'string:\n{string}')
 
             token = derivation_queue.pop()
             production = None
@@ -317,8 +317,6 @@ class CountingContextFreeGrammar:
         Raises:
             RuntimeError: Constraint or production is ambiguous.
         """
-        # XXX: For a variable a_3 with a constraint a_i < a_i+1,
-        # we can not check "a_2 < a_3"
         constraint_form_variables, index = (
             self._to_constraint_form(variable))
 

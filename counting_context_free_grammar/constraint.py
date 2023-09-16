@@ -135,7 +135,7 @@ class Comparison:
         for lower_variable, inclusive in self.lower_variables:
             comparison.add_lower_variable(lower_variable, inclusive)
         for upper_variable, inclusive in self.upper_variables:
-            comparison.add_upper_variable(lower_variable, inclusive)
+            comparison.add_upper_variable(upper_variable, inclusive)
         for inequal_variable in self.inequal_variables:
             comparison.add_inequal_variable(inequal_variable)
         return self
@@ -174,7 +174,8 @@ def parse_comparand(text: str) -> Union[Variable, int]:
 def _update_constraints_and_comparisons(
     text: str,
     constraints: dict[Variable, Constraint],
-    comparisons: dict[Variable, Comparison]
+    comparisons: dict[Variable, Comparison],
+    term_constraints: list[tuple[str, str, str]],
 ) -> None:
 
     text = text.replace(" ", "")
@@ -184,14 +185,45 @@ def _update_constraints_and_comparisons(
         _parse_comparands(piece) for piece in _RE_COMPARATOR.split(text)
     ]
 
+    term_indicators = ['min', 'max', '^', '*', '+', '-']
+
     for i, comparator in enumerate(comparators):
         lefts = comparandss[i]
         rights = comparandss[i+1]
+
+        comparator_str = _comparator_to_str(comparator)
 
         for left, right in itertools.product(lefts, rights):
 
             is_left_number = (type(left) is int)
             is_right_number = (type(right) is int)
+
+            # XXX: Hard-coded
+            if not is_right_number:
+                if right[-2:] == '-1' and comparator_str == '<=':
+                    right = right[:-2]
+                    comparator = _parse_comparator('<')
+                elif right[-2:] == '+1' and comparator_str == '>=':
+                    right = right[:-2]
+                    comparator = _parse_comparator('>')
+            elif not is_left_number:
+                if left[-2:] == '+1' and comparator_str == '<=':
+                    left = left[:-2]
+                    comparator = _parse_comparator('<')
+                elif left[-2:] == '-1' and comparator_str == '>=':
+                    left = left[:-2]
+                    comparator = _parse_comparator('>')
+
+            # update term constraint
+            def is_term(term: Union[str, int]):
+                if type(term) is int:
+                    return False
+                return any(indicator in term for indicator in term_indicators)
+
+            if is_term(left) or is_term(right):
+                term_constraints.append(
+                    (left, _comparator_to_str(comparator), right))
+                continue
 
             if not is_left_number and not is_right_number:
 
@@ -360,11 +392,12 @@ def parse(
 ) -> Parsed:
     constraints: dict[Variable, Constraint] = {}
     comparisons: dict[Variable, Comparison] = {}
+    term_constraints: list[tuple[str, str, str]] = []
     placeholders: set[Placeholder] = set()
 
     for constraint_string in constraint_strings:
         _update_constraints_and_comparisons(
-            constraint_string, constraints, comparisons)
+            constraint_string, constraints, comparisons, term_constraints)
 
     variables = set(constraints.keys()) | set(comparisons.keys())
     for variable in variables:
@@ -419,12 +452,12 @@ def parse(
         constraints.pop(variable, None)
         comparisons.pop(variable, None)
 
-    return constraints, comparisons, placeholders
+    return constraints, comparisons, term_constraints, placeholders
 
 
 _RE_COMPARATOR = re.compile(r'<=|>=|<|>|!=')
 _RE_NUMBER_CBE = re.compile(r'(?:(-?\d+)\*)?(-?\d+)(?:\^(-?\d+))?')
-_RE_MIN_OR_MAX = re.compile(r'(?:min|max)\((\w+\(,\w+\)*)\)')
+_RE_MIN_OR_MAX = re.compile(r'(?:min|max)\((\w+(,\w+)*)\)')
 
 
 def _comparator_to_str(comparator: int) -> str:
@@ -451,7 +484,7 @@ if __name__ == "__main__":
 
     # constraint_strings = ['0 <= a_i < 100', 'a_i < a_i+1']
     constraint_strings = ['0 <= A < B < C < D < 4']
-    constraints, comparisons, placeholders = parse(constraint_strings)
+    constraints, comparisons, _, placeholders = parse(constraint_strings)
 
     print({k: str(v) for k, v in constraints.items()})
     print({k: str(v) for k, v in comparisons.items()})

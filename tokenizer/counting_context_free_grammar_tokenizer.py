@@ -64,8 +64,9 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
 
         try:
             self.ccfg = Ccfg(production_strings, constraint_strings)
-        except Exception:
+        except Exception as e:
             logger.warning(f"Invalid CCFG: {text}")
+            logger.warning(e)
             return self._fallback_encode(text)
         encoding = []
         for word in text.split():

@@ -18,6 +18,7 @@ def test_completeness(
     testcases: list[str],
     *,
     name: str = "no name",
+    specification: str = "no specification",
     num_testcase_sampling: Optional[int] = None,
 ) -> bool:
     try:
@@ -25,6 +26,7 @@ def test_completeness(
     except Exception as e:
         logger.warning("Parsing Error")
         logger.warning(name)
+        logger.warning(specification)
         logger.warning(grammar)
         logger.warning(e)
         return False
@@ -56,21 +58,24 @@ def test_soundness(
     solution_dir: Path,
     *,
     name: str = "no name",
+    specification: str = "no specification",
     num_testcase_generation: int,
     num_solution_sampling: Optional[int] = None,
     timeout: float = 2,
 ) -> bool:
     try:
-        return _test_soundness(
+        is_sound = _test_soundness(
             grammar,
             solution_dir,
             num_solution_sampling,
             num_testcase_generation,
             timeout,
         )
+        return is_sound
     except Exception as e:
         logger.warning("Generation error")
         logger.warning(name)
+        logger.warning(specification)
         logger.warning(grammar)
         logger.warning(e)
         return False
@@ -99,7 +104,14 @@ def _test_soundness(
     generated_testcases = [
         ccfg.generate() for _ in range(num_testcase_generation)
     ]
-    flag = True
+
+    if num_solution_sampling is None:
+        sampled_solutions = solution_files
+    else:
+        num_solution_sampling = min(num_solution_sampling, len(solution_files))
+        sampled_solutions = random.sample(
+            solution_files, num_solution_sampling)
+
     for generated_testcase in generated_testcases:
 
         temp_file = tempfile.TemporaryFile('w+b')
@@ -114,31 +126,22 @@ def _test_soundness(
                 ['python', solution_file],
                 capture_output=True,
                 stdin=temp_file,
-                timeout=timeout
+                timeout=timeout,
+                text=True
             )
             temp_file.seek(0)
             return process
-
-        if num_solution_sampling is None:
-            sampled_solutions = solution_files
-        else:
-            num_solution_sampling = (
-                min(num_solution_sampling, len(solution_files)))
-            sampled_solutions = random.sample(
-                solution_files, num_solution_sampling)
         completed_processes = map(get_completed_process, sampled_solutions)
+        outputs = [process.stdout.strip() for process in completed_processes]
 
-        is_sound = True
-        for process, sampled_solution in zip(
-                completed_processes, sampled_solutions):
-            if process.returncode != 0:
-                is_sound = False
-                break
-
+        is_sound = all(output == outputs[0] for output in outputs)
+        # is_sound = all(ps.returncode == 0 for ps in completed_processes)
         temp_file.close()
-        return is_sound
 
-    return flag
+        if not is_sound:
+            return False
+
+    return True
 
 
 def test_correctness(

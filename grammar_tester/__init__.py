@@ -22,13 +22,21 @@ def test_completeness(
     num_testcase_sampling: Optional[int] = None,
 ) -> bool:
     try:
-        return _test_completeness(grammar, testcases, num_testcase_sampling)
+        rejected_testcase = _test_completeness(
+            grammar, testcases, num_testcase_sampling)
+        if rejected_testcase is None:
+            return True
+
+        logger.warning('Rejected testcase:')
+        logger.warning('\n'+rejected_testcase+'\n')
+        return False
+
     except Exception as e:
-        logger.warning("Parsing Error")
-        logger.warning(name)
-        logger.warning(specification)
-        logger.warning(grammar)
-        logger.warning(e)
+        logger.info("Parsing Error")
+        logger.info(name)
+        # logger.warning(specification)
+        logger.info(grammar)
+        logger.info(e)
         return False
 
 
@@ -36,7 +44,7 @@ def _test_completeness(
     grammar: dict[str, list[str]],
     testcases: list[str],
     num_testcase_sampling: Optional[int],
-) -> bool:
+) -> Optional[str]:
     discriminator = Discriminator()
 
     productions = grammar['productions']
@@ -47,10 +55,10 @@ def _test_completeness(
         num_testcase_sampling = min(num_testcase_sampling, len(testcases))
         sampled_testcases = random.sample(testcases, num_testcase_sampling)
 
-    return all(
-        discriminator(productions, constraints, testcase)
-        for testcase in sampled_testcases
-    )
+    for testcase in sampled_testcases:
+        if not discriminator(productions, constraints, testcase):
+            return testcase
+    return None
 
 
 def test_soundness(
@@ -64,20 +72,38 @@ def test_soundness(
     timeout: float = 2,
 ) -> bool:
     try:
-        is_sound = _test_soundness(
+        ret = _test_soundness(
             grammar,
             solution_dir,
             num_solution_sampling,
             num_testcase_generation,
             timeout,
         )
-        return is_sound
-    except Exception as e:
-        logger.warning("Generation error")
+        if ret is None:
+            return True
+
+        generated_testcase, outputs = ret
+        logger.warning('Name:')
         logger.warning(name)
+        logger.warning('Specification:')
         logger.warning(specification)
+        logger.warning('Grammar:')
         logger.warning(grammar)
-        logger.warning(e)
+        logger.warning('Invalid testcase:')
+        logger.warning('\n'+generated_testcase+'\n')
+        logger.warning('Outputs:')
+        for output in outputs:
+            logger.warning("#" * 80)
+            logger.warning('\n'+output+'\n')
+            logger.warning("#" * 80)
+        return False
+
+    except Exception as e:
+        logger.info("Generation error")
+        logger.info(name)
+        # logger.warning(specification)
+        logger.info(grammar)
+        logger.info(e)
         return False
 
 
@@ -87,7 +113,7 @@ def _test_soundness(
     num_solution_sampling: Optional[int],
     num_testcase_generation: int,
     timeout: float,
-) -> bool:
+) -> Optional[tuple[str, list[str]]]:
 
     productions = cast(list[str], grammar['productions'])
     constraints = cast(list[str], grammar['constraints'])
@@ -139,9 +165,9 @@ def _test_soundness(
         temp_file.close()
 
         if not is_sound:
-            return False
+            return generated_testcase, outputs
 
-    return True
+    return None
 
 
 def test_correctness(

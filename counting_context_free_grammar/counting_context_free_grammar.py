@@ -642,6 +642,9 @@ class CountingContextFreeGrammar:
             upper_bound = min(upper_bound, TESTMODE_VARIABLE_UPPER_BOUND)
             upper_bound = max(lower_bound, upper_bound)
 
+            lower_bound = max(lower_bound, -TESTMODE_VARIABLE_UPPER_BOUND)
+            lower_bound = min(lower_bound, upper_bound)
+
         comparison_inequal_values = self._get_comparison_inequals(
             variable, assignment, indexing)
         inequal = constraint.inequal_values | comparison_inequal_values

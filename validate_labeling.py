@@ -87,7 +87,6 @@ def main(config: dict[str, Any]):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.WARNING)
     logger = logging.getLogger('grammar_tester')
     logger.addHandler(logging.FileHandler('validate_labeling.log'))
 

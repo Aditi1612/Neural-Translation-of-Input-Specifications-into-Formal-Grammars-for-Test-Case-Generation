@@ -138,6 +138,9 @@ def _test_soundness(
         sampled_solutions = random.sample(
             solution_files, num_solution_sampling)
 
+    def normalize_output(output: str) -> str:
+        return ' '.join(output.split()).lower()
+
     for generated_testcase in generated_testcases:
 
         temp_file = tempfile.TemporaryFile('w+b')
@@ -158,7 +161,8 @@ def _test_soundness(
             temp_file.seek(0)
             return process
         completed_processes = map(get_completed_process, sampled_solutions)
-        outputs = [process.stdout.strip() for process in completed_processes]
+        outputs = [ps.stdout for ps in completed_processes]
+        outputs = list(map(normalize_output, outputs))
 
         is_sound = all(output == outputs[0] for output in outputs)
         # is_sound = all(ps.returncode == 0 for ps in completed_processes)

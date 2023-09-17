@@ -26,7 +26,7 @@ try:
 except ImportError:
     sre_parse = re.sre_parse  # type: ignore [attr-defined]
 
-# TODO: Move to types
+
 Nonterminal = typing.NewType('Nonterminal', str)
 Terminal = typing.NewType('Terminal', str)
 
@@ -45,8 +45,8 @@ class Comparator(Protocol[T]):
 MAX_SAMPLING_ITER = 2 ** 8
 MAX_DERIVATION_ITER = 2 ** 16
 
-TESTMODE_VARIABLE_UPPER_BOUND = 64
-TESTMODE_MAXIMUM_TERMINAL_LEN = 512
+TESTMODE_VARIABLE_UPPER_BOUND = 8
+TESTMODE_MAXIMUM_TERMINAL_LEN = 16
 
 _RE_REGEX_TERMINAL = re.compile(r'(.+?)\{([\w\-\*\^,]*)\}')
 _RE_NUMBER_CBE = re.compile(r'(?:(-?\d+)\*)?(-?\d+)(?:\^(-?\d+))?')
@@ -106,7 +106,12 @@ class CountingContextFreeGrammar:
 
         # Parse constraints and comparisons
         parsed = parse(constraints)
-        self.constraints, self.comparisons, self.placeholders = parsed
+        (
+            self.constraints,
+            self.comparisons,
+            self.term_constraints,
+            self.placeholders,
+        ) = parsed
 
         # Add placeholders from constraints and comparisons
         for token in self.productions:
@@ -138,9 +143,9 @@ class CountingContextFreeGrammar:
                 raise RuntimeError('Too many iterations')
             derivation_iter += 1
 
-            logger.debug(f'derivation_queue: {derivation_queue}')
+            logger.debug(f'derivation_queue: {len(derivation_queue)}')
             logger.debug(f'assignment:\n{assignment}')
-            logger.debug(f'string:\n{string}')
+            # logger.debug(f'string:\n{string}')
 
             token = derivation_queue.pop()
             production = None
@@ -279,7 +284,7 @@ class CountingContextFreeGrammar:
                 # XXX: Implicit indexing
                 if len(self.placeholders) == 1:
                     return self._substitute_production(
-                        production, list(self.placeholders)[0], index)
+                        production, sorted(list(self.placeholders))[0], index)
                 return production
 
             placeholder: Optional[Placeholder] = None
@@ -317,8 +322,6 @@ class CountingContextFreeGrammar:
         Raises:
             RuntimeError: Constraint or production is ambiguous.
         """
-        # XXX: For a variable a_3 with a constraint a_i < a_i+1,
-        # we can not check "a_2 < a_3"
         constraint_form_variables, index = (
             self._to_constraint_form(variable))
 
@@ -326,18 +329,11 @@ class CountingContextFreeGrammar:
         if self._is_counter(variable):
             production_form_variables = [variable]
 
-        # Sample value of the variable
-        values = [
-            self._sample_variable(variable, assignment, index)
-            for variable in constraint_form_variables
-            if variable in self.constraints
-        ]
-
-        if len(values) > 1:
-            raise InvalidConstraintError(
-                f"Constraint is ambiguous for {variable}.")
-
-        value = None if len(values) == 0 else values[0]
+        if len(constraint_form_variables) == 0:
+            value = None
+        else:
+            value = self._sample_variable(
+                constraint_form_variables[0], assignment, index)
 
         # Find production of the variable
         productions = []
@@ -391,7 +387,7 @@ class CountingContextFreeGrammar:
 
         if subscript_type == SubscriptType.CONSTANT:
             index = int(subscript)
-            for placeholder in self.placeholders:
+            for placeholder in sorted(list(self.placeholders)):
                 variable = Variable(f"{fragment}_{placeholder}")
                 constraint_form_variables.append(variable)
         else:
@@ -551,6 +547,65 @@ class CountingContextFreeGrammar:
 
         return bound, number_of_inner_variables
 
+    def check_term_constraint(
+        self, variable: str, value: int, assignment: Assignment
+    ) -> bool:
+        assignment = assignment.copy()
+        assignment[Variable(variable)] = value
+        for term_constraint in self.term_constraints:
+            left_str, comparator, right_str = term_constraint
+            try:
+                left = eval(left_str, {}, _assignment)
+                right = eval(right_str, {}, _assignment)
+            except NameError:
+                continue
+            if comparator == '==' and not left == right:
+                return False
+            elif comparator == '!=' and not left != right:
+                return False
+            elif comparator == '<' and not left < right:
+                return False
+            elif comparator == '>' and not left > right:
+                return False
+            elif comparator == '>=' and not left >= right:
+                return False
+            elif comparator == '<=' and not left <= right:
+                return False
+        return True
+
+    def _get_comparison_inequals(
+        self,
+        variable: Variable,
+        assignment: Assignment,
+        indexing: Optional[tuple[Placeholder, int]],
+    ) -> set[int]:
+
+        comparison = self.comparisons[variable]
+        inequal_variables: set[Variable]
+
+        if indexing is not None:
+            placeholder, index = indexing
+            inequal_variables = {
+                self._substitute(token, placeholder, index)
+                for token in comparison.inequal_variables
+            }
+        else:
+            inequal_variables = comparison.inequal_variables
+
+        comparison_inequals: set[int] = set()
+        for inequal_variable in inequal_variables:
+            if inequal_variable in assignment:
+                comparison_inequals.add(assignment[inequal_variable])
+            else:
+                fragment_1, _ = self._split_token(inequal_variable)
+                fragment_2, _ = self._split_token(variable)
+                if fragment_1 == fragment_2:
+                    for key, value in assignment.items():
+                        fragment_3, _ = self._split_token(key)
+                        if fragment_3 == fragment_1:
+                            comparison_inequals.add(value)
+        return comparison_inequals
+
     def _sample_variable(
         self,
         variable: Variable,
@@ -587,27 +642,16 @@ class CountingContextFreeGrammar:
             upper_bound = min(upper_bound, TESTMODE_VARIABLE_UPPER_BOUND)
             upper_bound = max(lower_bound, upper_bound)
 
-        comparison = self.comparisons[variable]
-        inequal_variables: set[Variable]
-        if indexing is not None:
-            placeholder, index = indexing
-            inequal_variables = {
-                self._substitute(token, placeholder, index)
-                for token in comparison.inequal_variables
-            }
-        else:
-            inequal_variables = comparison.inequal_variables
-        comparison_inequal = {
-            assignment[variable]
-            for variable in inequal_variables
-            if variable in assignment
-        }
+            lower_bound = max(lower_bound, -TESTMODE_VARIABLE_UPPER_BOUND)
+            lower_bound = min(lower_bound, upper_bound)
 
-        inequal = constraint.inequal_values | comparison_inequal
+        comparison_inequal_values = self._get_comparison_inequals(
+            variable, assignment, indexing)
+        inequal = constraint.inequal_values | comparison_inequal_values
 
         logger.debug(f'Sample a variable ({variable}, {index})')
         logger.debug(f'[{lower_bound}, {upper_bound}]')
-        logger.debug(comparison)
+        logger.debug(self.comparisons[variable])
 
         # At this point, we knows follows:
         # * the target variable is in a bound [`lower_bound`, `upper_bound`],
@@ -625,7 +669,10 @@ class CountingContextFreeGrammar:
                 random.randint(lower_bound, upper_bound) for _ in range(n)
             ]
             value = sorted(values)[k]
-            if value not in inequal:
+            term_constraint_flag = self.check_term_constraint(
+                variable, value, assignment)
+
+            if value not in inequal and term_constraint_flag:
                 return value
 
         raise RuntimeError(

@@ -55,9 +55,34 @@ class MyDataset(Dataset):
     @staticmethod
     def replace_description(description: str) -> str:
         description_replacements = [
-            ('≤', '<='),
+            ('\\cdots', '...'),
+            ('\\dots', '...'),
+            ('\\geq', '>='),
+            ('\\ge', '>='),
+            ('\\gt', '>'),
+            ('\\ldots', '...'),
             ('\\leq', '<='),
+            ('\\le', '<='),
+            ('\\lt', '<'),
+            ('\\neq', '!='),
+            ('\\ne', '!='),
             ('\\times', '*'),
+            ('\u2013', '--'),
+            ('\u2014', '---'),
+            ('\u2019', "'"),
+            ('\u2026', '...'),
+            ('\u2192', "->"),
+            ('\u2208', "in"),
+            ('\u2211', "sum"),
+            ('\u2212', '-'),
+            ('\u2260', "!="),
+            ('\u2264', '<='),
+            ('\u2265', '>='),
+            ('\u2266', '<='),
+            ('\u2295', "xor"),
+            ('\u22c5', '*'),
+            ('\u2308', ""),
+            ('\u2309', ""),
         ]
         for old, new in description_replacements:
             description = description.replace(old, new)

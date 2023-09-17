@@ -9,6 +9,8 @@ import jsonlines
 import torch
 import numpy as np
 from tqdm import tqdm
+from tqdm.contrib.logging import tqdm_logging_redirect
+from data_loader import MyDataset
 
 from grammar_tester import test_completeness
 from grammar_tester import test_soundness
@@ -48,9 +50,11 @@ def main(config: dict[str, Any]):
     completeness = []
 
     labeled_dataset = jsonlines.open(labeled_path, 'r')
-    for labeled_data in tqdm(labeled_dataset, desc='Testing'):
+    for labeled_data in tqdm(labeled_dataset, desc=f'Testing {labeled_path}'):
         grammar = labeled_data['grammar']
         name = labeled_data['name']
+        description = labeled_data['description']
+        specification = MyDataset.get_specification(description)
         testcases = testcases_dictionary[name]
         solution_dir = solution_prefix / name
 
@@ -58,11 +62,13 @@ def main(config: dict[str, Any]):
             grammar,
             solution_dir,
             name=name,
+            specification=description,
             **test_soundness_args
         )
         is_complete = test_completeness(
             grammar, testcases,
             name=name,
+            specification=specification,
             **test_completeness_args
         )
 
@@ -81,7 +87,8 @@ def main(config: dict[str, Any]):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.WARNING)
+    logger = logging.getLogger('grammar_tester')
+    logger.addHandler(logging.FileHandler('validate_labeling.log'))
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--labeled-data')
@@ -117,4 +124,5 @@ if __name__ == "__main__":
             task_config[k] = getattr(args, k)
         task_config.setdefault(k, defaults[k])
 
-    main(config)
+    with tqdm_logging_redirect():
+        main(config)

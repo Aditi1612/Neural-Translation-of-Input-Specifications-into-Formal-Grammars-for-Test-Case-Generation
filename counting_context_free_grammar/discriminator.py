@@ -43,7 +43,7 @@ class discriminator():
         # print(1)
 
         while self.derivation_queue:
-            # print(self.derivation_queue)
+            print(self.derivation_queue)
             # print(test_case, '\n')
             # print(self.variable_dict)
             curr_variable = self.derivation_queue[0]
@@ -223,7 +223,7 @@ class discriminator():
                 if not self.RE_INTEGER.fullmatch(counter[:-1]):
                     # print(self.variable_dict)
                     # print(curr_variable)
-                    if '-' in counter or '+' in counter or '*' in counter:
+                    if '-' in counter or '+' in counter or '*' in counter or re.findall(r'[0-9]+[a-zA-Z]+', counter):
                         counter = self.get_value(counter[:-1])
                     else:
                         counter = self.variable_dict[counter[:-1]]
@@ -418,6 +418,10 @@ class discriminator():
 
         num = num.replace('min', '$').replace('max', '&')
 
+        targets = re.findall(r'[0-9]+[a-zA-Z]+', num)
+        for target in targets:
+            change = re.findall(r'[a-zA-Z]+', target)[0]
+            num = num.replace(target, target.replace(change, f'*{change}'), 1)        
         
         values = [x.strip() for x in re.split('[-*/+^\(\)$&,]', num)]
         operators = [x.strip() for x in re.findall('[-*/+^\(\)$&,]', num)]
@@ -453,7 +457,13 @@ class discriminator():
             num += (value + operator)
         num += values[-1]
         # print('e', eval(num))
-        # print('n', num)
+
+        targets = re.findall(r'[0-9]+\(', num)
+
+        for target in targets:
+            change = target[:-1] + '*' + target[-1]
+            num = num.replace(target, change)
+
         return eval(num) * (-1 if negative else 1)
 
         '''
@@ -664,8 +674,8 @@ if __name__ == '__main__':
     import sys
     import jsonlines
 
-    test()
-    # test_one(192)
+    # test()
+    test_one(727)
     exit()
 
     file_name = sys.argv[1]

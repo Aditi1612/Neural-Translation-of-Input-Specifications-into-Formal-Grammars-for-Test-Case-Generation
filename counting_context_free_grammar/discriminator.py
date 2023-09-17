@@ -24,12 +24,9 @@ class discriminator():
 
         self.derivation_queue = [self.start_token]
 
-        self.generate_mode = (
-            'generate' if generate_mode is None else generate_mode)
+        self.generate_mode = 'generate' if generate_mode == None else generate_mode
 
-    def __call__(
-        self, grammer: list, constraints: list, test_case: str
-    ) -> bool:
+    def __call__(self, grammer: list, constraints: list, test_case: str) -> bool:
         self.__init__(self.generate_mode)
         # self.start_token = grammer[0].split(self.derivate_token)[0].strip()
         self.derivation_queue = [self.start_token]
@@ -38,6 +35,8 @@ class discriminator():
         test_case = test_case.strip()
         # print(self.const_dict)
         return self.parsing(test_case)
+
+    pass
 
     def parsing(self, test_case):
         # self.derivation_queue = [self.start_token]
@@ -159,6 +158,7 @@ class discriminator():
                     if self.RE_INTEGER.fullmatch(curr_token):
                         curr_token = int(curr_token)
                     self.variable_dict[variable][curr_variable] = curr_token
+
                     continue
 
                 elif curr_variable in self.derivation_dict:

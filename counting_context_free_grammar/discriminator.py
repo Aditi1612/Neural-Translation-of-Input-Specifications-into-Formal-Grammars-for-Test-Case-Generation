@@ -54,7 +54,8 @@ class discriminator():
 
             if curr_variable == self.start_token:
                 # self.derivate(curr_variable)
-                self.derivation_queue = self.derivation_dict[curr_variable][0].split(' ')
+                self.derivate(curr_variable)
+                # self.derivation_queue = self.derivation_dict[curr_variable][0].split(' ')
                 continue
             if curr_variable == self.blink_token:
                 del self.derivation_queue[0]

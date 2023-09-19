@@ -112,6 +112,9 @@ class discriminator():
                     end = self.get_value(end)
                     curr_variable = curr_variable.split('{')[0] + '{'
                     curr_variable = f'{curr_variable}{start},{end}' + '}'
+                else:
+                    curr_variable = curr_variable.split('{')[0] + '{'
+                    curr_variable = f'{curr_variable}{self.get_value(len_var)}' + '}'
 
                 if not re.match(curr_variable, curr_token):
                     if self.go_flag_point() : continue

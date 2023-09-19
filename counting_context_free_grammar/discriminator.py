@@ -25,7 +25,7 @@ class discriminator():
 
         self.derivation_queue = [self.start_token]
 
-        self.generate_mode = 'generate' if generate_mode == None else generate_mode
+        self.generate_mode = generate_mode if generate_mode else 'generate'
 
     def __call__(self, grammer: list, constraints: list, test_case: str) -> bool:
         self.__init__(self.generate_mode)
@@ -45,8 +45,6 @@ class discriminator():
         # print(1)
 
         while self.derivation_queue:
-            # print(self.derivation_queue)
-            # print(self.test_case, '\n')
             # print(self.variable_dict)
             curr_variable = self.derivation_queue[0]
             # print(self.derivation_queue)
@@ -128,21 +126,10 @@ class discriminator():
                 del self.derivation_queue[:2]
                 continue
 
+
             # 기타 terminal 생성
             elif not self.RE_NONTERMINAL.fullmatch(curr_variable):
-                curr_sep = self.get_sep_token()
-                if curr_sep == -1:
-                    if self.go_flag_point() : continue
-                    if self.generate_mode == "test":
-                        raise Exception(f"Error3: Invalid value - can't find seperate token\n\t{self.derivation_queue}\n\t{self.test_case}")
-                    return False
-
-                self.test_case = self.test_case.split(curr_sep)
-                curr_token = self.test_case[0]
-                self.test_case = curr_sep.join(self.test_case[1:])
-
-                del self.derivation_queue[:2]
-
+                
                 # a_i 형태
                 if re.match(r'.*_.*', curr_variable):
                     # print('c', curr_variable)
@@ -151,13 +138,31 @@ class discriminator():
                     counter = int(counter)
 
                     if variable in self.derivation_dict:
+                        self.derivate(variable, counter)
+                        continue
+
+                        '''
                         if curr_token not in self.derivation_dict[variable]:
                             derivate_list = self.derivation_dict[variable]
                             if self.go_flag_point() : continue
                             if self.generate_mode == "test":
                                 raise Exception(f"Error4: Invalid derivation\n\t{curr_token} not in {derivate_list}")
                             return False
+                        '''
                     else:
+                        curr_sep = self.get_sep_token()
+                        if curr_sep == -1:
+                            if self.go_flag_point() : continue
+                            if self.generate_mode == "test":
+                                raise Exception(f"Error3: Invalid value - can't find seperate token\n\t{self.derivation_queue}\n\t{self.test_case}")
+                            return False
+
+                        self.test_case = self.test_case.split(curr_sep)
+                        curr_token = self.test_case[0]
+                        self.test_case = curr_sep.join(self.test_case[1:])
+
+                        del self.derivation_queue[:2]
+
                         start, end = self.get_range(variable, counter)
                         if not start <= int(curr_token) <= end:
                             if self.go_flag_point() : continue
@@ -174,16 +179,31 @@ class discriminator():
                     continue
 
                 elif curr_variable in self.derivation_dict:
+                    self.derivate(curr_variable)
+                    '''
                     if curr_token not in self.derivation_dict[curr_variable]:
+                        # 여기에 string이 안에 있을 때 확인 필요
                         derivate_list = self.derivation_dict[curr_variable]
                         if self.go_flag_point() : continue
                         if self.generate_mode == "test":
                             raise Exception(f"Error6: Invalid derivation\n\t{curr_token} not in {derivate_list}")
 
                         return False
-
+                    '''
                     continue
-                else:
+                elif curr_variable in self.const_dict or re.fullmatch(r'\[[a-zA-Z]*\]', curr_variable):
+                    curr_sep = self.get_sep_token()
+                    if curr_sep == -1:
+                        if self.go_flag_point() : continue
+                        if self.generate_mode == "test":
+                            raise Exception(f"Error3: Invalid value - can't find seperate token\n\t{self.derivation_queue}\n\t{self.test_case}")
+                        return False
+
+                    self.test_case = self.test_case.split(curr_sep)
+                    curr_token = self.test_case[0]
+                    self.test_case = curr_sep.join(self.test_case[1:])
+
+                    del self.derivation_queue[:2]
                     # N, [N]의 형태
                     if re.match(r'\[[^\[]*\]', curr_variable):
                         curr_variable = curr_variable[1:-1]
@@ -198,24 +218,16 @@ class discriminator():
                         # print(curr_variable)
 
                         if curr_variable in self.derivation_dict:
+                            
+                            self.derivate(curr_variable)
+                            '''
                             if curr_token not in self.derivation_dict[curr_variable]:
                                 if self.go_flag_point() : continue
                                 derivate_list = self.derivation_dict[curr_variable]
                                 if self.generate_mode == "test":
                                     raise Exception(f"Error7: Invalid derivation\b\t{curr_variable} not in {derivate_list}")
                                 return False
-                        elif not curr_variable == curr_token:
-                            # print(7)
-                            if self.go_flag_point() : continue
-
-                            if self.generate_mode == "test":
-                                raise Exception(f"Error8: Invalid value\n\texpectd: {curr_token}\n\treal   : {curr_variable}")
-
-                            return False
-                        else:
-                            # 여기 구현
-                            ...
-
+                            '''
                         continue
 
                     start, end = self.get_range(curr_variable)
@@ -227,10 +239,23 @@ class discriminator():
                             raise Exception(f"Error9: variable is out of range\n\texpected: {start}<={curr_variable}<={end}\n\treal: {curr_token}")
                         return False
                     self.variable_dict[curr_variable] = int(curr_token)
+                
+                else:
+                    if self.test_case.find(curr_variable) == 0:
+                        self.test_case = self.test_case.replace(curr_variable, '', 1)
+                        del self.derivation_queue[0]
+                    else:
+                        if self.go_flag_point() : continue
+                        if self.generate_mode == "test":
+                            raise Exception(f"Error8: Invalid value: \n\texpectd: {self.test_case}\n\treal   : {curr_variable}")
 
+                        return False
                 continue
 
             # <T_i> 형태
+            if re.fullmatch(r'<[a-zA-Z]*>', curr_variable):
+                self.derivate(curr_variable)
+                continue
             if re.match(r'<[^_]*_[^_]*>', curr_variable):
                 nonterminal , counter = curr_variable.split('_')
                 # <T_N>
@@ -275,12 +300,13 @@ class discriminator():
         if len(self.derivation_dict[curr_variable]) > 1:
             self.flag['queue'].append(self.derivation_queue[:])
             self.flag['variable'].append(curr_variable)
-            self.flag['deriv_idx'].append(0 if deriv_idx == None else deriv_idx)
+            self.flag['deriv_idx'].append(deriv_idx if deriv_idx else 0)
             self.flag['test_case'].append(self.test_case[:])
             self.flag['counter'].append(counter)
         # print('1', len(self.derivation_dict[curr_variable]), curr_variable)
         
-        next_variable = self.derivation_dict[curr_variable][0 if deriv_idx == None else deriv_idx]
+        next_variable = self.derivation_dict[curr_variable][deriv_idx if deriv_idx else 0]
+        
         curr_list = []
 
         for variable in next_variable.split(' '):
@@ -295,10 +321,8 @@ class discriminator():
                 nonterminal = variable.split('_')[0]
                 variable = f'{nonterminal}_{counter}'
             curr_list.append(variable)
-
         # derivation이 진행된 이후 완료된 token 제거
         del self.derivation_queue[0]
-
         # DFS로 진행하기 위해 제거된 variable에서 생성된 variable들을 queue의 앞에 배치함
         curr_list.extend(self.derivation_queue)
         self.derivation_queue = curr_list
@@ -321,9 +345,11 @@ class discriminator():
             self.derivation_queue = queue
             self.test_case = test_case
             self.derivate(variable, counter, idx)
-            return True
+            
+            # print('f', self.derivation_queue)
+            # print('f', test_case)
 
-        return False
+            return True
 
     def get_range(self, variable, counter=None):
         '''
@@ -527,155 +553,3 @@ class discriminator():
             elif re.fullmatch(r'[^=]*!=[^=]*', const):
                 variable1, variable2 = const.split('!=')
                 self.permutation_variable.append(variable1)
-
-
-def test():
-    import jsonlines
-    parser = discriminator('test')
-    # file = ''
-
-    with open('res2.txt', 'w', encoding='utf-8') as write_file:
-        for file_name in ['train', 'test']:
-            # print(file_name)
-            with jsonlines.open(f'data/{file_name}_grammar.jsonl') as f:
-                for p in f:
-                    passed = True
-                    # if p['name']['index'] <= 350: continue
-                    print(p['name']['name'], '-', p['name']['index'])
-
-                    test_cases = p['public_tests']['input']
-                    # test_cases.extend(p['private_tests']['input'])
-                    grammar = p['spec']['grammer']
-                    const = p['spec']['constraints']
-
-                    for test_case in test_cases:
-                        # print(parser(grammar, const, test_case))
-                        try:
-                            res = parser(grammar, const, test_case)
-                        except Exception as e:
-                            if passed:
-                                name = p['name']['name']
-                                index = p['name']['index']
-
-                                write_file.write(f'{name} - {index}')
-                                write_file.write('\n')
-
-                                print(p['name']['name'], '-', p['name']['index'])
-
-                            write_file.write(test_case + '\n')
-
-                            passed = False
-                            # break
-                            write_file.write(e.__str__())
-                            write_file.write('\n')
-                            print(e)
-
-                    if not passed:
-                        print()
-                        write_file.write('\n')
-
-
-def test_one(problem_idx):
-
-    import jsonlines
-    import re
-    parser = discriminator('test')
-    # file = ''
-
-    for file_name in ['train', 'test']:
-        # print(file_name)
-        with jsonlines.open(f'data/{file_name}_grammar.jsonl') as f:
-            for p in f:
-                # print(re.split(r'[. ]', p['name']))
-                if p['name']['index'] != problem_idx: continue
-
-                # if p['name']['index'] <= 350: continue
-                # print(p['name']['name'], '-', p['name']['index'])
-
-                test_cases = p['public_tests']['input']
-                # test_cases.extend(p['private_tests']['input'])
-                grammar = p['spec']['grammer']
-                const = p['spec']['constraints']
-                print(p['name']['name'], '-', p['name']['index'])
-
-                for test_case in test_cases:
-
-                    print(test_case)
-                    res = parser(grammar, const, test_case)
-                    # print()
-                    # print(parser(grammar, const, test_case))
-                    try:
-                        res = parser(grammar, const, test_case)
-                        print(res)
-                    except Exception as e:
-                        print(e)
-                    print()
-                return
-
-
-if __name__ == '__main__':
-    import sys
-    import jsonlines
-
-    test()
-    # test_one(913)
-    exit()
-
-    file_name = sys.argv[1]
-    error_file = f"result_{file_name}_error_list.txt"
-    path_file = f"result_{file_name}_pass_list.txt"
-    error_reason_file = f"result_{file_name}_error_reason.txt"
-
-    discriminator = discriminator()
-
-    with open(path_file, 'w', encoding='utf-8') as write_file:
-        write_file.write('')
-
-    with open(error_file, 'w', encoding='utf-8') as write_file:
-        write_file.write('')
-
-    with open(error_reason_file, 'w', encoding='utf-8') as write_file:
-        write_file.write('')
-
-    with jsonlines.open(f'data/{file_name}.jsonl') as f:
-        for p_idx, problem in enumerate(f, 1):
-            print(p_idx)
-
-            name, idx = problem['name'].split(' - ')
-            grammer = problem['grammer']
-            const = problem['constraints']
-            test_case = problem['public_tests']['input'][0]
-            try:
-                res = discriminator(grammer, const, test_case)
-
-                with open(path_file, 'a', encoding='utf-8') as write_file:
-                    write_file.write(f'{name}, {idx}\n')
-
-            except Exception as e:
-                with open(error_file, 'a', encoding='utf-8') as write_file:
-                    write_file.write(f'{name}, {idx}\n')
-
-                with open(error_reason_file, 'a', encoding='utf-8') as write_file:
-                    write_file.write(f'{idx} {name}:\n' + test_case + ('' if test_case[-1] == '\n' else '\n'))
-                    write_file.write('\t' + str(e) + '\n\n')
-
-    # "name" =  "71_A - 1"
-    test_grammer =  ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> [a-z]{1,10^2}", "<T_1>->[a-z]{1,10^2}"]
-    test_const = ["1<=N<=100"]
-    # "public_tests": "input":
-    test_cases = ["4\nword\nlocalization\ninternationalization\npneumonoultramicroscopicsilicovolcanoconiosis\n","26\na\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz\n", "10\ngyartjdxxlcl\nfzsck\nuidwu\nxbymclornemdmtj\nilppyoapitawgje\ncibzc\ndrgbeu\nhezplmsdekhhbo\nfeuzlrimbqbytdu\nkgdco\n", "5\nabcdefgh\nabcdefghi\nabcdefghij\nabcdefghijk\nabcdefghijklm\n", "20\nlkpmx\nkovxmxorlgwaomlswjxlpnbvltfv\nhykasjxqyjrmybejnmeumzha\ntuevlumpqbbhbww\nqgqsphvrmupxxc\ntrissbaf\nqfgrlinkzvzqdryckaizutd\nzzqtoaxkvwoscyx\noswytrlnhpjvvnwookx\nlpuzqgec\ngyzqfwxggtvpjhzmzmdw\nrlxjgmvdftvrmvbdwudra\nvsntnjpepnvdaxiporggmglhagv\nxlvcqkqgcrbgtgglj\nlyxwxbiszyhlsrgzeedzprbmcpduvq\nyrmqqvrkqskqukzqrwukpsifgtdc\nxpuohcsjhhuhvr\nvvlfrlxpvqejngwrbfbpmqeirxlw\nsvmasocxdvadmaxtrpakysmeaympy\nyuflqboqfdt\n", "3\nnjfngnrurunrgunrunvurn\njfvnjfdnvjdbfvsbdubruvbubvkdb\nksdnvidnviudbvibd\n", "1\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij\n", "100\nm\nz\ns\nv\nd\nr\nv\ny\ny\ne\np\nt\nc\na\nn\nm\np\ng\ni\nj\nc\na\nb\nq\ne\nn\nv\no\nk\nx\nf\ni\nl\na\nq\nr\nu\nb\ns\nl\nc\nl\ne\nv\nj\nm\nx\nb\na\nq\nb\na\nf\nj\nv\nm\nq\nc\nt\nt\nn\nx\no\ny\nr\nu\nh\nm\nj\np\nj\nq\nz\ns\nj\no\ng\nc\nm\nn\no\nm\nr\no\ns\nt\nh\nr\np\nk\nb\nz\ng\no\nc\nc\nz\nz\ng\nr\n", "1\na\n", "1\ntcyctkktcctrcyvbyiuhihhhgyvyvyvyvjvytchjckt\n", "24\nyou\nare\nregistered\nfor\npractice\nyou\ncan\nsolve\nproblems\nunofficially\nresults\ncan\nbe\nfound\nin\nthe\ncontest\nstatus\nand\nin\nthe\nbottom\nof\nstandings\n"]
-
-    # test_grammer = ["<S>->[01]{S} <n> [01]{S}"]
-    # test_const = ["1<=S<=100"]
-
-    # "output": ["word\nl10n\ni18n\np43s\n"]
-    # "private_tests": {"input": ["26\na\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz\n", "10\ngyartjdxxlcl\nfzsck\nuidwu\nxbymclornemdmtj\nilppyoapitawgje\ncibzc\ndrgbeu\nhezplmsdekhhbo\nfeuzlrimbqbytdu\nkgdco\n", "5\nabcdefgh\nabcdefghi\nabcdefghij\nabcdefghijk\nabcdefghijklm\n", "20\nlkpmx\nkovxmxorlgwaomlswjxlpnbvltfv\nhykasjxqyjrmybejnmeumzha\ntuevlumpqbbhbww\nqgqsphvrmupxxc\ntrissbaf\nqfgrlinkzvzqdryckaizutd\nzzqtoaxkvwoscyx\noswytrlnhpjvvnwookx\nlpuzqgec\ngyzqfwxggtvpjhzmzmdw\nrlxjgmvdftvrmvbdwudra\nvsntnjpepnvdaxiporggmglhagv\nxlvcqkqgcrbgtgglj\nlyxwxbiszyhlsrgzeedzprbmcpduvq\nyrmqqvrkqskqukzqrwukpsifgtdc\nxpuohcsjhhuhvr\nvvlfrlxpvqejngwrbfbpmqeirxlw\nsvmasocxdvadmaxtrpakysmeaympy\nyuflqboqfdt\n", "3\nnjfngnrurunrgunrunvurn\njfvnjfdnvjdbfvsbdubruvbubvkdb\nksdnvidnviudbvibd\n", "1\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij\n", "100\nm\nz\ns\nv\nd\nr\nv\ny\ny\ne\np\nt\nc\na\nn\nm\np\ng\ni\nj\nc\na\nb\nq\ne\nn\nv\no\nk\nx\nf\ni\nl\na\nq\nr\nu\nb\ns\nl\nc\nl\ne\nv\nj\nm\nx\nb\na\nq\nb\na\nf\nj\nv\nm\nq\nc\nt\nt\nn\nx\no\ny\nr\nu\nh\nm\nj\np\nj\nq\nz\ns\nj\no\ng\nc\nm\nn\no\nm\nr\no\ns\nt\nh\nr\np\nk\nb\nz\ng\no\nc\nc\nz\nz\ng\nr\n", "1\na\n", "1\ntcyctkktcctrcyvbyiuhihhhgyvyvyvyvjvytchjckt\n", "24\nyou\nare\nregistered\nfor\npractice\nyou\ncan\nsolve\nproblems\nunofficially\nresults\ncan\nbe\nfound\nin\nthe\ncontest\nstatus\nand\nin\nthe\nbottom\nof\nstandings\n"], "output": ["a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz\n", "g10l\nfzsck\nuidwu\nx13j\ni13e\ncibzc\ndrgbeu\nh12o\nf13u\nkgdco\n", "abcdefgh\nabcdefghi\nabcdefghij\na9k\na11m\n", "lkpmx\nk26v\nh22a\nt13w\nq12c\ntrissbaf\nq21d\nz13x\no17x\nlpuzqgec\ng18w\nr19a\nv25v\nx15j\nl28q\ny26c\nx12r\nv26w\ns27y\ny9t\n", "n20n\nj27b\nk15d\n", "a98j\n", "m\nz\ns\nv\nd\nr\nv\ny\ny\ne\np\nt\nc\na\nn\nm\np\ng\ni\nj\nc\na\nb\nq\ne\nn\nv\no\nk\nx\nf\ni\nl\na\nq\nr\nu\nb\ns\nl\nc\nl\ne\nv\nj\nm\nx\nb\na\nq\nb\na\nf\nj\nv\nm\nq\nc\nt\nt\nn\nx\no\ny\nr\nu\nh\nm\nj\np\nj\nq\nz\ns\nj\no\ng\nc\nm\nn\no\nm\nr\no\ns\nt\nh\nr\np\nk\nb\nz\ng\no\nc\nc\nz\nz\ng\nr\n", "a\n", "t41t\n", "you\nare\nregistered\nfor\npractice\nyou\ncan\nsolve\nproblems\nu10y\nresults\ncan\nbe\nfound\nin\nthe\ncontest\nstatus\nand\nin\nthe\nbottom\nof\nstandings\n"]}, "description": "Sometimes some words like \"localization\" or \"internationalization\" are so long that writing them many times in one text is quite tiresome.\n\nLet's consider a word too long, if its length is strictly more than 10 characters. All too long words should be replaced with a special abbreviation.\n\nThis abbreviation is made like this: we write down the first and the last letter of a word and between them we write the number of letters between the first and the last letters. That number is in decimal system and doesn't contain any leading zeroes.\n\nThus, \"localization\" will be spelt as \"l10n\", and \"internationalization» will be spelt as \"i18n\".\n\nYou are suggested to automatize the process of changing the words with abbreviations. At that all too long words should be replaced by the abbreviation and the words that are not too long should not undergo any changes.\n\nInput\n\nThe first line contains an integer n (1 ≤ n ≤ 100). Each of the following n lines contains one word. All the words consist of lowercase Latin letters and possess the lengths of from 1 to 100 characters.\n\nOutput\n\nPrint n lines. The i-th line should contain the result of replacing of the i-th word from the input data.\n\nExamples\n\nInput\n\n4\nword\nlocalization\ninternationalization\npneumonoultramicroscopicsilicovolcanoconiosis\n\n\nOutput\n\nword\nl10n\ni18n\np43s"}
-
-    '''
-    discriminator = discriminator()
-    for test_case in test_cases:
-        res = discriminator(test_grammer, test_const, test_case)
-
-        print(res)
-    '''
-    ...

@@ -8,6 +8,7 @@ import string
 class fuzzing():
     def __init__(self):
         self.fuzzing_rate = 0.3
+        self.numeric_addition_bound = 1
         ...
         
     def __call__(self, test_cases:[str]) -> [[str],]:
@@ -30,8 +31,16 @@ class fuzzing():
                 for target_idx in targets:
                     target = tokens[target_idx]
                     # print(target)
-                    if re.fullmatch(r'[-+]?([0-9]+\.[0-9]+|[0-9]+)', target):
-                        tokens[target_idx] = str(int(target) + (1 if random.random() >= 0.5 else -1))
+                    if re.fullmatch(r'[-+]?[0-9]+', target):
+                        addition_value = 0
+                        while not addition_value:
+                            addition_value = random.randint(self.numeric_addition_bound*-1,self.numeric_addition_bound)
+                        tokens[target_idx] = str(int(target) + addition_value)
+                    elif re.fullmatch(r'[-+]?([0-9]+\.[0-9]+|[0-9]+)', target):
+                        addition_value = 0.0
+                        while not addition_value:
+                            addition_value = random.uniform(self.numeric_addition_bound*-1, self.numeric_addition_bound)
+                        tokens[target_idx] = str(float(target) + addition_value)
                     elif re.fullmatch(r'[a-zA-Z]*', target):
                         str_list = list(self.get_str_list(target))
                         remove_index = random.choice(range(len(target)))

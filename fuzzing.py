@@ -4,31 +4,32 @@ import math
 import string
 
 class fuzzing():
-    def __init__(self):
-        self.fuzzing_rate = 0.3
-        self.numeric_addition_bound = 1
+    def __init__(self, fuzzing_rate=0.3, numeric_addition_bound=1, num_of_result=10):
+        self.fuzzing_rate = fuzzing_rate
+        self.numeric_addition_bound = numeric_addition_bound
+        self.num_of_result = num_of_result
         ...
         
     def __call__(self, test_cases:[str]) -> [[str],]:
         res = []
         for idx, test_case in enumerate(test_cases):
             test_case = test_case.rstrip()
-            print(idx)
-            tokens_origin = re.split(r'[ \n]', test_case)
-            spliters = re.findall(r'[ \n]', test_case)
+            tokens_origin = re.split(r'[ \n\{\},]', test_case)
+            spliters = re.findall(r'[ \n\{\},]', test_case)
             num_of_tokens = len(tokens_origin)
             num_of_sample = math.ceil(num_of_tokens*self.fuzzing_rate)
             weight = [1]*len(tokens_origin)
             # 첫 token이 정수라면 test case의 수를 나타내는 경우가 대부분이므로 선택하지 않는다.
             weight[0] = 0 if re.fullmatch(r'[0-9]*', tokens_origin[0]) and num_of_tokens > 1 else 1
             mutateds = []
-            for _ in range(10):
+            for _ in range(self.num_of_result):
                 tokens = tokens_origin[:]
                 targets = random.choices(range(num_of_tokens), weights=weight, k=num_of_sample)
                 mutated = ''
                 for target_idx in targets:
                     target = tokens[target_idx]
-                    # print(target)
+                    if not target: continue
+                    print('t', target)
                     if re.fullmatch(r'[-+]?[0-9]+', target):
                         addition_value = 0
                         while not addition_value:
@@ -41,12 +42,14 @@ class fuzzing():
                         tokens[target_idx] = str(float(target) + addition_value)
                     elif re.fullmatch(r'[a-zA-Z]*', target):
                         str_list = list(self.get_str_list(target))
+                        
                         remove_index = random.choice(range(len(target)))
                         str_list.remove(target[remove_index])
-                        tokens[target_idx] = target[:remove_index-1] + random.choice(str_list) + target[remove_index:]
+                        target = list(target)
+                        target[remove_index] = random.choice(str_list)
+                        tokens[target_idx] = ''.join(target)
                     else:
                         change = list(target)
-                        print(target)
                         while(''.join(change) == target and len(target) > 1 and len(set(change)) > 1):
                             random.shuffle(change)
                         tokens[target_idx] = ''.join(change)
@@ -70,6 +73,6 @@ class fuzzing():
             
 if __name__ == "__main__":
     fuzzer = fuzzing()
-    test_case = ['1 6 6 2 1 1\n', '5 1 4 4 2 1\n', '4 1 7 4 1 2\n', '3 1\n', '4 3\n', '10\n', '1\n', '3 3\nWWW\nBWW\nWWW\n', '5 6\nWWBBBW\nWWBBBW\nWWBBBW\nWWWWWW\nWWWWWW\n', '6\n1\n2\n3\n4\n5\n6\n', 'aabb\nabab\n', 'aaba\nabaa\n', '###.\n....\n####\n']
+    test_case = ['1 6 6 2 1 1\n', '5 1 4 4 2 1\n', '4 1 7 4 1 2\n', '3 1\n', '4 3\n', '10\n', '1\n', '3 3\nWWW\nBWW\nWWW\n', '5 6\nWWBBBW\nWWBBBW\nWWBBBW\nWWWWWW\nWWWWWW\n', '6\n1\n2\n3\n4\n5\n6\n', 'aabb\nabab\n', 'aaba\nabaa\n', '###.\n....\n####\n', '{a, b, c}\n', '{b, a, b, a}\n', '{}\n']
     print(fuzzer(test_case))
     pass

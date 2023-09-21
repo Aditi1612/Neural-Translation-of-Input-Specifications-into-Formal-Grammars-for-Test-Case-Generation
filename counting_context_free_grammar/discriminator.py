@@ -295,9 +295,9 @@ class discriminator():
                     raise Exception(f"Error10: counter have negative value")
                 return False
             # derivate
-            self.derivate(curr_variable, counter)
-                
-            if not self.test_case and not self.have_epsilon_transition:
+            curr_vatiable = self.derivate(curr_variable, counter)
+            
+            if not self.test_case and self.blink_token not in self.derivation_dict[curr_variable]:
                 if self.go_flag_point():
                     continue
                 raise("Error")
@@ -339,6 +339,8 @@ class discriminator():
         # DFS로 진행하기 위해 제거된 variable에서 생성된 variable들을 queue의 앞에 배치함
         curr_list.extend(self.derivation_queue)
         self.derivation_queue = curr_list
+        
+        return self.derivation_queue[0]
 
     def go_flag_point(self):
         while True:

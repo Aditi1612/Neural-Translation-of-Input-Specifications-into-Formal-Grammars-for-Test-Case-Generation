@@ -22,6 +22,8 @@ class discriminator():
         self.compare_dict = {}
         self.flag = {"queue": [], "variable": [], "deriv_idx": [], 'test_case': [], 'counter': []}
         self.test_case = ''
+        
+        self.have_epsilon_transition = False
 
         self.derivation_queue = [self.start_token]
 
@@ -41,19 +43,16 @@ class discriminator():
     pass
 
     def parsing(self):
-        # self.derivation_queue = [self.start_token]
-        # print(1)
 
         while self.derivation_queue:
+            counter = None
             # print(self.variable_dict)
             curr_variable = self.derivation_queue[0]
-            # print(self.derivation_queue)
             # print(self.flag)
-
+            # print(self.derivation_queue)
+            # print(self.test_case)
             if curr_variable == self.start_token:
-                # self.derivate(curr_variable)
                 self.derivate(curr_variable)
-                # self.derivation_queue = self.derivation_dict[curr_variable][0].split(' ')
                 continue
             if curr_variable == self.blink_token:
                 del self.derivation_queue[0]
@@ -74,6 +73,8 @@ class discriminator():
                     raise("Error")
             
             if self.RE_STRING.fullmatch(curr_variable):
+                if self.space_token in curr_variable:
+                    curr_variable = curr_variable.replace(self.space_token, ' ')
                 curr_sep = self.get_sep_token()
                 if curr_sep == -1:
                     if self.go_flag_point() : continue
@@ -144,14 +145,6 @@ class discriminator():
                         self.derivate(variable, counter)
                         continue
 
-                        '''
-                        if curr_token not in self.derivation_dict[variable]:
-                            derivate_list = self.derivation_dict[variable]
-                            if self.go_flag_point() : continue
-                            if self.generate_mode == "test":
-                                raise Exception(f"Error4: Invalid derivation\n\t{curr_token} not in {derivate_list}")
-                            return False
-                        '''
                     else:
                         curr_sep = self.get_sep_token()
                         if curr_sep == -1:
@@ -244,9 +237,24 @@ class discriminator():
                     self.variable_dict[curr_variable] = int(curr_token)
                 
                 else:
-                    if self.test_case.find(curr_variable) == 0:
-                        self.test_case = self.test_case.replace(curr_variable, '', 1)
-                        del self.derivation_queue[0]
+                    # 여기 작업할 차례
+                    curr_sep = self.get_sep_token()
+                    if curr_sep == -1:
+                        if self.go_flag_point() : continue
+                        if self.generate_mode == "test":
+                            raise Exception(f"Error3: Invalid value - can't find seperate token\n\t{self.derivation_queue}\n\t{self.test_case}")
+                        return False
+
+                    self.test_case = self.test_case.split(curr_sep)
+                    curr_token = self.test_case[0]
+                    self.test_case = curr_sep.join(self.test_case[1:])
+
+                    if curr_token == curr_variable:
+                        del self.derivation_queue[:2]
+                         
+                    # if self.test_case.find(curr_variable) == 0:
+                    #     self.test_case = self.test_case.replace(curr_variable, '', 1)
+                    #     del self.derivation_queue[0]
                     else:
                         if self.go_flag_point() : continue
                         if self.generate_mode == "test":
@@ -268,12 +276,14 @@ class discriminator():
                 if not self.RE_INTEGER.fullmatch(counter[:-1]):
                     # print(self.variable_dict)
                     # print(curr_variable)
-                    if '-' in counter or '+' in counter or '*' in counter or re.findall(r'[0-9]+[a-zA-Z]+', counter):
-                        counter = self.get_value(counter[:-1])
-                    else:
-                        counter = self.variable_dict[counter[:-1]]
+                    # if '-' in counter or '+' in counter or '*' in counter or re.findall(r'[0-9]+[a-zA-Z]+', counter):
+                    #     counter = self.get_value(counter[:-1])
+                    # else:
+                    #     counter = self.variable_dict[counter[:-1]]
+                    counter = self.get_value(counter[:-1])
                     counter = f'{counter}>'
-                    curr_variable = nonterminal + '_' + counter
+                    curr_variable = f'{nonterminal}_{counter}'
+                    
                 # <T_1> 등의 상황
                 if curr_variable in self.derivation_dict:
                     counter = int(counter[:-1])
@@ -285,10 +295,12 @@ class discriminator():
                     raise Exception(f"Error10: counter have negative value")
                 return False
             # derivate
-            try:
-                self.derivate(curr_variable, counter)
-            except:
-                self.derivate(curr_variable)
+            self.derivate(curr_variable, counter)
+                
+            if not self.test_case and not self.have_epsilon_transition:
+                if self.go_flag_point():
+                    continue
+                raise("Error")
 
         self.test_case = self.test_case.strip()
 
@@ -300,6 +312,7 @@ class discriminator():
         return False
 
     def derivate(self, curr_variable, counter = None, deriv_idx = None):
+        # print('c', curr_variable, counter)
         if len(self.derivation_dict[curr_variable]) > 1:
             self.flag['queue'].append(self.derivation_queue[:])
             self.flag['variable'].append(curr_variable)
@@ -317,10 +330,7 @@ class discriminator():
             if re.match(r'<.*_i-1>', variable):
                 nonterminal = variable.split('_')[0]
                 variable = f'{nonterminal}_{counter-1}>'
-            elif re.match(r'<.*_i>', variable):
-                nonterminal = variable.split('_')[0]
-                variable = f'{nonterminal}_{counter}>'
-            elif re.fullmatch(r'[^_<]*_.*', variable):
+            elif re.fullmatch(r'[^_<]*_i', variable):
                 nonterminal = variable.split('_')[0]
                 variable = f'{nonterminal}_{counter}'
             curr_list.append(variable)
@@ -341,7 +351,7 @@ class discriminator():
             idx = self.flag['deriv_idx'].pop() + 1
             test_case = self.flag['test_case'].pop()
             counter = self.flag['counter'].pop()
-
+            
             if len(self.derivation_dict[variable]) <= idx:
                 continue
 
@@ -487,6 +497,7 @@ class discriminator():
             for token in right_hand.split('|'):
                 token = token.strip()
                 self.derivation_dict[left_hand].append(token)
+                if self.blink_token in token: self.have_epsilon_transition = True
 
     def make_constraints_dict(self, constraints: list):
         for const in constraints:

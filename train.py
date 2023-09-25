@@ -63,7 +63,7 @@ def main(config: dict[str, Any]) -> None:
 
     train_data_path = data_dir / config['train_data']
     valid_data_path = data_dir / config['unlabeled_valid_data']
-    unlabeled_data_path = data_dir / config['unlabeled_train_data']
+    unlabeled_train_data_path = data_dir / config['unlabeled_train_data']
 
     def get_testcases_dictionary(testcases_path: Path) -> dict[str, list[str]]:
         testcases_dictionary: dict[str, list[str]] = {}
@@ -152,8 +152,9 @@ def main(config: dict[str, Any]) -> None:
         return average_correctness
 
     unlabeled_data_list: list[dict[str, Any]] = []
-    with jsonlines.open(unlabeled_data_path, 'r') as reader:
-        unlabeled_data_list.extend(tqdm(reader, desc='Loading unlabeled data'))
+    with jsonlines.open(unlabeled_train_data_path, 'r') as reader:
+        unlabeled_data_list.extend(
+            tqdm(reader, desc='Loading unlabeled train data'))
 
     production_model = T5ForConditionalGeneration.from_pretrained(pretrained)
     constraint_model = T5ForConditionalGeneration.from_pretrained(pretrained)
@@ -199,6 +200,9 @@ if __name__ == '__main__':
 
     data_loader_logger = logging.getLogger('data_loader.my_data_loader')
     data_loader_logger.setLevel(logging.WARNING)
+
+    # labeler_logger = logging.getLogger('pseudo_labeler')
+    # labeler_logger.setLevel(logging.WARNING)
 
     trainer_logger = logging.getLogger('trainer.my_model_trainer')
     trainer_logger.addHandler(logging.FileHandler('train.log'))

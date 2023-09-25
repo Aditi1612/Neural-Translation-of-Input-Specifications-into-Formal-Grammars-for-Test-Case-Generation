@@ -28,8 +28,7 @@ def main():
 
                 name = data['name']
 
-                # for solution_type in ['solutions', 'incorrect_solutions']:
-                for solution_type in ['incorrect_solutions']:
+                for solution_type in ['solutions', 'incorrect_solutions']:
 
                     solutions = data[solution_type]['solution']
                     solutions_dir = Path(

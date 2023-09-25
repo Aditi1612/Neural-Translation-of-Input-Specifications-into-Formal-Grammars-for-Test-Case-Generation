@@ -87,7 +87,7 @@ def get_validity(
 
         return mode, num_of_mode
 
-    if None in outputs:
+    if None in outputs or len(outputs) == 0:
         return TestcaseValidityResult(0, '', [])
 
     mode, num_of_mode = get_mode(outputs)

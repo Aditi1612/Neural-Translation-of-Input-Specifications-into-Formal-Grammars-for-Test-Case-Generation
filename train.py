@@ -62,16 +62,23 @@ def main(config: dict[str, Any]) -> None:
     target_tokenizer = CcfgTokenizer(source_tokenizer)
 
     train_data_path = data_dir / config['train_data']
-    valid_data_path = data_dir / config['valid_data']
+    valid_data_path = data_dir / config['unlabeled_valid_data']
     unlabeled_data_path = data_dir / config['unlabeled_train_data']
 
-    testcases_path = data_dir / config['unlabeled_valid_data']
-    testcases_dictionary: dict[str, list[str]] = {}
-    with jsonlines.open(testcases_path, 'r') as dataset:
-        for data in tqdm(dataset, desc='Loading testcases'):
-            name = data['name']
-            testcases = data['public_tests']['input']
-            testcases_dictionary[name] = testcases
+    def get_testcases_dictionary(testcases_path: Path) -> dict[str, list[str]]:
+        testcases_dictionary: dict[str, list[str]] = {}
+        with jsonlines.open(testcases_path, 'r') as dataset:
+            for data in tqdm(dataset, desc='Loading testcases'):
+                name = data['name']
+                testcases = data['public_tests']['input']
+                testcases_dictionary[name] = testcases
+        return testcases_dictionary
+
+    valid_testcases_path = data_dir / config['unlabeled_valid_data']
+    valid_testcases_dictionary = get_testcases_dictionary(valid_testcases_path)
+
+    train_testcases_path = data_dir / config['unlabeled_train_data']
+    train_testcases_dictionary = get_testcases_dictionary(train_testcases_path)
 
     train_data_loader = get_my_data_loader(
         train_data_path,
@@ -116,7 +123,7 @@ def main(config: dict[str, Any]) -> None:
         for i, labeled_valid_data in enumerate(map(label, valid_dataset)):
             grammar = labeled_valid_data['grammar']
             name = labeled_valid_data['name']
-            testcases = testcases_dictionary[name]
+            testcases = valid_testcases_dictionary[name]
             solution_dir = solution_prefix / name
 
             is_sound = get_soundness(
@@ -161,7 +168,7 @@ def main(config: dict[str, Any]) -> None:
         device,
         source_encoding_args,
         get_solution_dir=solution_prefix.joinpath,
-        get_testcases=lambda name: testcases_dictionary.get(name, []),
+        get_testcases=lambda name: train_testcases_dictionary.get(name, []),
         **get_soundness_args,
         **get_completeness_args
     )

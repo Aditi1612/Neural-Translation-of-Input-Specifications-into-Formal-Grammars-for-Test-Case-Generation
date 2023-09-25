@@ -4,7 +4,6 @@
   "solution_prefix": "data/solutions/solutions",
   "incorrect_solution_prefix": "data/solutions/solutions",
   "train_data": "labeled/train.jsonl",
-  "valid_data": "labeled/test.jsonl",
   "test_data": "labeled/test.jsonl",
   "unlabeled_train_data": "unlabeled/code_contests_train_python.jsonl",
   "unlabeled_valid_data": "unlabeled/code_contests_valid_python.jsonl",

@@ -24,6 +24,11 @@ TestcasesValidationResult = NamedTuple(
     ]
 )
 
+TestcaseValidityResult = NamedTuple(
+    'TestcaseValidityResult',
+    [('validity', float), ('mode', str), ('outputs', list[str])]
+)
+
 
 def is_all_same(xs: list[Any]) -> bool:
     if len(xs) == 0:
@@ -57,7 +62,7 @@ def get_validity(
     *,
     timeout: float = 2,
     num_solution_sampling: Optional[int] = None
-) -> tuple[float, str]:
+) -> TestcaseValidityResult:
 
     flag = (type(testcase) == str)
 
@@ -85,6 +90,8 @@ def get_validity(
         groupby_iterable = itertools.groupby(sorted(filter(None, outputs)))
         groups = [(k, len(list(v))) for k, v in groupby_iterable]
         groups = sorted(groups, key=lambda e: e[1], reverse=True)
+        if len(groups) == 0:
+            mode, num_of_mode = '', 0
         mode, num_of_mode = groups[0]
 
         return mode, num_of_mode
@@ -92,12 +99,15 @@ def get_validity(
     mode, num_of_mode = get_mode(outputs)
     validity = num_of_mode / len(outputs)
 
+    if validity != 1:
+        logger.debug(str(outputs))
+
     temp_file.seek(position)
 
     if flag:
         temp_file.close()
 
-    return validity, mode
+    return TestcaseValidityResult(validity, mode, outputs)
 
 
 def validate_testcase(
@@ -128,7 +138,7 @@ def validate_testcase(
         temp_file.write(testcase.encode('utf-8'))
         temp_file.flush()
 
-        validity, correct_output = get_validity(
+        validity, correct_output, _ = get_validity(
             testcase,
             correct_solution_dir,
             timeout=timeout,
@@ -297,7 +307,7 @@ def _get_soundness(
         [ccfg.generate() for _ in range(num_testcase_generation)])
 
     for generated_testcase in generated_testcases:
-        validity, _ = get_validity(
+        validity, _, outputs = get_validity(
             generated_testcase,
             solution_dir,
             timeout=timeout,
@@ -305,7 +315,7 @@ def _get_soundness(
         )
 
         if validity < 0.8:
-            return generated_testcase, []
+            return generated_testcase, outputs
 
     return None
 

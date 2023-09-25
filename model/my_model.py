@@ -44,13 +44,33 @@ class MyModel(torch.nn.Module):
 
         return production_output, constraint_output
 
+    def generate(
+        self,
+        input_ids: torch.Tensor,
+        generate_config: GenerationConfig
+    ) -> tuple[list[list[str]], list[list[str]]]:
+
+        self.eval()
+        with torch.no_grad():
+            productionss = self._generate_lists(
+                input_ids, generate_config, self.production_model)
+            constraintss = self._generate_lists(
+                input_ids, generate_config, self.constraint_model)
+
+            productionss = list(map(
+                MyModel._post_process_productions, productionss))
+            constraintss = list(map(
+                MyModel._post_process_constraints, constraintss))
+
+        return productionss, constraintss
+
     def _generate_decodings(
         self,
         input_ids: torch.Tensor,
-        generate_config: GenerationConfig,
+        generation_config: GenerationConfig,
         model: T5ForConditionalGeneration
     ) -> list[str]:
-        outputs = model.generate(input_ids, generate_config)
+        outputs = model.generate(input_ids, generation_config)
         decodings = self.target_tokenizer.batch_decode(
             outputs, skip_special_tokens=True)
         return decodings
@@ -66,12 +86,12 @@ class MyModel(torch.nn.Module):
     def _generate_lists(
         self,
         input_ids: torch.Tensor,
-        generate_config: GenerationConfig,
+        generation_config: GenerationConfig,
         model: T5ForConditionalGeneration,
 
     ) -> list[list[str]]:
         decodings = self._generate_decodings(
-            input_ids, generate_config, model)
+            input_ids, generation_config, model)
         return list(map(self._decoding_to_list, decodings))
 
     @staticmethod
@@ -102,21 +122,3 @@ class MyModel(torch.nn.Module):
         constraints = list(set(constraints))
         constraints = list(map(str.strip, constraints))
         return constraints
-
-    def generate(
-        self,
-        input_ids: torch.Tensor,
-        generate_config: GenerationConfig
-    ) -> tuple[list[list[str]], list[list[str]]]:
-
-        productionss = self._generate_lists(
-            input_ids, generate_config, self.production_model)
-        constraintss = self._generate_lists(
-            input_ids, generate_config, self.constraint_model)
-
-        productionss = list(map(
-            MyModel._post_process_productions, productionss))
-        constraintss = list(map(
-            MyModel._post_process_constraints, constraintss))
-
-        return productionss, constraintss

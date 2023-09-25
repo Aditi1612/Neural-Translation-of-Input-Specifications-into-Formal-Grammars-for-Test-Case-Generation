@@ -3,7 +3,7 @@ import random
 import copy
 import math
 from collections import deque
-from typing import (Optional, Protocol, Any, )
+from typing import (Optional, Protocol, Callable, Any, )
 
 import torch
 from torch.utils.data import DataLoader
@@ -41,7 +41,8 @@ class MyModelTrainer(BaseTrainer):
         optimizer: torch.optim.Optimizer,
         device: torch.device,
         data_loader: DataLoader,
-        valid_data_loader: Optional[DataLoader] = None,
+        # valid_data_loader: Optional[DataLoader] = None,
+        validate: Optional[Callable[[MyModel], float]] = None,
         unlabeled_data_list: list[dict[str, Any]] = [],
         pseudo_labeler: PseudoLabeler = lambda x, y: None,
         lr_scheduler: None = None,
@@ -56,7 +57,7 @@ class MyModelTrainer(BaseTrainer):
         num_beams: int = 10,
         repetition_penalty: float = 2.5,
         pseudo_label_samples: int = 100,
-        early_stopping_patience: int = 10,
+        early_stopping_patience: int = 5,
     ) -> None:
         super().__init__(
             model, optimizer,
@@ -65,7 +66,8 @@ class MyModelTrainer(BaseTrainer):
         self.model: MyModel = model
         self.device = device
         self.data_loader = data_loader
-        self.valid_data_loader = valid_data_loader
+        # self.valid_data_loader = valid_data_loader
+        self._validate_callback = validate
         unlabeled_data_list = copy.deepcopy(unlabeled_data_list)
         random.shuffle(unlabeled_data_list)
         self.unlabeled_data_deque = deque(unlabeled_data_list)
@@ -81,7 +83,7 @@ class MyModelTrainer(BaseTrainer):
 
         self.source_tokenizer = model.source_tokenizer
         self.target_tokenizer = model.target_tokenizer
-        self.do_validation = valid_data_loader is not None
+        self.do_validation = validate is not None
         self.do_pseudo_labeling = len(unlabeled_data_list) > 0
         self.pseudo_labeled_dataset = None
         self.pseudo_labeled_data_loader: Optional[DataLoader] = None
@@ -95,22 +97,36 @@ class MyModelTrainer(BaseTrainer):
     def train(self) -> list[dict[str, float]]:
         losses: list[dict[str, float]] = []
         patient_count = -1
-        best_loss = 0.0
+        best_correctness = 0.0
         for epoch in range(self.start_epoch, self.epochs + 1):
             loss_dictionary = self._train_epoch(epoch)
             losses.append(loss_dictionary)
 
-            if self.do_early_stopping:
-                valid_loss = loss_dictionary.get('valid', 0)
-                if valid_loss > best_loss:
+            valid_correctness = loss_dictionary.get('valid', None)
+            if valid_correctness is not None:
+                if (
+                    self.do_early_stopping
+                    and (valid_correctness < best_correctness)
+                ):
                     patient_count += 1
                     if patient_count >= self.early_stopping_patience:
                         logger.info(f"Early stopping at epoch {epoch}")
-                        self._save_checkpoint(epoch)
+                        self._save_checkpoint(
+                            epoch,
+                            basename=f'early-stop-checkpoint-epoch{epoch}.pth'
+                        )
                         break
                 else:
                     patient_count = 0
-                    best_loss = valid_loss
+                    best_correctness = valid_correctness
+                    logger.info(
+                        "Best correctness at epoch {}: {:.6f}%"
+                        .format(epoch, best_correctness * 100)
+                    )
+                    self._save_checkpoint(
+                        epoch,
+                        basename=f'best-checkpoint-epoch{epoch}.pth'
+                    )
 
             if epoch % self.save_period == 0:
                 self._save_checkpoint(epoch)
@@ -203,20 +219,10 @@ class MyModelTrainer(BaseTrainer):
 
     def _valid_epoch(self, epoch: int) -> float:
 
-        assert self.valid_data_loader is not None
-
-        losses = []
-        self.model.eval()
-        with torch.no_grad():
-            for batch_index, batch in enumerate(self.valid_data_loader):
-
-                loss = self._get_batch_loss(batch)
-                losses.append(loss.item())
-
-        average_loss = _average(losses)
-        logger.info(
-            f"Train epoch: {epoch} Avg. valid loss: {average_loss}")
-        return average_loss
+        # assert self.valid_data_loader is not None
+        assert self._validate_callback is not None
+        valid_correctness = self._validate_callback(self.model)
+        return valid_correctness
 
     def _pseudo_label(self, epoch: int) -> None:
 
@@ -233,7 +239,7 @@ class MyModelTrainer(BaseTrainer):
             if index % logging_frequency == 0:
                 logger.debug(
                     "Pseudo-labeling: {} {:.2f}%"
-                    .format(epoch, index/pseudo_label_samples)
+                    .format(epoch, 100 * index/pseudo_label_samples)
                 )
             unlabeled_data = self.unlabeled_data_deque.popleft()
             description = unlabeled_data['description']

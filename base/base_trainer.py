@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from abc import abstractmethod
+from typing import Optional
 
 import torch
 
@@ -38,7 +39,9 @@ class BaseTrainer:
                 self._save_checkpoint(epoch)
         return losses
 
-    def _save_checkpoint(self, epoch: int) -> None:
+    def _save_checkpoint(
+        self, epoch: int, basename: Optional[str] = None
+    ) -> None:
         arch = type(self.model).__name__
         optimizer_type = type(self.optimizer).__name__
 
@@ -50,7 +53,9 @@ class BaseTrainer:
             'optimizer_type': optimizer_type,
         }
         os.makedirs(self.checkpoint_dir, exist_ok=True)
-        filename = self.checkpoint_dir / f'checkpoint-epoch{epoch}.pth'
+        if basename is None:
+            basename = f'checkpoint-epoch{epoch}.pth'
+        filename = self.checkpoint_dir / basename
         torch.save(state, filename)
 
     def _resume_checkpoint(self, resume_path: os.PathLike) -> None:

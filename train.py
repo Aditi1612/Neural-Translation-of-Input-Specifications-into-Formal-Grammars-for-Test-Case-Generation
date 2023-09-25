@@ -14,10 +14,13 @@ from transformers import RobertaTokenizer  # type: ignore [import]
 from transformers import T5ForConditionalGeneration  # type: ignore [import]
 
 from data_loader import get_my_data_loader
+from data_loader import MyDataset
 from model import MyModel
 from tokenizer import CountingContextFreeGrammarTokenizer as CcfgTokenizer
 from trainer import MyModelTrainer
 from pseudo_labeler import get_pseudo_labeler_correct
+from grammar_tester import test_soundness
+from grammar_tester import test_completeness
 
 
 # Fix random seeds for reproducibility
@@ -33,6 +36,12 @@ def main(config: dict[str, Any]) -> None:
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logging.info(f"Use device: {device}")
+
+    solution_prefix = Path(config['solution_prefix'])
+    test_labeling_config = config['validate_labeling']
+
+    test_soundness_args = test_labeling_config['test_soundness']['args']
+    test_completeness_args = test_labeling_config['test_completeness']['args']
 
     data_loader_args = config['data_loader']['args']
     data_dir = Path(config['data_dir'])
@@ -54,8 +63,7 @@ def main(config: dict[str, Any]) -> None:
     train_data_path = data_dir / config['train_data']
     valid_data_path = data_dir / config['valid_data']
     unlabeled_data_path = data_dir / config['unlabeled_train_data']
-    testcases_path = (
-        data_dir / 'unlabeled' / 'code_contests_train_python.jsonl')
+    testcases_path = data_dir / config['unlabeled_valid_data']
 
     testcases_dictionary: dict[str, list[str]] = {}
     with jsonlines.open(testcases_path, 'r') as dataset:
@@ -74,13 +82,74 @@ def main(config: dict[str, Any]) -> None:
         **data_loader_args
     )
 
-    valid_data_loader = get_my_data_loader(
-        valid_data_path,
-        source_tokenizer,
-        target_tokenizer,
-        source_encoding_args,
-        **data_loader_args
-    )
+    def validate(model: MyModel) -> float:
+        def label(unlabeled: dict[str, Any]) -> dict[str, Any]:
+            prefix = "summarize: "
+            name = unlabeled['name']
+            description = unlabeled['description']
+
+            # Tokenize description
+            specification = MyDataset.get_specification(description)
+            encoding = source_tokenizer.encode(
+                prefix + specification, **source_encoding_args)
+            input_ids = encoding.to(device)
+
+            # Generate grammar
+            generated_productions_list, generated_constraints_list = (
+                model.generate(input_ids, generation_config))
+            productions = generated_productions_list[0]
+            constraints = generated_constraints_list[0]
+            grammar = {'productions': productions, 'constraints': constraints}
+
+            labeled_data: dict[str, Any] = {}
+            labeled_data['name'] = name
+            labeled_data['description'] = description
+            labeled_data['grammar'] = grammar
+
+            return labeled_data
+
+        soundness = []
+        completeness = []
+        valid_dataset: list[dict[str, Any]] = []
+        with jsonlines.open(valid_data_path, 'r') as f:
+            valid_dataset.extend(f)
+
+        for i, labeled_valid_data in enumerate(map(label, valid_dataset)):
+            grammar = labeled_valid_data['grammar']
+            name = labeled_valid_data['name']
+            testcases = testcases_dictionary[name]
+            solution_dir = solution_prefix / name
+
+            is_sound = test_soundness(
+                grammar,
+                solution_dir,
+                name=name,
+                **test_soundness_args
+            )
+            is_complete = test_completeness(
+                grammar, testcases,
+                name=name,
+                **test_completeness_args
+            )
+            if i % np.ceil(len(valid_dataset) / 10) == 0:
+                logging.debug(
+                    "Validation {:.2f}%"
+                    .format(i/len(valid_dataset) * 100)
+                )
+
+            soundness.append(is_sound)
+            completeness.append(is_complete)
+        correctness = list(map(lambda e: all(e), zip(completeness, soundness)))
+
+        average_soundness = np.mean(soundness)
+        average_completeness = np.mean(completeness)
+        average_correctness = np.mean(correctness)
+
+        print(f"Sound: {average_soundness * 100:.2f}%")
+        print(f"Complete: {average_completeness * 100:.2f}%")
+        print(f"Sound and Complete: {average_correctness * 100:.2f}%")
+
+        return average_correctness
 
     unlabeled_data_list: list[dict[str, Any]] = []
     with jsonlines.open(unlabeled_data_path, 'r') as reader:
@@ -110,7 +179,7 @@ def main(config: dict[str, Any]) -> None:
         optimizer,
         device,
         train_data_loader,
-        valid_data_loader,
+        validate,
         unlabeled_data_list,
         pseudo_labeler=pseudo_labeler,
         **trainer_args)
@@ -124,6 +193,12 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     ccfg_logger = logging.getLogger('counting_context_free_grammar')
     ccfg_logger.setLevel(logging.INFO)
+
+    grammar_tester_logger = logging.getLogger('grammar_tester')
+    grammar_tester_logger.setLevel(logging.ERROR)
+
+    trainer_logger = logging.getLogger('trainer.my_model_trainer')
+    trainer_logger.addHandler(logging.FileHandler('train.log'))
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--loss-path')

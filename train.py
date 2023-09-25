@@ -56,7 +56,7 @@ def main(config: dict[str, Any]) -> None:
     train_config = config['train']
     logging.info(train_config)
     generation_config = GenerationConfig(**train_config['generation_config'])
-    loss_path = Path(train_config.get('loss_path', './dev/null'))
+    loss_path = Path(train_config['loss_path'])
 
     source_tokenizer = RobertaTokenizer.from_pretrained(config['pretrained'])
     target_tokenizer = CcfgTokenizer(source_tokenizer)
@@ -190,6 +190,7 @@ def main(config: dict[str, Any]) -> None:
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
+
     ccfg_logger = logging.getLogger('counting_context_free_grammar')
     ccfg_logger.setLevel(logging.INFO)
 
@@ -206,7 +207,7 @@ if __name__ == '__main__':
     with open('./config.json') as fp:
         config = json.load(fp)
 
-    defaults = {'loss_path': './dev/null'}
+    defaults = {'loss_path': '/dev/null'}
 
     task = 'train'
     task_config = config.setdefault(task, {})

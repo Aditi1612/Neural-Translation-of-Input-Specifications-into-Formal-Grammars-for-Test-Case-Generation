@@ -84,7 +84,8 @@ class MyModelTrainer(BaseTrainer):
         self.source_tokenizer = model.source_tokenizer
         self.target_tokenizer = model.target_tokenizer
         self.do_validation = validate is not None
-        self.do_pseudo_labeling = len(unlabeled_data_list) > 0
+        self.do_pseudo_labeling = (
+            len(unlabeled_data_list) > 0 and (pseudo_label_period > 0))
         self.pseudo_labeled_dataset = None
         self.pseudo_labeled_data_loader: Optional[DataLoader] = None
         if self.do_pseudo_labeling:

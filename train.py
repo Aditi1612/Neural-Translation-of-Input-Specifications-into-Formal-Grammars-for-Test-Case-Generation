@@ -201,17 +201,18 @@ if __name__ == '__main__':
     data_loader_logger = logging.getLogger('data_loader.my_data_loader')
     data_loader_logger.setLevel(logging.WARNING)
 
-    # labeler_logger = logging.getLogger('pseudo_labeler')
-    # labeler_logger.setLevel(logging.WARNING)
+    labeler_logger = logging.getLogger('pseudo_labeler')
+    labeler_logger.setLevel(logging.WARNING)
 
     trainer_logger = logging.getLogger('trainer.my_model_trainer')
     trainer_logger.addHandler(logging.FileHandler('train.log'))
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--loss-path')
+    parser.add_argument('--config', default='./config.json')
     args = parser.parse_args()
 
-    with open('./config.json') as fp:
+    with open(args.config) as fp:
         config = json.load(fp)
 
     defaults = {'loss_path': '/dev/null'}

@@ -27,15 +27,18 @@ def main():
             for data in tqdm(python_dataset):
 
                 name = data['name']
-                solutions = data['solutions']['solution']
 
-                solutions_dir = Path(f'data/solutions/{name}')
-                os.makedirs(solutions_dir, exist_ok=True)
+                # for solution_type in ['solutions', 'incorrect_solutions']:
+                for solution_type in ['incorrect_solutions']:
 
-                for idx, solution in enumerate(solutions):
-                    solution_path = solutions_dir / f'{idx}.py'
-                    with open(solution_path, 'w') as f:
-                        f.write(solution)
+                    solutions = data[solution_type]['solution']
+                    solutions_dir = Path(
+                        f'data/solutions/{solution_type}/{name}')
+                    os.makedirs(solutions_dir, exist_ok=True)
+                    for idx, solution in enumerate(solutions):
+                        solution_path = solutions_dir / f'{idx}.py'
+                        with open(solution_path, 'w') as f:
+                            f.write(solution)
 
 
 if __name__ == "__main__":

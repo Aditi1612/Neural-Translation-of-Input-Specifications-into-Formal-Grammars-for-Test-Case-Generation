@@ -69,6 +69,8 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
             logger.warning(e)
             return self._fallback_encode(text)
         encoding = []
+        text = f' {Ccfg.derivation_token} '.join(
+            map(str.strip, text.split(Ccfg.derivation_token)))
         for word in text.split():
             encoding.extend(self._encode_token(word))
         self.clear()
@@ -202,7 +204,7 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
         if len(splited_output) > 1:
             constraints = list(filter(
                 lambda e: len(e) > 0,
-                map(str.strip,splited_output[1].split(self.subseparator))
+                map(str.strip, splited_output[1].split(self.subseparator))
             ))
         constraints = list(set(constraints))
         return {

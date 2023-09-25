@@ -49,7 +49,7 @@ class MyDataset(Dataset):
         start = 0 if start == len(description) else start
         end = len(description) if end < 0 else end
 
-        specification = description[start:].strip()
+        specification = description[start:end].strip()
         return specification
 
     @staticmethod

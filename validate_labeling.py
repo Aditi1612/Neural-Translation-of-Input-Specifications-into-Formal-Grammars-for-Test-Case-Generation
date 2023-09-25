@@ -89,6 +89,7 @@ def main(config: dict[str, Any]):
 
 if __name__ == "__main__":
     logger = logging.getLogger('validator')
+    logger.setLevel(logging.INFO)
     logger.addHandler(logging.FileHandler('validate_labeling.log'))
 
     parser = argparse.ArgumentParser()

@@ -30,13 +30,6 @@ TestcaseValidityResult = NamedTuple(
 )
 
 
-def is_all_same(xs: list[Any]) -> bool:
-    if len(xs) == 0:
-        return True
-    e = xs[0]
-    return all(x == e for x in xs)
-
-
 def get_stdout(python_file: Path, stdin: io.IOBase) -> Optional[str]:
     stream_position = stdin.tell()
     try:
@@ -87,20 +80,27 @@ def get_validity(
     outputs = [get_stdout(solution, temp_file) for solution in solutions]
 
     def get_mode(xs: list[Any]):
-        groupby_iterable = itertools.groupby(sorted(filter(None, outputs)))
+        groupby_iterable = itertools.groupby(sorted(outputs))
         groups = [(k, len(list(v))) for k, v in groupby_iterable]
         groups = sorted(groups, key=lambda e: e[1], reverse=True)
-        if len(groups) == 0:
-            mode, num_of_mode = '', 0
         mode, num_of_mode = groups[0]
 
         return mode, num_of_mode
+
+    if None in outputs:
+        return TestcaseValidityResult(0, '', [])
 
     mode, num_of_mode = get_mode(outputs)
     validity = num_of_mode / len(outputs)
 
     if validity != 1:
-        logger.debug(str(outputs))
+        logger.info("v" * 80)
+        logger.info("Testcase:")
+        for line in temp_file.readlines():
+            logger.info(line.decode('utf-8').strip())
+        logger.info("Outputs:")
+        logger.info(str(outputs))
+        temp_file.seek(0)
 
     temp_file.seek(position)
 
@@ -294,6 +294,7 @@ def _get_soundness(
     num_solution_sampling: Optional[int],
     num_testcase_generation: int,
     timeout: float,
+    validity_threshold: float = 0.8,
 ) -> Optional[tuple[str, list[str]]]:
 
     productions = cast(list[str], grammar['productions'])
@@ -314,7 +315,12 @@ def _get_soundness(
             num_solution_sampling=num_solution_sampling
         )
 
-        if validity < 0.8:
+        if validity < 1:
+            logger.info("Solution Directory:")
+            logger.info(solution_dir)
+            logger.info("^" * 80)
+
+        if validity < validity_threshold:
             return generated_testcase, outputs
 
     return None

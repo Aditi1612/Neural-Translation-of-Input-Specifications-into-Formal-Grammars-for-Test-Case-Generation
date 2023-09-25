@@ -55,8 +55,9 @@ def main(config: dict[str, Any]) -> None:
     # Set variables related to `train_config`
     train_config = config['train']
     logging.info(train_config)
-    generation_config = GenerationConfig(**train_config['generation_config'])
     loss_path = Path(train_config['loss_path'])
+    generation_config = GenerationConfig(**train_config['generation_config'])
+    pseudo_labeler_args = train_config['pseudo_labeler']['args']
 
     source_tokenizer = RobertaTokenizer.from_pretrained(config['pretrained'])
     target_tokenizer = CcfgTokenizer(source_tokenizer)
@@ -170,8 +171,7 @@ def main(config: dict[str, Any]) -> None:
         source_encoding_args,
         get_solution_dir=solution_prefix.joinpath,
         get_testcases=lambda name: train_testcases_dictionary.get(name, []),
-        **get_soundness_args,
-        **get_completeness_args
+        **pseudo_labeler_args,
     )
 
     trainer = MyModelTrainer(

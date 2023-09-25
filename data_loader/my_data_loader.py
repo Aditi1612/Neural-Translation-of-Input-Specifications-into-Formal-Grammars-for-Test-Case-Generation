@@ -1,6 +1,6 @@
 import os
+import logging
 
-import torch
 import transformers  # type: ignore [import]
 from torch.utils.data import DataLoader
 from typing import (Any, cast, )
@@ -11,6 +11,9 @@ from tokenizer import CountingContextFreeGrammarTokenizer as CcfgTokenizer
 
 # NOTE: https://huggingface.co/docs/transformers/model_doc/t5#training
 PREFIX = "summarize: "
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_my_data_loader(
@@ -34,6 +37,11 @@ def get_my_data_loader(
         stringifieds = [cast(str, sample['stringified']) for sample in samples]
         production_encodings, constraint_encodings = (
             target_tokenizer.batch_encode_to_splited(stringifieds))
+
+        logger.debug("Productions:")
+        logger.debug(source_tokenizer.batch_decode(production_encodings))
+        logger.debug("Constraints:")
+        logger.debug(source_tokenizer.batch_decode(constraint_encodings))
 
         return {
             'samples': samples,

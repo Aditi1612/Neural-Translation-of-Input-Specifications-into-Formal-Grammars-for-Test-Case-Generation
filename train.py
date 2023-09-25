@@ -197,6 +197,9 @@ if __name__ == '__main__':
     validator_logger = logging.getLogger('validator')
     validator_logger.setLevel(logging.ERROR)
 
+    data_loader_logger = logging.getLogger('data_loader.my_data_loader')
+    data_loader_logger.setLevel(logging.WARNING)
+
     trainer_logger = logging.getLogger('trainer.my_model_trainer')
     trainer_logger.addHandler(logging.FileHandler('train.log'))
 

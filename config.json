@@ -38,7 +38,7 @@
       "num_beams": 5,
       "repetition_penalty": 2.5,
       "early_stopping": true,
-      "num_return_sequences": 1
+      "num_return_sequences": 5
     }
   },
   "validate_testcases": {
@@ -47,13 +47,13 @@
   "validate_labeling": {
     "get_soundness": {
       "args": {
-        "num_testcase_generation": 5,
-        "num_solution_sampling": 5
+        "num_testcase_generation": 10,
+        "num_solution_sampling": 10
       }
     },
     "get_completeness": {
       "args": {
-        "num_testcase_sampling": 5
+        "num_testcase_sampling": 10
       }
     }
   },

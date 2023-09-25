@@ -256,6 +256,7 @@ def get_soundness(
     num_testcase_generation: int,
     num_solution_sampling: Optional[int] = None,
     timeout: float = 2,
+    validity_threshold: float = 0.8,
 ) -> bool:
     try:
         ret = _get_soundness(
@@ -264,6 +265,7 @@ def get_soundness(
             num_solution_sampling,
             num_testcase_generation,
             timeout,
+            validity_threshold,
         )
         if ret is None:
             return True
@@ -294,7 +296,7 @@ def _get_soundness(
     num_solution_sampling: Optional[int],
     num_testcase_generation: int,
     timeout: float,
-    validity_threshold: float = 0.8,
+    validity_threshold: float,
 ) -> Optional[tuple[str, list[str]]]:
 
     productions = cast(list[str], grammar['productions'])

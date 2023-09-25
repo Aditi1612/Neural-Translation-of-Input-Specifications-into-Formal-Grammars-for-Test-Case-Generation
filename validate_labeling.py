@@ -12,8 +12,8 @@ from tqdm import tqdm
 from tqdm.contrib.logging import tqdm_logging_redirect
 from data_loader import MyDataset
 
-from grammar_tester import test_completeness
-from grammar_tester import test_soundness
+from validator import get_completeness
+from validator import get_soundness
 
 
 # Fix random seeds for reproducibility
@@ -29,13 +29,14 @@ def main(config: dict[str, Any]):
 
     solution_prefix = Path(config['solution_prefix'])
 
-    # Set variables related to `test_labeling_config`
-    test_labeling_config = config['validate_labeling']
-    logging.info(test_labeling_config)
-    labeled_path = test_labeling_config['labeled_data']
-    testcases_path = test_labeling_config['testcase']
-    test_soundness_args = test_labeling_config['test_soundness']['args']
-    test_completeness_args = test_labeling_config['test_completeness']['args']
+    # Set variables related to `validate_labeling_config`
+    validate_labeling_config = config['validate_labeling']
+    logging.info(validate_labeling_config)
+    labeled_path = validate_labeling_config['labeled_data']
+    testcases_path = validate_labeling_config['testcase']
+    get_soundness_args = validate_labeling_config['get_soundness']['args']
+    get_completeness_args = (
+        validate_labeling_config['get_completeness']['args'])
 
     testcases_dictionary: dict[list[str]] = {}
     with jsonlines.open(testcases_path, 'r') as dataset:
@@ -58,18 +59,18 @@ def main(config: dict[str, Any]):
         testcases = testcases_dictionary[name]
         solution_dir = solution_prefix / name
 
-        is_sound = test_soundness(
+        is_sound = get_soundness(
             grammar,
             solution_dir,
             name=name,
             specification=description,
-            **test_soundness_args
+            **get_soundness_args
         )
-        is_complete = test_completeness(
+        is_complete = get_completeness(
             grammar, testcases,
             name=name,
             specification=specification,
-            **test_completeness_args
+            **get_completeness_args
         )
 
         soundness.append(is_sound)
@@ -87,7 +88,7 @@ def main(config: dict[str, Any]):
 
 
 if __name__ == "__main__":
-    logger = logging.getLogger('grammar_tester')
+    logger = logging.getLogger('validator')
     logger.addHandler(logging.FileHandler('validate_labeling.log'))
 
     parser = argparse.ArgumentParser()

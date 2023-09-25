@@ -19,8 +19,8 @@ from model import MyModel
 from tokenizer import CountingContextFreeGrammarTokenizer as CcfgTokenizer
 from trainer import MyModelTrainer
 from pseudo_labeler import get_pseudo_labeler_correct
-from grammar_tester import test_soundness
-from grammar_tester import test_completeness
+from validator import get_soundness
+from validator import get_completeness
 
 
 # Fix random seeds for reproducibility
@@ -38,10 +38,11 @@ def main(config: dict[str, Any]) -> None:
     logging.info(f"Use device: {device}")
 
     solution_prefix = Path(config['solution_prefix'])
-    test_labeling_config = config['validate_labeling']
 
-    test_soundness_args = test_labeling_config['test_soundness']['args']
-    test_completeness_args = test_labeling_config['test_completeness']['args']
+    validate_labeling_config = config['validate_labeling']
+    get_soundness_args = validate_labeling_config['get_soundness']['args']
+    get_completeness_args = (
+        validate_labeling_config['get_completeness']['args'])
 
     data_loader_args = config['data_loader']['args']
     data_dir = Path(config['data_dir'])
@@ -63,15 +64,13 @@ def main(config: dict[str, Any]) -> None:
     train_data_path = data_dir / config['train_data']
     valid_data_path = data_dir / config['valid_data']
     unlabeled_data_path = data_dir / config['unlabeled_train_data']
-    testcases_path = data_dir / config['unlabeled_valid_data']
 
+    testcases_path = data_dir / config['unlabeled_valid_data']
     testcases_dictionary: dict[str, list[str]] = {}
     with jsonlines.open(testcases_path, 'r') as dataset:
         for data in tqdm(dataset, desc='Loading testcases'):
             name = data['name']
             testcases = data['public_tests']['input']
-            # testcases.extend(data['private_tests']['input'])
-            # testcases.extend(data['generated_tests']['input'])
             testcases_dictionary[name] = testcases
 
     train_data_loader = get_my_data_loader(
@@ -120,17 +119,11 @@ def main(config: dict[str, Any]) -> None:
             testcases = testcases_dictionary[name]
             solution_dir = solution_prefix / name
 
-            is_sound = test_soundness(
-                grammar,
-                solution_dir,
-                name=name,
-                **test_soundness_args
-            )
-            is_complete = test_completeness(
-                grammar, testcases,
-                name=name,
-                **test_completeness_args
-            )
+            is_sound = get_soundness(
+                grammar, solution_dir, name=name, **get_soundness_args)
+            is_complete = get_completeness(
+                grammar, testcases, name=name, **get_completeness_args)
+
             if i % np.ceil(len(valid_dataset) / 10) == 0:
                 logging.debug(
                     "Validation {:.2f}%"
@@ -169,9 +162,8 @@ def main(config: dict[str, Any]) -> None:
         source_encoding_args,
         get_solution_dir=solution_prefix.joinpath,
         get_testcases=lambda name: testcases_dictionary.get(name, []),
-        num_testcase_generation=10,
-        num_solution_sampling=10,
-        num_testcase_sampling=10
+        **get_soundness_args,
+        **get_completeness_args
     )
 
     trainer = MyModelTrainer(
@@ -194,8 +186,8 @@ if __name__ == '__main__':
     ccfg_logger = logging.getLogger('counting_context_free_grammar')
     ccfg_logger.setLevel(logging.INFO)
 
-    grammar_tester_logger = logging.getLogger('grammar_tester')
-    grammar_tester_logger.setLevel(logging.ERROR)
+    validator_logger = logging.getLogger('validator')
+    validator_logger.setLevel(logging.ERROR)
 
     trainer_logger = logging.getLogger('trainer.my_model_trainer')
     trainer_logger.addHandler(logging.FileHandler('train.log'))

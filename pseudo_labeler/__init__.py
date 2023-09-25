@@ -1,4 +1,4 @@
-import logging
+# import logging
 import itertools
 from pathlib import Path
 from typing import (Any, Optional, Callable, )
@@ -9,9 +9,9 @@ from transformers import RobertaTokenizer  # type: ignore [import]
 
 from counting_context_free_grammar import CountingContextFreeGrammar as Ccfg
 from data_loader import MyDataset
-from grammar_tester import test_soundness
-from grammar_tester import test_completeness
-from grammar_tester import test_correctness
+from validator import get_soundness
+from validator import get_completeness
+from validator import get_correctness
 from model import MyModel
 from trainer import PseudoLabeler
 
@@ -150,7 +150,7 @@ def get_pseudo_labeler_sound(
         solution_dir = get_solution_dir(name)
 
         def strategy(grammar: Grammar) -> bool:
-            return test_soundness(
+            return get_soundness(
                 grammar, solution_dir,
                 num_testcase_generation=num_testcase_generation,
             )
@@ -176,7 +176,7 @@ def get_pseudo_labeler_complete(
         testcases = testcases_dictionary[name]
 
         def strategy(grammar: Grammar) -> bool:
-            is_complete = test_completeness(
+            is_complete = get_completeness(
                 grammar, testcases, name=name,
                 num_testcase_sampling=num_testcase_sampling
             )
@@ -208,7 +208,7 @@ def get_pseudo_labeler_correct(
         testcases = get_testcases(name)
 
         def strategy(grammar: Grammar) -> bool:
-            is_correct = test_correctness(
+            is_correct = get_correctness(
                 grammar, solution_dir, testcases, name,
                 num_testcase_generation=num_testcase_generation,
                 num_solution_sampling=num_solution_sampling,

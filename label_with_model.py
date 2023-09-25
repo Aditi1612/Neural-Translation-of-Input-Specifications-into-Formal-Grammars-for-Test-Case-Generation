@@ -40,16 +40,21 @@ def main(config: dict[str, Any]) -> None:
     label_config = config['label']
     logging.info(label_config)
     model_dir = Path(label_config['model_dir'])
+    if label_config['model_pth'] is None:
+        checkpoint_path = None
+    else:
+        checkpoint_path = Path(label_config['model_pth'])
     generation_config = GenerationConfig(**label_config['generation_config'])
     unlabeled_data_path = Path(label_config['unlabeled_data'])
     output_path = label_config['output']
 
-    checkpoint_paths = model_dir.glob('*.pth')
-    latest_checkpoint_path = max(checkpoint_paths, key=os.path.getctime)
+    if checkpoint_path is None:
+        checkpoint_paths = model_dir.glob('*.pth')
+        checkpoint_path = max(checkpoint_paths, key=os.path.getctime)
 
     logging.info(f"Use device: {device}")
     logging.info(f"Dataset: {unlabeled_data_path}")
-    logging.info(f"Checkpoint: {latest_checkpoint_path}")
+    logging.info(f"Checkpoint: {checkpoint_path}")
 
     # Create a data loader
     source_tokenizer = RobertaTokenizer.from_pretrained(pretrained_model_name)
@@ -70,7 +75,7 @@ def main(config: dict[str, Any]) -> None:
         source_tokenizer,
         target_tokenizer
     )
-    checkpoint = torch.load(latest_checkpoint_path, map_location=device)
+    checkpoint = torch.load(checkpoint_path, map_location=device)
     state_dict = checkpoint['model_state_dict']
     model.load_state_dict(state_dict)
     model = model.to(device)
@@ -112,6 +117,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--model-dir')
+    parser.add_argument('--model-pth')
     parser.add_argument('--unlabeled-data')
     parser.add_argument('--output')
     parser.add_argument('--test', action='store_true')
@@ -135,6 +141,7 @@ if __name__ == "__main__":
 
     defaults = {
         'model_dir': model_dir,
+        'model_pth': None,
         'unlabeled_data': unlabeled_data,
         'output': output
     }

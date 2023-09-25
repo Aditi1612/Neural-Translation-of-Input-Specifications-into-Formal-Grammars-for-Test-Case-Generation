@@ -248,6 +248,9 @@ class MyModelTrainer(BaseTrainer):
             if pseudo_label is None:
                 failed_data_list.append(unlabeled_data)
                 continue
+            else:
+                logger.debug("Grammar:")
+                logger.debug(pseudo_label)
             unlabeled_data['grammar'] = pseudo_label
             unlabeled_data['specification'] = specification
             pseudo_labeled_data_list.append(unlabeled_data)

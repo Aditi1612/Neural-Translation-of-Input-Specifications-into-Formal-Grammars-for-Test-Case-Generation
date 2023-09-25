@@ -1,4 +1,4 @@
-# import logging
+import logging
 import itertools
 from pathlib import Path
 from typing import (Any, Optional, Callable, )
@@ -21,6 +21,8 @@ Data = dict[str, Any]
 Grammar = dict[str, list[str]]
 Generation = tuple[list[list[str]], list[list[str]]]
 
+logger = logging.getLogger(__name__)
+
 
 def _get_unlabeled_data_to_generation(
     tokenizer: RobertaTokenizer,
@@ -39,6 +41,16 @@ def _get_unlabeled_data_to_generation(
         input_ids = tokenizer.encode(PREFIX + specification, **encoding_args)
         input_ids = input_ids.to(device)
         generation = model.generate(input_ids, generation_config)
+
+        productions = generation[0][0]
+        constraints = generation[1][0]
+        grammar = {'productions': productions, 'constraints': constraints}
+
+        logger.debug("Specification:")
+        logger.debug(specification)
+        logger.debug("Top-1 Grammar:")
+        logger.debug(str(grammar))
+
         return generation
 
     return _unlabeled_data_to_generation

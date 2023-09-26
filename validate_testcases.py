@@ -54,11 +54,12 @@ def f(
     )
 
     num_valid = validation_result.num_valid
+    valid_ratio = num_valid / len(testcases)
     effectiveness = validation_result.average_effectiveness
     effectiveness_without_invalids = (
         validation_result.average_effectiveness_without_invalids)
 
-    return num_valid, effectiveness, effectiveness_without_invalids
+    return valid_ratio, effectiveness, effectiveness_without_invalids
 
 
 def main(config: dict[str, Any]):

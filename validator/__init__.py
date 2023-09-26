@@ -197,7 +197,9 @@ def validate_testcases(
         average_effectiveness_without_invalids = 0
     else:
         average_effectiveness_without_invalids = (
-            sum(effectivenesses) / len(effectivenesses))
+            sum(effectivenesses_except_invalids)
+            / len(effectivenesses_except_invalids)
+        )
 
     return TestcasesValidationResult(
         num_valid,

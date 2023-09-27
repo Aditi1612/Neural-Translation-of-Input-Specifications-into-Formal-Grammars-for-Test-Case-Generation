@@ -1,62 +1,70 @@
-# Automatic Generation of Test Case Grammar from Programming Problem Descriptions
+# Neural Translation of Input Specifications into Formal Grammars for Test Case Generation
 
-by
-Dogyu Kim,
-Aditi, and
-Sang-Ki Ko
+by Anonymous
 
 This repo provides the source code & data of our work.
 
-
-
 ## Abstract
 
-> We aim to automatically generate a formal grammar that precisely describes the logical specification of test cases for programming problems. Generating high-quality test cases is a necessary step for evaluating the codes written by programmers as low-quality test cases easily fail to discriminate incorrect codes from correct "solutions" that exactly satisfy the requirements posed in programming problem descriptions. However, it is known to be highly technical to write a good test case from a given problem description without understanding the educational purpose of the problem and the logical restrictions specified in the description.
+> Test cases are crucial for ensuring the program's correctness and evaluating
+> performance in programming. The high diversity of test cases within
+> constraints is necessary to distinguish between correct and incorrect
+> answers. Automated source code generation is currently a popular area due to
+> the inefficiency of manually generating test cases. Recent attempts involve
+> generating conditional cases from problem descriptions using deep-learning
+> models that learn from source code. However, this task requires a combination
+> of complex skills such as extracting syntactic and logical constraints for a
+> given test case from a problem, and generating test cases that satisfy the
+> constraints. In this work, we introduce a modified context-free grammar that
+> explicitly represents the syntactical and logical constraints embedded within
+> programming problems. Our innovative framework for automated test case
+> generation separates restriction extraction from test case generation,
+> simplifying the task for the model. We compare diverse methods for neural
+> translation of input specifications into formal grammars.
 
-## Find information of problem
-```
-problem_info.py {Problem ID | Problem Name} [d, s, g, t, p, h]
-```
-> The last token means what you want to show in the information
-  - d: Description
-  - s: input specification
-  - g: input test case grammer
-  - t: test cases
-  - p: public test cases
-  - h: private test cases(hidden test cases)
-
-## Dataset generate and concat
-
-```
-bash dataset.sh
-```
-> After make grammer, we need test cases and description to use generator and parser
-
-## Test grammer
-```
-python test.py
-```
->Test all the grammer using generator and discriminator
+## Usage
 
 ```
-python tester.py {problem index | problem name} [run mode]
+$ make help
+clean-saved:  ## Clean the saved files except the last checkpoint
+generate-testcase-model-without-pseudo-lebeling:  ## Generate the testcase with the model without pseudo labeling
+help:  ## Show this help message
+label-test-with-model-with-base-pl: | results  ## Label the data with the base pl model
+label-with-model-without-pseudo-labeling-labeled-test: | results  ## Label the data with the model
+label-with-model-with-pseudo-labeling-labeled-test: | results  ## Label the data with the model
+prepare-dataset:  ## Prepare the dataset
+test-human-labeled-data: test-human-labeled-data-train test-human-labeled-data-test  ## Test the human-labeled data
+test-human-labeled-data-test:  ## Test the human-labeled test data
+test-human-labeled-data-train:  ## Test the human-labeled train data
+validate-bard-grammar: validate-bard-grammar-1-shot validate-bard-grammar-5-shot  ## Test the bard grammar
+validate-model-labeling-without-pl-labeled-test:  ## Validate the model labeling without pseudo labeling
+validate-model-labeling-with-pl-labeled-test:  ## Validate the model labeling without pseudo labeling
+validate-syntactic-equivalence-model-with-base-pl:  ## Validate the syntactic equivalence with pseudo labeling
+validate-syntactic-equivalence-model-without-pl:  ## Validate the syntactic equivalence without pseudo labeling
+validate-syntactic-equivalence-model-with-pl:  ## Validate the syntactic equivalence with pseudo labeling
+validate-testcase-codecontest: $(validate_testcase_codecontest_targets) ## Validate the codecontest testcase
+validate-testcase-codecontest-generated:  ## Validate the codecontest generated testcase
+validate-testcase-codecontest-private:  ## Validate the codecontest private testcase
+validate-testcase-codecontest-public:  ## Validate the codecontest public testcase
+validate-testcase-fuzzing:  ## Validate the fuzzing testcase
+validate-testcase-model-without-pseudo-labeling:  ## Validate the model generated testcase
 ```
-> Test only one that you want using generator and discriminator
 
 ## Reproducing the results
 
-> Explain how (possibly with running scripts)
+```
+$ python train.py -h
+usage: train.py [-h] [--loss-path LOSS_PATH] [--config CONFIG]
 
+optional arguments:
+  -h, --help            show this help message and exit
+  --loss-path LOSS_PATH
+  --config CONFIG
+```
 
 ## Citation
 
-```bib
-@article{KimAK23,
-  author =  {Dogyu Kim, Aditi, Sang-Ki Ko},
-  title =   {Automatic Generation of Test Case Grammar from Programming Problem Descriptions},
-  year =    {2023}
-}
-```
+Not available.
 
 ## License
 

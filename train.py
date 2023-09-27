@@ -123,6 +123,7 @@ def main(config: dict[str, Any]) -> None:
         valid_dataset: list[dict[str, Any]] = []
         with jsonlines.open(valid_data_path, 'r') as f:
             valid_dataset.extend(f)
+        valid_dataset = random.sample(valid_dataset, 20)
 
         for i, labeled_valid_data in enumerate(map(label, valid_dataset)):
             grammar = labeled_valid_data['grammar']

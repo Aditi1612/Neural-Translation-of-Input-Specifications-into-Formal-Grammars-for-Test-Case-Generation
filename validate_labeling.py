@@ -34,6 +34,7 @@ def main(config: dict[str, Any]):
     logging.info(validate_labeling_config)
     labeled_path = validate_labeling_config['labeled_data']
     testcases_path = validate_labeling_config['testcase']
+    output_path = validate_labeling_config['output']
     get_soundness_args = validate_labeling_config['get_soundness']['args']
     get_completeness_args = (
         validate_labeling_config['get_completeness']['args'])
@@ -50,6 +51,7 @@ def main(config: dict[str, Any]):
     soundness = []
     completeness = []
 
+    sound_and_complete_dataset = []
     labeled_dataset = jsonlines.open(labeled_path, 'r')
     for labeled_data in tqdm(labeled_dataset, desc=f'Testing {labeled_path}'):
         grammar = labeled_data['grammar']
@@ -72,6 +74,8 @@ def main(config: dict[str, Any]):
             specification=specification,
             **get_completeness_args
         )
+        if is_sound and is_complete:
+            sound_and_complete_dataset.append(labeled_data)
 
         soundness.append(is_sound)
         completeness.append(is_complete)
@@ -81,6 +85,9 @@ def main(config: dict[str, Any]):
     average_soundness = sum(soundness) / len(soundness)
     average_completeness = sum(completeness) / len(completeness)
     average_correctness = sum(correctness) / len(correctness)
+
+    with jsonlines.open(output_path, 'w') as output:
+        output.write_all(sound_and_complete_dataset)
 
     print(f"{average_soundness * 100:.2f} & ", end='')
     print(f"{average_completeness * 100:.2f} & ", end='')
@@ -97,6 +104,7 @@ if __name__ == "__main__":
     parser.add_argument('--labeled-data')
     parser.add_argument('--testcase')
     parser.add_argument('--test', action='store_true')
+    parser.add_argument('--output', default='/dev/null')
     args = parser.parse_args()
 
     with open('./config.json') as fp:
@@ -118,6 +126,7 @@ if __name__ == "__main__":
     defaults = {
         'labeled_data': labeled_data,
         'testcase': testcases_path,
+        'output': args.output,
     }
 
     task = 'validate_labeling'

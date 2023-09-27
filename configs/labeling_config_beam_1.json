@@ -5,9 +5,9 @@
   "incorrect_solution_prefix": "data/solutions/solutions",
   "train_data": "labeled/train.jsonl",
   "test_data": "labeled/test.jsonl",
-  "unlabeled_train_data": "unlabeled/code_contests_train_python.jsonl",
+  "unlabeled_train_data": "unlabeled/code_contests_train_python_filtered.jsonl",
   "unlabeled_valid_data": "unlabeled/code_contests_valid_python.jsonl",
-  "unlabeled_test_data": "unlabeled/code_contests_test_python.jsonl",
+  "unlabeled_test_data": "unlabeled/code_contests_train_python_with_test_label.jsonl",
   "data_loader": {
     "args": {
       "batch_size": 8,

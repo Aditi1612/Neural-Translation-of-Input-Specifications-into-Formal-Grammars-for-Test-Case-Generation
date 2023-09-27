@@ -24,7 +24,7 @@
   "metrics": [],
   "trainer": {
     "epochs": 10000,
-    "save_dir": "saved/0928.train_base_pl/",
+    "save_dir": "saved/base_pl/",
     "save_period": 10,
     "valid_period": 20,
     "pseudo_label_period": 50,

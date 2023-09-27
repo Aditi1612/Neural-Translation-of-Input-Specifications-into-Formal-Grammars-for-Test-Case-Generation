@@ -23,10 +23,12 @@
   },
   "trainer": {
     "epochs": 1000,
-    "save_dir": "saved/0925.woSL/",
+    "save_dir": "saved/0927.wPL/",
     "save_period": 10,
     "valid_period": 5,
-    "pseudo_label_period": -1,
+    "pseudo_label_period": 10,
+    "pseudo_label_samples": 200,
+    "max_pseudo_labeled_samples": 500,
     "early_stopping_patience": 3
   },
   "train": {
@@ -46,8 +48,14 @@
       }
     }
   },
-  "validate_testcases": {
-    "args": {}
+  "source_encoding": {
+    "args": {
+      "add_special_tokens": false,
+      "max_length": 512,
+      "padding": true,
+      "return_tensors": "pt",
+      "truncation": true
+    }
   },
   "validate_labeling": {
     "get_soundness": {
@@ -60,35 +68,6 @@
       "args": {
         "num_testcase_sampling": 10
       }
-    }
-  },
-  "test": {
-    "generation_config": {
-      "length_penalty": 1.0,
-      "max_new_tokens": 150,
-      "num_beams": 1,
-      "repetition_penalty": 2.5,
-      "early_stopping": true,
-      "num_return_sequences": 10
-    }
-  },
-  "label": {
-    "generation_config": {
-      "length_penalty": 1.0,
-      "max_new_tokens": 150,
-      "num_beams": 100,
-      "repetition_penalty": 2.5,
-      "early_stopping": true,
-      "num_return_sequences": 1
-    }
-  },
-  "source_encoding": {
-    "args": {
-      "add_special_tokens": false,
-      "max_length": 512,
-      "padding": true,
-      "return_tensors": "pt",
-      "truncation": true
     }
   }
 }

@@ -21,10 +21,9 @@
       "lr": 1e-5
     }
   },
-  "metrics": [],
   "trainer": {
     "epochs": 10000,
-    "save_dir": "saved/0928.train_generatable_pl/",
+    "save_dir": "saved/generatable_pl/",
     "save_period": 10,
     "valid_period": 20,
     "pseudo_label_period": 50,

@@ -1,21 +1,14 @@
-.PHONY: \
+.PHONY: all
 
-	all \
-	help \
-	prepare-dataset \
-	test-ccfg clean-saved \
-	test-human-labeled-data \
-	test-human-labeled-data-test \
-	test-human-labeled-data-train \
-	validate-bard-grammar \
-	validate-bard-grammar-1-shot \
-	validate-bard-grammar-5-shot
+all:
 
 model_with_pseudo_labeling_path = saved/0927.wPL/best-checkpoint-epoch55.pth
 model_without_pseudo_labeling_path = saved/0925.without_pseudo_labeling/best-checkpoint-epoch90.pth
-model_with_base_pl_path = saved/0927.train_base_pl/checkpoint-epoch60.pth
 
-all:
+model_with_base_pl_path = saved/base_pl/checkpoint-epoch60.pth
+model_with_generatable_pl_path = saved/correct_generatable_pl/checkpoint-epoch60.pth
+model_with_complete_pl_path = saved/complete_pl/checkpoint-epoch60.pth
+model_with_correct_pl_path = saved/correct_base_pl/checkpoint-epoch60.pth
 
 ################################################################################
 
@@ -39,7 +32,6 @@ results:
 
 ################################################################################
 # Grammar generation with CodeT5-based model
-# FIXME: Hard-coded
 ################################################################################
 
 label-with-model-without-pseudo-labeling-labeled-test: | results  ## Label the data with the model
@@ -69,6 +61,24 @@ label-test-with-model-with-base-pl: | results  ## Label the data with the base p
 			--config configs/labeling_config_beam_$${i}.json; \
 	done
 
+label-test-with-model-with-complete-pl: | results  ## Label the data with the complete pl model
+	for i in 1 10 100; do \
+		python label_with_model.py \
+			--model-pth $(model_with_complete_pl_path) \
+			--output results/ccfg_with_complete_pl_labeled_test_beam_$${i}.jsonl \
+			--unlabeled-data data/unlabeled/code_contests_train_python_with_test_label.jsonl\
+			--config configs/labeling_config_beam_$${i}.json; \
+	done
+
+label-test-with-model-with-correct-pl: | results  ## Label the data with the correct pl model
+	for i in 1 10 100; do \
+		python label_with_model.py \
+			--model-pth $(model_with_correct_pl_path) \
+			--output results/ccfg_with_correct_pl_labeled_test_beam_$${i}.jsonl \
+			--unlabeled-data data/unlabeled/code_contests_train_python_with_test_label.jsonl\
+			--config configs/labeling_config_beam_$${i}.json; \
+	done
+
 ################################################################################
 # Syntax evaluation
 ################################################################################
@@ -79,8 +89,18 @@ validate-syntactic-equivalence-model-without-pl:  ## Validate the syntactic equi
 validate-syntactic-equivalence-model-with-pl:  ## Validate the syntactic equivalence with pseudo labeling
 	python test.py --model-pth $(model_with_pseudo_labeling_path)
 
-validate-syntactic-equivalence-model-with-base-pl:  ## Validate the syntactic equivalence with pseudo labeling
+validate-syntactic-equivalence-model-with-base-pl:  ## Validate the syntactic equivalence with base pseudo labeling
 	python test.py --model-pth $(model_with_base_pl_path)
+
+validate-syntactic-equivalence-model-with-generatable-pl:  ## Validate the syntactic equivalence with generatable pseudo labeling
+	python test.py --model-pth $(model_with_generatable_pl_path)
+
+validate-syntactic-equivalence-model-with-complete-pl:  ## Validate the syntactic equivalence with complete pseudo labeling
+	python test.py --model-pth $(model_with_complete_pl_path)
+
+validate-syntactic-equivalence-model-with-correct-pl:  ## Validate the syntactic equivalence with correct pseudo labeling
+	python test.py --model-pth $(model_with_correct_pl_path)
+
 
 validate-syntactic-equivalence-bard-1-shot:  ## Validate the syntactic equivalence of bard grammar with 1-shot
 	python test_large_language_model.py \
@@ -109,14 +129,41 @@ validate-model-labeling-without-pl-labeled-test:  ## Validate the model labeling
 			--testcase data/unlabeled/code_contests_train_python_with_test_label.jsonl; \
 	done
 
-validate-model-labeling-with-pl-labeled-test:  ## Validate the model labeling without pseudo labeling
+validate-model-labeling-with-pl-labeled-test:  ## Validate the model labeling with pseudo labeling
 	for i in 1 10 100; do \
 		python validate_labeling.py \
 			--labeled-data results/ccfg_with_pl_labeled_test_beam_$${i}.jsonl \
 			--testcase data/unlabeled/code_contests_train_python_with_test_label.jsonl; \
 	done
 
-validate-bard-grammar: validate-bard-grammar-1-shot validate-bard-grammar-5-shot  ## Test the bard grammar
+validate-model-with-base-pl-test:  ## Validate the model labeling with base-pl
+	for i in 1 10 100; do \
+		python validate_labeling.py \
+			--labeled-data results/ccfg_with_base_pl_beam_$${i}.jsonl \
+			--testcase data/unlabeled/code_contests_train_python_with_test_label.jsonl; \
+	done
+
+validate-model-with-generatable-pl-test:  ## Validate the model labeling with generatable-pl
+	for i in 1 10 100; do \
+		python validate_labeling.py \
+			--labeled-data results/ccfg_with_generatable_pl_beam_$${i}.jsonl \
+			--testcase data/unlabeled/code_contests_train_python_with_test_label.jsonl; \
+	done
+
+validate-model-with-complete-pl-test:  ## Validate the model labeling with complete-pl
+	for i in 1 10 100; do \
+		python validate_labeling.py \
+			--labeled-data results/ccfg_with_complete_pl_beam_$${i}.jsonl \
+			--testcase data/unlabeled/code_contests_train_python_with_test_label.jsonl; \
+	done
+
+validate-model-with-correct-pl-test:  ## Validate the model labeling with correct-pl
+	for i in 1 10 100; do \
+		python validate_labeling.py \
+			--labeled-data results/ccfg_with_correct_pl_beam_$${i}.jsonl \
+			--testcase data/unlabeled/code_contests_train_python_with_test_label.jsonl; \
+	done
+
 
 validate-bard-grammar-1-shot:  ## Test the bard grammar with 1-shot
 	python validate_labeling.py \
@@ -149,6 +196,8 @@ generate-testcase-model-without-pseudo-lebeling:  ## Generate the testcase with 
 			--output results/ccfg_without_pl_labeled_test_beam_$${i}_testcase.jsonl; \
 	done
 
+# TODO
+
 generate-testcase-bard-grammar-1-shot:  ## Generate the testcase with bard 1-shot grammar
 	python generate_testcase_with_grammar.py \
 		--labeled-data data/bard_labeled/test_1_shot.jsonl \
@@ -180,6 +229,7 @@ validate-testcase-model-without-pseudo-labeling:  ## Validate the model generate
 			--type model_generated; \
 	done
 
+
 validate-testcase-fuzzing:  ## Validate the fuzzing testcase
 	python validate_testcase.py \
 		--testcase data/testcase/fuzzing.jsonl \
@@ -189,6 +239,7 @@ validate_testcase_codecontest_targets = \
 	validate-testcase-codecontest-public \
 	validate-testcase-codecontest-private \
 	validate-testcase-codecontest-generated
+
 
 validate-testcase-codecontest: $(validate_testcase_codecontest_targets) ## Validate the codecontest testcase
 
@@ -206,6 +257,7 @@ validate-testcase-codecontest-private:  ## Validate the codecontest private test
 	python validate_testcase.py \
 		--testcase data/unlabeled/code_contests_train_python_with_test_label.jsonl \
 		--type codecontests_private
+
 
 validate-testcase-bard-grammar-1-shot:  ## Validate the bard-grammar 1-shot testcase
 	python validate_testcase.py \

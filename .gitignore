@@ -3,7 +3,10 @@ __pycache__/
 test_results
 results
 saved
-data
+data/raw
+data/labeled
+data/unlabeled
+data/solutions
 .vscode
 .venv
 *.swp

@@ -182,7 +182,7 @@ validate-testcase-model-without-pseudo-labeling:  ## Validate the model generate
 
 validate-testcase-fuzzing:  ## Validate the fuzzing testcase
 	python validate_testcase.py \
-		--testcase results/testcase_fuzzing.jsonl \
+		--testcase data/testcase/fuzzing.jsonl \
 		--type fuzzing
 
 validate_testcase_codecontest_targets = \

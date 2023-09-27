@@ -24,10 +24,10 @@
   "metrics": [],
   "trainer": {
     "epochs": 10000,
-    "save_dir": "saved/0927.train_complete_pl/",
+    "save_dir": "saved/0928.train_complete_pl/",
     "save_period": 10,
     "valid_period": 20,
-    "pseudo_label_period": 50,
+    "pseudo_label_period": 40,
     "pseudo_label_samples": 5000,
     "early_stopping_patience": 5
   },

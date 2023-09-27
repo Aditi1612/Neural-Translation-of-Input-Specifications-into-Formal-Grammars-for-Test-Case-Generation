@@ -21,7 +21,9 @@ all:
 
 prepare-dataset:  ## Prepare the dataset
 	python scripts/download_dataset.py \
-	&& python scripts/filter_python_dataset.py
+	&& python scripts/filter_python_dataset.py \
+	&& python scripts/generate_python3_solutions.py \
+	&& python scripts/filter_labeled_test_dataset.py
 
 data/raw:
 	python scripts/download_dataset.py

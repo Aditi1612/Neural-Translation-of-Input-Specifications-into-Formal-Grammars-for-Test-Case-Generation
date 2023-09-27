@@ -1,6 +1,7 @@
 __pycache__/
 
 test_results
+results
 .vscode
 .venv
 

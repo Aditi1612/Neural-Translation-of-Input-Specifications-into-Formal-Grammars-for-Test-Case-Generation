@@ -1,0 +1,71 @@
+{
+  "pretrained": "Salesforce/codet5-base",
+  "data_dir": "data/",
+  "solution_prefix": "data/solutions/solutions",
+  "incorrect_solution_prefix": "data/solutions/solutions",
+  "train_data": "labeled/train.jsonl",
+  "test_data": "labeled/test.jsonl",
+  "unlabeled_train_data": "unlabeled/code_contests_train_python_filtered.jsonl",
+  "unlabeled_valid_data": "unlabeled/code_contests_valid_python.jsonl",
+  "unlabeled_test_data": "unlabeled/code_contests_train_python_with_test_label.jsonl",
+  "data_loader": {
+    "args": {
+      "batch_size": 8,
+      "shuffle": true,
+      "num_workers": 4
+    }
+  },
+  "optimizer": {
+    "type": "Adam",
+    "args":{
+      "lr": 1e-5
+    }
+  },
+  "metrics": [],
+  "trainer": {
+    "epochs": 10000,
+    "save_dir": "saved/0927.train_base_pl/",
+    "save_period": 10,
+    "valid_period": 20,
+    "pseudo_label_period": 50,
+    "pseudo_label_samples": 5000,
+    "early_stopping_patience": 5
+  },
+  "train": {
+    "generation_config": {
+      "length_penalty": 1.0,
+      "max_new_tokens": 150,
+      "num_beams": 5,
+      "repetition_penalty": 2.5,
+      "early_stopping": true,
+      "num_return_sequences": 1
+    },
+    "pseudo_labeler": {
+      "type": "base",
+      "args": {}
+    }
+  },
+  "source_encoding": {
+    "args": {
+      "add_special_tokens": false,
+      "max_length": 512,
+      "padding": true,
+      "return_tensors": "pt",
+      "truncation": true
+    }
+  },
+  "validate_labeling": {
+    "get_soundness": {
+      "args": {
+        "num_testcase_generation": 5,
+        "num_solution_sampling": 5
+      }
+    },
+    "get_completeness": {
+      "args": {
+        "num_testcase_sampling": 5
+      }
+    }
+  }
+}
+

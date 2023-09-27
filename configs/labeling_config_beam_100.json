@@ -1,0 +1,37 @@
+{
+  "pretrained": "Salesforce/codet5-base",
+  "data_dir": "data/",
+  "solution_prefix": "data/solutions/solutions",
+  "incorrect_solution_prefix": "data/solutions/solutions",
+  "train_data": "labeled/train.jsonl",
+  "test_data": "labeled/test.jsonl",
+  "unlabeled_train_data": "unlabeled/code_contests_train_python.jsonl",
+  "unlabeled_valid_data": "unlabeled/code_contests_valid_python.jsonl",
+  "unlabeled_test_data": "unlabeled/code_contests_test_python.jsonl",
+  "data_loader": {
+    "args": {
+      "batch_size": 8,
+      "shuffle": true,
+      "num_workers": 4
+    }
+  },
+  "label": {
+    "generation_config": {
+      "length_penalty": 1.0,
+      "max_new_tokens": 150,
+      "num_beams": 100,
+      "repetition_penalty": 2.5,
+      "early_stopping": true,
+      "num_return_sequences": 1
+    }
+  },
+  "source_encoding": {
+    "args": {
+      "add_special_tokens": false,
+      "max_length": 512,
+      "padding": true,
+      "return_tensors": "pt",
+      "truncation": true
+    }
+  }
+}

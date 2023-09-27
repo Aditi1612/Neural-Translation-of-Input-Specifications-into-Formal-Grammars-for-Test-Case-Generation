@@ -9,7 +9,7 @@ import jsonlines
 import torch
 import numpy as np
 from tqdm import tqdm
-from tqdm.contrib.logging import tqdm_logging_redirect
+# from tqdm.contrib.logging import tqdm_logging_redirect
 from data_loader import MyDataset
 
 from validator import get_completeness
@@ -63,7 +63,7 @@ def main(config: dict[str, Any]):
             grammar,
             solution_dir,
             name=name,
-            specification=description,
+            specification=specification,
             **get_soundness_args
         )
         is_complete = get_completeness(
@@ -82,14 +82,15 @@ def main(config: dict[str, Any]):
     average_completeness = sum(completeness) / len(completeness)
     average_correctness = sum(correctness) / len(correctness)
 
-    print(f"Sound: {average_soundness * 100:.2f}%")
-    print(f"Complete: {average_completeness * 100:.2f}%")
-    print(f"Sound and Complete: {average_correctness * 100:.2f}%")
+    print(f"{average_soundness * 100:.2f} & ", end='')
+    print(f"{average_completeness * 100:.2f} & ", end='')
+    print(f"{average_correctness * 100:.2f} ")
 
 
 if __name__ == "__main__":
     logger = logging.getLogger('validator')
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.ERROR)
+    # logger.setLevel(logging.INFO)
     logger.addHandler(logging.FileHandler('validate_labeling.log'))
 
     parser = argparse.ArgumentParser()
@@ -126,5 +127,4 @@ if __name__ == "__main__":
             task_config[k] = getattr(args, k)
         task_config.setdefault(k, defaults[k])
 
-    with tqdm_logging_redirect():
-        main(config)
+    main(config)

@@ -30,6 +30,9 @@ class MyDataset(Dataset):
     def extend(self, dataset: list[dict[str, Any]]) -> None:
         self.data.extend(map(MyDataset.preprocess, dataset))
 
+    def delete_front(self, k: int = 1) -> None:
+        del self.data[:k]
+
     @staticmethod
     def get_specification(description: str) -> str:
         description = MyDataset.replace_description(description)

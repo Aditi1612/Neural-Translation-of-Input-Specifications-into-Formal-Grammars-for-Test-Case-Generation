@@ -178,14 +178,14 @@ def get_pseudo_labeler_complete(
     generation_config: GenerationConfig,
     device: torch.device,
     encoding_args: dict[str, Any],
-    testcases_dictionary: dict[str, list[str]],
+    get_testcases: Callable[[str], list[str]],
     *,
     num_testcase_sampling: Optional[int] = None,
 ) -> PseudoLabeler:
 
     def strategy_builder(unlabeled_data: Data) -> Strategy:
         name = unlabeled_data['name']
-        testcases = testcases_dictionary[name]
+        testcases = get_testcases(name)
 
         def strategy(grammar: Grammar) -> bool:
             is_complete = get_completeness(

@@ -23,69 +23,28 @@
   },
   "metrics": [],
   "trainer": {
-    "epochs": 1000,
-    "save_dir": "saved/0927.wPL/",
+    "epochs": 10000,
+    "save_dir": "saved/0927.train_complete_pl/",
     "save_period": 10,
-    "valid_period": 5,
-    "pseudo_label_period": 10,
-    "pseudo_label_samples": 200,
-    "max_pseudo_labeled_samples": 500,
-    "early_stopping_patience": 3
+    "valid_period": 20,
+    "pseudo_label_period": 50,
+    "pseudo_label_samples": 5000,
+    "early_stopping_patience": 5
   },
   "train": {
     "generation_config": {
       "length_penalty": 1.0,
       "max_new_tokens": 150,
-      "num_beams": 20,
+      "num_beams": 5,
       "repetition_penalty": 2.5,
       "early_stopping": true,
       "num_return_sequences": 1
     },
     "pseudo_labeler": {
-      "args": {
-        "num_testcase_generation": 5,
-        "num_solution_sampling": 5,
-        "num_testcase_sampling": 10
-      }
-    }
-  },
-  "validate_testcases": {
-    "args": {
-      "num_correct_solution_samples": 20,
-      "num_incorrect_solution_samples": 20
-    }
-  },
-  "validate_labeling": {
-    "get_soundness": {
-      "args": {
-        "num_testcase_generation": 10,
-        "num_solution_sampling": 10
-      }
-    },
-    "get_completeness": {
+      "type": "complete",
       "args": {
         "num_testcase_sampling": 10
       }
-    }
-  },
-  "test": {
-    "generation_config": {
-      "length_penalty": 1.0,
-      "max_new_tokens": 150,
-      "num_beams": 10,
-      "repetition_penalty": 2.5,
-      "early_stopping": true,
-      "num_return_sequences": 10
-    }
-  },
-  "label": {
-    "generation_config": {
-      "length_penalty": 1.0,
-      "max_new_tokens": 150,
-      "num_beams": 100,
-      "repetition_penalty": 2.5,
-      "early_stopping": true,
-      "num_return_sequences": 1
     }
   },
   "source_encoding": {
@@ -96,5 +55,19 @@
       "return_tensors": "pt",
       "truncation": true
     }
+  },
+  "validate_labeling": {
+    "get_soundness": {
+      "args": {
+        "num_testcase_generation": 5,
+        "num_solution_sampling": 5
+      }
+    },
+    "get_completeness": {
+      "args": {
+        "num_testcase_sampling": 5
+      }
+    }
   }
 }
+

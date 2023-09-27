@@ -102,7 +102,13 @@ class CountingContextFreeGrammarTokenizer(Tokenizer):
     ) -> tuple[torch.Tensor, torch.Tensor]:
 
         encoding = self.encode(text)
-        index = encoding.index(self.separator_token_encoding[0])
+        try:
+            index = encoding.index(self.separator_token_encoding[0])
+        except Exception:
+            return (
+                torch.tensor([self.eos_token_id], dtype=torch.long),
+                torch.tensor([self.eos_token_id], dtype=torch.long)
+            )
         len_separator = len(self.separator_token_encoding)
         production_encoding = (
             torch.tensor(

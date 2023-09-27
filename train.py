@@ -19,6 +19,9 @@ from model import MyModel
 from tokenizer import CountingContextFreeGrammarTokenizer as CcfgTokenizer
 from trainer import MyModelTrainer
 from pseudo_labeler import get_pseudo_labeler_correct
+from pseudo_labeler import get_pseudo_labeler_sound
+from pseudo_labeler import get_pseudo_labeler_complete
+from pseudo_labeler import get_pseudo_labeler_base
 from validator import get_soundness
 from validator import get_completeness
 
@@ -57,7 +60,7 @@ def main(config: dict[str, Any]) -> None:
     logging.info(train_config)
     loss_path = Path(train_config['loss_path'])
     generation_config = GenerationConfig(**train_config['generation_config'])
-    pseudo_labeler_args = train_config['pseudo_labeler']['args']
+    pseudo_labeler_config = train_config.get('pseudo_labeler', None)
 
     source_tokenizer = RobertaTokenizer.from_pretrained(config['pretrained'])
     target_tokenizer = CcfgTokenizer(source_tokenizer)
@@ -164,15 +167,56 @@ def main(config: dict[str, Any]) -> None:
     model = model.to(device)
 
     optimizer = torch.optim.Adam(params=model.parameters(), **optimizer_args)
-    pseudo_labeler = get_pseudo_labeler_correct(
-        source_tokenizer,
-        generation_config,
-        device,
-        source_encoding_args,
-        get_solution_dir=solution_prefix.joinpath,
-        get_testcases=lambda name: train_testcases_dictionary.get(name, []),
-        **pseudo_labeler_args,
-    )
+
+    if pseudo_labeler_config is not None:
+        pseudo_labeler_type = pseudo_labeler_config.get('type', 'correct')
+        pseudo_labeler_args = pseudo_labeler_config.get('args', {})
+
+        def get_testcases(name: str):
+            return train_testcases_dictionary.get(name, [])
+
+        get_solution_dir = solution_prefix.joinpath
+
+        if pseudo_labeler_type == 'base':
+            pseudo_labeler = get_pseudo_labeler_base(
+                source_tokenizer,
+                generation_config,
+                device,
+                source_encoding_args
+            )
+        elif pseudo_labeler_type == 'sound':
+            pseudo_labeler = get_pseudo_labeler_sound(
+                source_tokenizer,
+                generation_config,
+                device,
+                source_encoding_args,
+                get_solution_dir,
+                **pseudo_labeler_args
+            )
+        elif pseudo_labeler_type == 'complete':
+            pseudo_labeler = get_pseudo_labeler_complete(
+                source_tokenizer,
+                generation_config,
+                device,
+                source_encoding_args,
+                get_testcases,
+                **pseudo_labeler_args
+            )
+        elif pseudo_labeler_type == 'correct':
+            pseudo_labeler = get_pseudo_labeler_correct(
+                source_tokenizer,
+                generation_config,
+                device,
+                source_encoding_args,
+                get_solution_dir,
+                get_testcases,
+                **pseudo_labeler_args
+            )
+        else:
+            raise ValueError(
+                f"Unknown pseudo-labeler type: {pseudo_labeler_type}")
+    else:
+        pseudo_labeler = None
 
     trainer = MyModelTrainer(
         model,
@@ -190,7 +234,11 @@ def main(config: dict[str, Any]) -> None:
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(
+        format='%(asctime)s %(levelname)-8s %(message)s',
+        level=logging.DEBUG,
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
 
     ccfg_logger = logging.getLogger('counting_context_free_grammar')
     ccfg_logger.setLevel(logging.INFO)

@@ -4,7 +4,7 @@ import logging
 import random
 from multiprocessing import Pool
 from pathlib import Path
-from typing import (Any, )
+from typing import (Any, Optional)
 
 import jsonlines
 import torch
@@ -28,9 +28,9 @@ def f(
     i: int,
     data: dict[str, Any],
     config: dict[str, Any]
-) -> tuple[float, float, float]:
+) -> Optional[tuple[float, float, float]]:
 
-    print(i)
+    # print(i)
 
     solution_prefix = Path(config['solution_prefix'])
     incorrect_solution_prefix = Path(config['incorrect_solution_prefix'])
@@ -42,7 +42,11 @@ def f(
     if is_unlabeled:
         testcases = data['generated_tests']['input']
     else:
-        testcases = data['testcases']['input']
+        testcases = data['testcase']
+
+    if testcases is None:
+        return None
+
     correct_solution_dir = solution_prefix / name
     incorrect_solution_dir = incorrect_solution_prefix / name
 
@@ -62,10 +66,18 @@ def f(
     return valid_ratio, effectiveness, effectiveness_without_invalids
 
 
+def get_bin_count(xs: list[float], k: int = 10) -> list[int]:
+    bin_count = [0 for _ in range(k)]
+    for x in xs:
+        bin_count[min(int(x * k), k-1)] += 1
+    return bin_count
+
+
 def main(config: dict[str, Any]):
 
     # Set variables related to `validate_labeling_testcases`
     validate_testcases_config = config['validate_testcases']
+    logging.debug(validate_testcases_config)
     testcases_path = Path(validate_testcases_config['testcase'])
 
     valid_ratios: list[float] = []
@@ -78,13 +90,16 @@ def main(config: dict[str, Any]):
             dataset.append(data)
 
     with Pool(5) as pool:
-        results = pool.starmap(
-            f,
-            [(i, data, config) for i, data in enumerate(dataset)]
-        )
-        valid_ratios = [result[0] for result in results]
-        effectivenesses = [result[1] for result in results]
-        effectivenesses_without_invalids = [result[2] for result in results]
+        results = list(pool.starmap(
+            f, [(i, data, config) for i, data in enumerate(dataset)]))
+
+    num_faileds = sum(result is None for result in results)
+    filtered_results = list(filter(None, results))
+
+    valid_ratios = [result[0] for result in filtered_results]
+    effectivenesses = [result[1] for result in filtered_results]
+    effectivenesses_without_invalids = (
+        [result[2] for result in filtered_results])
 
     average_valid_ratio = sum(valid_ratios) / len(valid_ratios)
     average_effectiveness = sum(effectivenesses) / len(effectivenesses)
@@ -92,8 +107,12 @@ def main(config: dict[str, Any]):
         sum(effectivenesses_without_invalids)
         / len(effectivenesses_without_invalids)
     )
-    print(f"Average valid ratio: {average_valid_ratio}")
-    print(f"Average effectiveness: {average_effectiveness}")
+    failed_ratio = num_faileds / len(results)
+    print("Failed Ratio: {:.2f}".format(failed_ratio))
+    # print("Valid ratio bin count (0 to 10):")
+    # print(get_bin_count(valid_ratios))
+    print(f"Average valid ratio: {average_valid_ratio * 100:.2f}%")
+    print(f"Average effectiveness: {average_effectiveness * 100:.2f}%")
     print(
         "Average effectiveness without invalids: {}"
         .format(average_effectiveness_without_invalids)

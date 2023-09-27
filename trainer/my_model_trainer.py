@@ -56,8 +56,9 @@ class MyModelTrainer(BaseTrainer):
         max_new_tokens: int = 150,
         num_beams: int = 10,
         repetition_penalty: float = 2.5,
-        pseudo_label_samples: int = 100,
-        early_stopping_patience: int = 5,
+        pseudo_label_samples: Optional[int] = 100,
+        max_pseudo_labeled_samples: Optional[int] = None,
+        early_stopping_patience: Optional[int] = 5,
     ) -> None:
         super().__init__(
             model, optimizer,
@@ -91,6 +92,10 @@ class MyModelTrainer(BaseTrainer):
         if self.do_pseudo_labeling:
             self.pseudo_labeled_dataset = MyDataset()
         self.pseudo_label_samples = pseudo_label_samples
+        if max_pseudo_labeled_samples is None:
+            self.max_pseudo_labeled_samples = len(unlabeled_data_list)
+        else:
+            self.max_pseudo_labeled_samples = max_pseudo_labeled_samples
         self.early_stopping_patience = early_stopping_patience
         self.do_early_stopping = (
             early_stopping_patience > 0 and self.do_validation)
@@ -256,16 +261,28 @@ class MyModelTrainer(BaseTrainer):
             unlabeled_data['specification'] = specification
             pseudo_labeled_data_list.append(unlabeled_data)
 
+        previous_pseudo_labeled_data_len = len(self.pseudo_labeled_dataset)
+
         self.unlabeled_data_deque.extend(failed_data_list)
+        self.pseudo_labeled_dataset.extend(pseudo_labeled_data_list)
+        removed_pseudo_labeled_data_list = []
+
+        if len(self.pseudo_labeled_dataset) > self.max_pseudo_labeled_samples:
+            removed_pseudo_labeled_data_list = (
+                self.pseudo_labeled_dataset[:self.max_pseudo_labeled_samples])
+            self.pseudo_labeled_dataset.delete_front(
+                -self.pseudo_label_samples)
+
+        self.unlabeled_data_deque.extend(removed_pseudo_labeled_data_list)
 
         logger.info(
-            "Pseudo-labeled entries: {}(+{})"
+            "Pseudo-labeled entries: {}(+{},-{})"
             .format(
-                len(self.pseudo_labeled_dataset),
-                len(pseudo_labeled_data_list)
+                previous_pseudo_labeled_data_len,
+                len(pseudo_labeled_data_list),
+                len(removed_pseudo_labeled_data_list)
             )
         )
-        self.pseudo_labeled_dataset.extend(pseudo_labeled_data_list)
 
         should_create_pseudo_labeled_data_loader = (
             self.pseudo_labeled_data_loader is None

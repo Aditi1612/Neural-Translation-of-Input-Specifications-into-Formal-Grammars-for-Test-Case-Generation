@@ -15,6 +15,14 @@ from counting_context_free_grammar import Discriminator
 logger = logging.getLogger(__name__)
 
 
+def _has_setrecursionlimit(python_file: Path):
+    with open(python_file, 'r') as f:
+        lines = f.readlines()
+    if any('setrecursionlimit' in line for line in lines):
+        return True
+    return False
+
+
 TestcasesValidationResult = NamedTuple(
     'TestcasesValidationResult',
     [
@@ -70,6 +78,8 @@ def get_validity(
     temp_file.seek(0)
 
     solutions = list(solution_dir.iterdir())
+    solutions = list(itertools.filterfalse(_has_setrecursionlimit, solutions))
+
     if num_solution_sampling is None:
         num_solution_sampling = len(solutions)
     else:
@@ -121,16 +131,13 @@ def validate_testcase(
     validity_threshold: float = 0.8,
 ) -> Tuple[bool, int]:
 
-    # correct_solutions = list(correct_solution_dir.iterdir())
     incorrect_solutions = list(incorrect_solution_dir.iterdir())
+    incorrect_solutions = list(
+        itertools.filterfalse(_has_setrecursionlimit, incorrect_solutions))
 
-    # if num_correct_solution_samples is None:
-    #     num_correct_solution_samples = len(correct_solutions)
     if num_incorrect_solution_samples is None:
         num_incorrect_solution_samples = len(incorrect_solutions)
 
-    # correct_solutions = random.sample(
-    #     correct_solutions, num_correct_solution_samples)
     incorrect_solutions = random.sample(
         incorrect_solutions, num_incorrect_solution_samples)
 
@@ -169,6 +176,7 @@ def validate_testcases(
     timeout: float = 2,
     num_correct_solution_samples: Optional[int] = None,
     num_incorrect_solution_samples: Optional[int] = None,
+    validity_threshold: int = 0.8,
 ) -> TestcasesValidationResult:
 
     num_valid = 0
@@ -182,6 +190,7 @@ def validate_testcases(
             timeout=timeout,
             num_correct_solution_samples=num_correct_solution_samples,
             num_incorrect_solution_samples=num_incorrect_solution_samples,
+            validity_threshold=validity_threshold,
         )
         if is_valid:
             num_valid += 1

@@ -39,18 +39,17 @@ def main(config: dict[str, Any]) -> None:
     # Set variables related to `label_config`
     label_config = config['label']
     logging.info(label_config)
-    model_dir = Path(label_config['model_dir'])
     if label_config['model_pth'] is None:
         checkpoint_path = None
+        model_dir = Path(label_config['model_dir'])
+        checkpoint_paths = model_dir.glob('*.pth')
+        checkpoint_path = max(checkpoint_paths, key=os.path.getctime)
     else:
         checkpoint_path = Path(label_config['model_pth'])
+
     generation_config = GenerationConfig(**label_config['generation_config'])
     unlabeled_data_path = Path(label_config['unlabeled_data'])
     output_path = label_config['output']
-
-    if checkpoint_path is None:
-        checkpoint_paths = model_dir.glob('*.pth')
-        checkpoint_path = max(checkpoint_paths, key=os.path.getctime)
 
     logging.info(f"Use device: {device}")
     logging.info(f"Dataset: {unlabeled_data_path}")
@@ -120,30 +119,27 @@ if __name__ == "__main__":
     parser.add_argument('--model-pth')
     parser.add_argument('--unlabeled-data')
     parser.add_argument('--output')
+    parser.add_argument('--config', default='./config.json')
     parser.add_argument('--test', action='store_true')
     args = parser.parse_args()
 
-    with open('./config.json') as fp:
+    with open(args.config) as fp:
         config = json.load(fp)
 
     data_dir = Path(config['data_dir'])
     unlabeled_valid_data = data_dir / config['unlabeled_valid_data']
     unlabeled_test_data = data_dir / config['unlabeled_test_data']
     unlabeled_data = unlabeled_test_data if args.test else unlabeled_valid_data
-    trainer_config = config['trainer']
-    model_dir = Path(trainer_config['save_dir'])
     output_base = (
         'model_labeled_test_data.jsonl' if args.test
         else 'model_labeled_valid_data.jsonl'
     )
-    output = (
-        (Path(args.model_dir) if args.model_dir else model_dir) / output_base)
 
     defaults = {
-        'model_dir': model_dir,
+        'model_dir': None,
         'model_pth': None,
         'unlabeled_data': unlabeled_data,
-        'output': output
+        'output': None
     }
 
     task = 'label'

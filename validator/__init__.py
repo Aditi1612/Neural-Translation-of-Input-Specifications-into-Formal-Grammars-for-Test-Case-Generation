@@ -8,6 +8,8 @@ import itertools
 from pathlib import Path
 from typing import (Optional, Tuple, Any, Union, NamedTuple, cast, )
 
+import timeout_decorator
+
 from counting_context_free_grammar import CountingContextFreeGrammar as Ccfg
 from counting_context_free_grammar import Discriminator
 
@@ -152,9 +154,6 @@ def validate_testcase(
             num_solution_sampling=num_correct_solution_samples
         )
 
-        if validity < validity_threshold:
-            return False, 0
-
         incorrect_solution_outputs = [
             get_stdout(solution, temp_file)
             for solution in incorrect_solutions
@@ -165,7 +164,7 @@ def validate_testcase(
         for incorrect_output in incorrect_solution_outputs
     )
     effectiveness = num_distinguished / len(incorrect_solution_outputs)
-    return True, effectiveness
+    return validity >= validity_threshold, effectiveness
 
 
 def validate_testcases(
@@ -244,6 +243,7 @@ def get_completeness(
         return False
 
 
+@timeout_decorator.timeout(4)
 def _get_completeness(
     grammar: dict[str, list[str]],
     testcases: list[str],
@@ -308,6 +308,7 @@ def get_soundness(
         return False
 
 
+@timeout_decorator.timeout(4)
 def _get_soundness(
     grammar: dict[str, list[str]],
     solution_dir: Path,

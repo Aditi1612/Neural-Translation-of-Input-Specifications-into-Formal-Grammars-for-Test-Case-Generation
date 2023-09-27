@@ -18,10 +18,11 @@ from data_loader import MyDataset
 from model import MyModel
 from tokenizer import CountingContextFreeGrammarTokenizer as CcfgTokenizer
 from trainer import MyModelTrainer
-from pseudo_labeler import get_pseudo_labeler_correct
-from pseudo_labeler import get_pseudo_labeler_sound
-from pseudo_labeler import get_pseudo_labeler_complete
 from pseudo_labeler import get_pseudo_labeler_base
+from pseudo_labeler import get_pseudo_labeler_complete
+from pseudo_labeler import get_pseudo_labeler_correct
+from pseudo_labeler import get_pseudo_labeler_generatable
+from pseudo_labeler import get_pseudo_labeler_sound
 from validator import get_soundness
 from validator import get_completeness
 
@@ -211,6 +212,14 @@ def main(config: dict[str, Any]) -> None:
                 source_encoding_args,
                 get_solution_dir,
                 get_testcases,
+                **pseudo_labeler_args
+            )
+        elif pseudo_labeler_type == 'generatable':
+            pseudo_labeler = get_pseudo_labeler_generatable(
+                source_tokenizer,
+                generation_config,
+                device,
+                source_encoding_args,
                 **pseudo_labeler_args
             )
         else:

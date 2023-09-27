@@ -30,21 +30,31 @@ def f(
     config: dict[str, Any]
 ) -> Optional[tuple[float, float, float]]:
 
-    # print(i)
+    print(i)
 
     solution_prefix = Path(config['solution_prefix'])
     incorrect_solution_prefix = Path(config['incorrect_solution_prefix'])
 
     validate_testcases_config = config['validate_testcases']
-    is_unlabeled = validate_testcases_config['unlabeled']
+    testcases_type = validate_testcases_config['type']
 
-    name = data['name']
-    if is_unlabeled:
-        testcases = data['generated_tests']['input']
+    if testcases_type == 'fuzzing':
+        name = data['name']['origin']
     else:
+        name = data['name']
+
+    if testcases_type == 'codecontests_generated':
+        testcases = data['generated_tests']['input']
+    elif testcases_type == 'codecontests_public':
+        testcases = data['public_tests']['input']
+    elif testcases_type == 'codecontests_private':
+        testcases = data['private_tests']['input']
+    elif testcases_type == 'fuzzing':
+        testcases = data['fuzzing']['input']
+    elif testcases_type == 'model_generated':
         testcases = data['testcase']
 
-    if testcases is None:
+    if testcases is None or len(testcases) == 0:
         return None
 
     correct_solution_dir = solution_prefix / name
@@ -77,6 +87,7 @@ def main(config: dict[str, Any]):
 
     # Set variables related to `validate_labeling_testcases`
     validate_testcases_config = config['validate_testcases']
+    testcases_type = validate_testcases_config['type']
     logging.debug(validate_testcases_config)
     testcases_path = Path(validate_testcases_config['testcase'])
 
@@ -108,15 +119,14 @@ def main(config: dict[str, Any]):
         / len(effectivenesses_without_invalids)
     )
     failed_ratio = num_faileds / len(results)
-    print("Failed Ratio: {:.2f}".format(failed_ratio))
-    # print("Valid ratio bin count (0 to 10):")
-    # print(get_bin_count(valid_ratios))
-    print(f"Average valid ratio: {average_valid_ratio * 100:.2f}%")
-    print(f"Average effectiveness: {average_effectiveness * 100:.2f}%")
     print(
-        "Average effectiveness without invalids: {}"
-        .format(average_effectiveness_without_invalids)
+        "{} & Coverage & Valid & Effect. & Effect. w/o Invalids \\\\"
+        .format(testcases_type)
     )
+    print(f"{(1 - failed_ratio) * 100:.2f}", end=' & ')
+    print(f"{average_valid_ratio * 100:.2f}", end=' & ')
+    print(f"{average_effectiveness * 100:.2f}", end=' & ')
+    print("{:.2f} \\\\".format(average_effectiveness_without_invalids * 100))
 
 
 if __name__ == "__main__":
@@ -124,7 +134,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--testcase')
-    parser.add_argument('--unlabeled', action='store_true')
+    parser.add_argument('--type')
     args = parser.parse_args()
 
     with open('./config.json') as fp:
@@ -133,7 +143,7 @@ if __name__ == "__main__":
     data_dir = Path(config['data_dir'])
     defaults = {
         'testcase': None,
-        'unlabeled': False,
+        'type': None,
     }
 
     task = 'validate_testcases'

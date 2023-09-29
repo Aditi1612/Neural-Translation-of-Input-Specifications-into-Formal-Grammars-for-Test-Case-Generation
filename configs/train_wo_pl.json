@@ -23,7 +23,7 @@
   },
   "trainer": {
     "epochs": 1000,
-    "save_dir": "saved/0925.woSL/",
+    "save_dir": "saved/without_pl/",
     "save_period": 10,
     "valid_period": 5,
     "pseudo_label_period": -1,

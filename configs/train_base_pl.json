@@ -21,7 +21,6 @@
       "lr": 1e-5
     }
   },
-  "metrics": [],
   "trainer": {
     "epochs": 10000,
     "save_dir": "saved/base_pl/",

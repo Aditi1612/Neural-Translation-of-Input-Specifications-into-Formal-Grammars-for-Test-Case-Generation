@@ -27,26 +27,44 @@ This repo provides the source code & data of our work.
 ```
 $ make help
 clean-saved:  ## Clean the saved files except the last checkpoint
+generate-testcase-model-without-pseudo-lebeling-extreme:  ## Generate the testcase with the model without pseudo labeling in extreme distribution
 generate-testcase-model-without-pseudo-lebeling:  ## Generate the testcase with the model without pseudo labeling
 help:  ## Show this help message
 label-test-with-model-with-base-pl: | results  ## Label the data with the base pl model
+label-test-with-model-with-complete-pl: | results  ## Label the data with the complete pl model
+label-test-with-model-with-correct-pl: | results  ## Label the data with the correct pl model
 label-with-model-without-pseudo-labeling-labeled-test: | results  ## Label the data with the model
 label-with-model-with-pseudo-labeling-labeled-test: | results  ## Label the data with the model
 prepare-dataset:  ## Prepare the dataset
 test-human-labeled-data: test-human-labeled-data-train test-human-labeled-data-test  ## Test the human-labeled data
 test-human-labeled-data-test:  ## Test the human-labeled test data
 test-human-labeled-data-train:  ## Test the human-labeled train data
-validate-bard-grammar: validate-bard-grammar-1-shot validate-bard-grammar-5-shot  ## Test the bard grammar
+validate-large-language-model-grammar: $(validate_large_lagnague_model_grammar_targets) ## Validate the large language model grammar
 validate-model-labeling-without-pl-labeled-test:  ## Validate the model labeling without pseudo labeling
-validate-model-labeling-with-pl-labeled-test:  ## Validate the model labeling without pseudo labeling
-validate-syntactic-equivalence-model-with-base-pl:  ## Validate the syntactic equivalence with pseudo labeling
+validate-model-labeling-with-pl-labeled-test:  ## Validate the model labeling with pseudo labeling
+validate-model-with-base-pl-test:  ## Validate the model labeling with base-pl
+validate-model-with-complete-pl-test:  ## Validate the model labeling with complete-pl
+validate-model-with-correct-pl-test:  ## Validate the model labeling with correct-pl
+validate-model-with-generatable-pl-test:  ## Validate the model labeling with generatable-pl
+validate-syntactic-equivalence-model-with-base-pl:  ## Validate the syntactic equivalence with base pseudo labeling
+validate-syntactic-equivalence-model-with-complete-pl-earlier:  ## Validate the syntactic equivalence with complete pseudo labeling earlier
+validate-syntactic-equivalence-model-with-complete-pl:  ## Validate the syntactic equivalence with complete pseudo labeling
+validate-syntactic-equivalence-model-with-correct-pl:  ## Validate the syntactic equivalence with correct pseudo labeling
+validate-syntactic-equivalence-model-with-generatable-pl:  ## Validate the syntactic equivalence with generatable pseudo labeling
 validate-syntactic-equivalence-model-without-pl:  ## Validate the syntactic equivalence without pseudo labeling
 validate-syntactic-equivalence-model-with-pl:  ## Validate the syntactic equivalence with pseudo labeling
-validate-testcase-codecontest: $(validate_testcase_codecontest_targets) ## Validate the codecontest testcase
-validate-testcase-codecontest-generated:  ## Validate the codecontest generated testcase
-validate-testcase-codecontest-private:  ## Validate the codecontest private testcase
-validate-testcase-codecontest-public:  ## Validate the codecontest public testcase
+validate-testcase: $(validate_testcase_targets) ## Validate the testcase
+validate-testcase-bard-zero-shot:  ## Validate the bard generated testcase zero-shot
+validate-testcase-codecontests: $(validate_testcase_codecontests_targets) ## Validate the codecontest testcase
+validate-testcase-codecontests-generated:  ## Validate the codecontests generated testcase
+validate-testcase-codecontests-private:  ## Validate the codecontest private testcase
+validate-testcase-codecontests-public:  ## Validate the codecontest public testcase
+validate-testcase-fine-tuning:  ## Validate the fine-tuning testcase
 validate-testcase-fuzzing:  ## Validate the fuzzing testcase
+validate-testcase-gpt-zero-shot:  ## Validate the gpt generated testcase zero-shot
+validate-testcase-large-language-model: $(validate_testcase_large_language_model_targets) ## Validate the large language model testcase
+validate-testcase-large-language-model-grammar: $(validate_testcase_large_language_model_grammar_targets) ## Validate the large language model grammar
+validate-testcase-model-without-pseudo-labeling-extreme:  ## Validate the model generated testcase in extreme distribution
 validate-testcase-model-without-pseudo-labeling:  ## Validate the model generated testcase
 ```
 

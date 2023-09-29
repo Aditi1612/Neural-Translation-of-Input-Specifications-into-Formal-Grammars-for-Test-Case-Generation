@@ -26,9 +26,6 @@ random.seed(SEED)  # python random seed
 
 def main(config: dict[str, Any]) -> None:
 
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    logging.info(f"Use device: {device}")
-
     data_dir = Path(config['data_dir'])
     test_data_path = data_dir / config['test_data']
     pretrained_model_name = config['pretrained']
@@ -132,15 +129,17 @@ def main(config: dict[str, Any]) -> None:
     average_exact_match_constraints = (
         sum(exact_match_constraints) / len(exact_match_constraints))
 
+    print(model_labeled_data_path)
+    print('& Productions & Constraints & Grammar \\\\')
     print('& {:.2f} & {:.2f} & {:.2f} \\\\'.format(
-        average_exact_match * 100,
         average_exact_match_productions * 100,
         average_exact_match_constraints * 100,
+        average_exact_match * 100,
     ))
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
+    # logging.basicConfig(level=logging.DEBUG)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--model-labeled-data')

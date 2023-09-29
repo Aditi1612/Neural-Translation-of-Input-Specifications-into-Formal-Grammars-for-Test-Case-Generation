@@ -81,8 +81,10 @@ class CountingContextFreeGrammar:
         productions: list[str],
         constraints: list[str],
         testmode: bool = False,
+        extrememode: bool = False,
     ):
         self.testmode = testmode
+        self.extrememode = extrememode
 
         # Parse productions
         self.productions: dict[Token, list[Production]] = {}
@@ -663,11 +665,16 @@ class CountingContextFreeGrammar:
         n = lower_inner_variables + upper_inner_variables + 1
         k = lower_inner_variables
 
+        def _sample_value():
+            if not self.extrememode or lower_bound > 0:
+                return random.randint(lower_bound, upper_bound)
+            x = random.random()
+            y = (x ** 3) * (upper_bound - lower_bound + 1) + lower_bound
+            return math.floor(y)
+
         # XXX: It depends on max iteration
         for _ in range(MAX_SAMPLING_ITER):
-            values = [
-                random.randint(lower_bound, upper_bound) for _ in range(n)
-            ]
+            values = [_sample_value() for _ in range(n)]
             value = sorted(values)[k]
             term_constraint_flag = self.check_term_constraint(
                 variable, value, assignment)

@@ -9,6 +9,7 @@ from typing import (Any, Optional)
 import jsonlines
 import torch
 import numpy as np
+from tqdm import tqdm
 
 from validator import validate_testcases
 
@@ -28,8 +29,7 @@ def f(
     i: int,
     data: dict[str, Any],
     config: dict[str, Any]
-) -> Optional[tuple[float, float, float]]:
-
+) -> Optional[tuple[float, Optional[float], Optional[float]]]:
     print(i)
 
     solution_prefix = Path(config['solution_prefix'])
@@ -52,7 +52,8 @@ def f(
     elif testcases_type == 'fuzzing':
         testcases = data['fuzzing']['input']
     elif testcases_type == 'model_generated':
-        testcases = data['testcase']
+        testcases = data['testcase'][:10]
+        testcases = testcases[:min(len(testcases), 10)]
 
     if testcases is None or len(testcases) == 0:
         return None
@@ -64,6 +65,7 @@ def f(
         testcases,
         correct_solution_dir,
         incorrect_solution_dir,
+        solution_sampling_seed=42,
         **validate_testcases_config['args']
     )
 
@@ -91,42 +93,64 @@ def main(config: dict[str, Any]):
     logging.debug(validate_testcases_config)
     testcases_path = Path(validate_testcases_config['testcase'])
 
-    valid_ratios: list[float] = []
-    effectivenesses: list[float] = []
-    effectivenesses_without_invalids: list[float] = []
+    target_names: Optional[set[str]] = None
+    if validate_testcases_config['filter'] is not None:
+        filter_testcases_path = Path(validate_testcases_config['filter'])
+        with jsonlines.open(filter_testcases_path, 'r') as filter_testcases:
+            target_names = {
+                data['name'] for data
+                in tqdm(filter_testcases, desc='Loading filter testcases')
+                if data['testcase'] is not None
+            }
 
     dataset: list[dict[str, Any]] = []
     with jsonlines.open(testcases_path, 'r') as testcases:
         for data in testcases:
-            dataset.append(data)
+            if target_names is None or data['name'] in target_names:
+                dataset.append(data)
 
     with Pool(5) as pool:
         results = list(pool.starmap(
             f, [(i, data, config) for i, data in enumerate(dataset)]))
 
-    num_faileds = sum(result is None for result in results)
     filtered_results = list(filter(None, results))
-
-    valid_ratios = [result[0] for result in filtered_results]
-    effectivenesses = [result[1] for result in filtered_results]
-    effectivenesses_without_invalids = (
-        [result[2] for result in filtered_results])
-
+    coverage = len(filtered_results) / len(results)
+    valid_ratios = [e[0] for e in filtered_results]
     average_valid_ratio = sum(valid_ratios) / len(valid_ratios)
+    effectivenesses = [e[1] for e in filtered_results]
     average_effectiveness = sum(effectivenesses) / len(effectivenesses)
+
+    effectivenesses_without_invalids = (
+        list(filter(None, [e[2] for e in filtered_results])))
+    coverage_without_invalids = (
+        len(effectivenesses_without_invalids) / len(results))
     average_effectiveness_without_invalids = (
         sum(effectivenesses_without_invalids)
         / len(effectivenesses_without_invalids)
     )
-    failed_ratio = num_faileds / len(results)
+
     print(
-        "{} & Coverage & Valid & Effect. & Effect. w/o Invalids \\\\"
+        "{} & Coverage & Valid & InEffectiveness & Coverage & InEffectiveness \\\\"
         .format(testcases_type)
     )
-    print(f"{(1 - failed_ratio) * 100:.2f}", end=' & ')
-    print(f"{average_valid_ratio * 100:.2f}", end=' & ')
-    print(f"{average_effectiveness * 100:.2f}", end=' & ')
-    print("{:.2f} \\\\".format(average_effectiveness_without_invalids * 100))
+    # Coverage
+    print(f"{coverage * 100:.2f}", end=' & ')
+    # Valid
+    print("{:.2f} {{\\small($\\pm{:.2f}$)}}".format(
+        average_valid_ratio * 100, np.std(valid_ratios) * 100
+    ), end=' & ')
+    # Effectiveness
+    print("{:.2f} {{\\small($\\pm${:.2f})}} &".format(
+        (1 - average_effectiveness) * 100, np.std(effectivenesses) * 100
+    ))
+
+    # Coverage w/o invalids
+    print(f"{coverage_without_invalids * 100:.2f} ", end=' & ')
+    # Effectiveness w/o invalids
+    print("{:.2f} {{\\small($\\pm{:.2f}$)}} \\\\".format(
+        (1 - average_effectiveness_without_invalids) * 100,
+        np.std(effectivenesses_without_invalids) * 100,
+    ))
 
 
 if __name__ == "__main__":
@@ -135,6 +159,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--testcase')
     parser.add_argument('--type')
+    parser.add_argument('--filter')
     args = parser.parse_args()
 
     with open('./config.json') as fp:
@@ -144,6 +169,7 @@ if __name__ == "__main__":
     defaults = {
         'testcase': None,
         'type': None,
+        'filter': None,
     }
 
     task = 'validate_testcases'

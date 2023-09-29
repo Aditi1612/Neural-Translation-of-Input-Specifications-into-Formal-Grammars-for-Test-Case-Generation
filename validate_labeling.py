@@ -64,6 +64,7 @@ def main(config: dict[str, Any]):
         is_sound = get_soundness(
             grammar,
             solution_dir,
+            solution_sampling_seed=42,
             name=name,
             specification=specification,
             **get_soundness_args
@@ -89,9 +90,10 @@ def main(config: dict[str, Any]):
     with jsonlines.open(output_path, 'w') as output:
         output.write_all(sound_and_complete_dataset)
 
+    print("Soundness & Completeness & Sound. \\& Compl. \\\\")
     print(f"{average_soundness * 100:.2f} & ", end='')
     print(f"{average_completeness * 100:.2f} & ", end='')
-    print(f"{average_correctness * 100:.2f} ")
+    print(f"{average_correctness * 100:.2f} \\\\")
 
 
 if __name__ == "__main__":

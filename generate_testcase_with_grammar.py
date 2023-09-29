@@ -12,6 +12,7 @@ from counting_context_free_grammar import CountingContextFreeGrammar as CCFG
 def main(args: argparse.Namespace):
     labeled_path = Path(args.labeled_data)
     output_path = Path(args.output)
+    extreme = args.extreme
 
     testcase_dataset = []
     with jsonlines.open(labeled_path, "r") as labeled_dataset:
@@ -23,7 +24,7 @@ def main(args: argparse.Namespace):
 
             exception = None
             try:
-                ccfg = CCFG(productions, constraints)
+                ccfg = CCFG(productions, constraints, extrememode=extreme)
 
                 @timeout_decorator.timeout(10)
                 def generate():
@@ -66,6 +67,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--labeled-data")
     parser.add_argument("--output")
+    parser.add_argument("--extreme", default=False, action="store_true")
     args = parser.parse_args()
 
     main(args)

@@ -30,7 +30,7 @@ TestcasesValidationResult = NamedTuple(
     [
         ('num_valid', int),
         ('average_effectiveness', float),
-        ('average_effectiveness_without_invalids', float),
+        ('average_effectiveness_without_invalids', Optional[float]),
     ]
 )
 
@@ -62,6 +62,7 @@ def get_stdout(python_file: Path, stdin: io.IOBase) -> Optional[str]:
 def get_validity(
     testcase: Union[str, io.IOBase],
     solution_dir: Path,
+    solution_sampling_seed: Optional[int] = None,
     *,
     timeout: float = 2,
     num_solution_sampling: Optional[int] = None
@@ -87,7 +88,11 @@ def get_validity(
     else:
         num_solution_sampling = min(num_solution_sampling, len(solutions))
 
-    solutions = random.sample(solutions, num_solution_sampling)
+    if solution_sampling_seed is not None:
+        random_instance = random.Random(solution_sampling_seed)
+        solutions = random_instance.sample(solutions, num_solution_sampling)
+    else:
+        solutions = random.sample(solutions, num_solution_sampling)
 
     outputs = [get_stdout(solution, temp_file) for solution in solutions]
 
@@ -126,6 +131,7 @@ def validate_testcase(
     testcase: str,
     correct_solution_dir: Path,
     incorrect_solution_dir: Path,
+    solution_sampling_seed: Optional[int] = None,
     *,
     timeout: float = 2,
     num_correct_solution_samples: Optional[int] = None,
@@ -140,8 +146,13 @@ def validate_testcase(
     if num_incorrect_solution_samples is None:
         num_incorrect_solution_samples = len(incorrect_solutions)
 
-    incorrect_solutions = random.sample(
-        incorrect_solutions, num_incorrect_solution_samples)
+    if solution_sampling_seed is not None:
+        random_instance = random.Random(solution_sampling_seed)
+        incorrect_solutions = random_instance.sample(
+            incorrect_solutions, num_incorrect_solution_samples)
+    else:
+        incorrect_solutions = random.sample(
+            incorrect_solutions, num_incorrect_solution_samples)
 
     with tempfile.TemporaryFile('w+b') as temp_file:
         temp_file.write(testcase.encode('utf-8'))
@@ -163,7 +174,9 @@ def validate_testcase(
         incorrect_output != correct_output
         for incorrect_output in incorrect_solution_outputs
     )
+
     effectiveness = num_distinguished / len(incorrect_solution_outputs)
+
     return validity >= validity_threshold, effectiveness
 
 
@@ -171,6 +184,7 @@ def validate_testcases(
     testcases: list[str],
     correct_solution_dir: Path,
     incorrect_solution_dir: Path,
+    solution_sampling_seed: Optional[int] = None,
     *,
     timeout: float = 2,
     num_correct_solution_samples: Optional[int] = None,
@@ -186,6 +200,7 @@ def validate_testcases(
             testcase,
             correct_solution_dir,
             incorrect_solution_dir,
+            solution_sampling_seed=solution_sampling_seed,
             timeout=timeout,
             num_correct_solution_samples=num_correct_solution_samples,
             num_incorrect_solution_samples=num_incorrect_solution_samples,
@@ -196,13 +211,10 @@ def validate_testcases(
             effectivenesses_except_invalids.append(effectiveness)
         effectivenesses.append(effectiveness)
 
-    if len(effectivenesses) == 0:
-        average_effectiveness = 0
-    else:
-        average_effectiveness = sum(effectivenesses) / len(effectivenesses)
+    average_effectiveness = sum(effectivenesses) / len(effectivenesses)
 
     if len(effectivenesses_except_invalids) == 0:
-        average_effectiveness_without_invalids = 0
+        average_effectiveness_without_invalids = None
     else:
         average_effectiveness_without_invalids = (
             sum(effectivenesses_except_invalids)
@@ -268,6 +280,7 @@ def _get_completeness(
 def get_soundness(
     grammar: dict[str, list[str]],
     solution_dir: Path,
+    solution_sampling_seed: Optional[int] = None,
     *,
     name: str = "no name",
     specification: str = "no specification",
@@ -284,6 +297,7 @@ def get_soundness(
             num_testcase_generation,
             timeout,
             validity_threshold,
+            solution_sampling_seed
         )
         if ret is None:
             return True
@@ -316,6 +330,7 @@ def _get_soundness(
     num_testcase_generation: int,
     timeout: float,
     validity_threshold: float,
+    solution_sampling_seed: Optional[int],
 ) -> Optional[tuple[str, list[str]]]:
 
     productions = cast(list[str], grammar['productions'])
@@ -332,6 +347,7 @@ def _get_soundness(
         validity, _, outputs = get_validity(
             generated_testcase,
             solution_dir,
+            solution_sampling_seed=solution_sampling_seed,
             timeout=timeout,
             num_solution_sampling=num_solution_sampling
         )
@@ -352,6 +368,7 @@ def get_correctness(
     solution_dir: Path,
     testcases: list[str],
     name: str,
+    solution_sampling_seed: Optional[int] = None,
     *,
     num_testcase_generation: int,
     num_solution_sampling: Optional[int] = None,
@@ -359,7 +376,7 @@ def get_correctness(
     timeout: float = 2,
 ) -> bool:
     is_sound = get_soundness(
-        grammar, solution_dir,
+        grammar, solution_dir, solution_sampling_seed,
         name=name,
         num_testcase_generation=num_testcase_generation,
         num_solution_sampling=num_solution_sampling,

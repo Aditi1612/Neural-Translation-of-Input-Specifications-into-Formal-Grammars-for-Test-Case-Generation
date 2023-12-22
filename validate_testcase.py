@@ -30,7 +30,8 @@ def f(
     data: dict[str, Any],
     config: dict[str, Any]
 ) -> Optional[tuple[float, Optional[float], Optional[float]]]:
-    print(i)
+    if i % 10 == 0:
+        logger.debug(i)
 
     solution_prefix = Path(config['solution_prefix'])
     incorrect_solution_prefix = Path(config['incorrect_solution_prefix'])
@@ -52,11 +53,12 @@ def f(
     elif testcases_type == 'fuzzing':
         testcases = data['fuzzing']['input']
     elif testcases_type == 'model_generated':
-        testcases = data['testcase'][:10]
-        testcases = testcases[:min(len(testcases), 10)]
+        testcases = data['testcase']
 
     if testcases is None or len(testcases) == 0:
         return None
+
+    testcases = testcases[:min(len(testcases), 10)]
 
     correct_solution_dir = solution_prefix / name
     incorrect_solution_dir = incorrect_solution_prefix / name
@@ -110,8 +112,8 @@ def main(config: dict[str, Any]):
                 dataset.append(data)
 
     with Pool(5) as pool:
-        results = list(pool.starmap(
-            f, [(i, data, config) for i, data in enumerate(dataset)]))
+        results = pool.starmap(
+            f, [(i, data, config) for i, data in enumerate(dataset)])
 
     filtered_results = list(filter(None, results))
     coverage = len(filtered_results) / len(results)
@@ -130,8 +132,8 @@ def main(config: dict[str, Any]):
     )
 
     print(
-        "{} & Coverage & Valid & InEffectiveness & Coverage & InEffectiveness \\\\"
-        .format(testcases_type)
+        f"{testcases_type} & Coverage & Valid & Effectiveness"
+        " & Coverage & Effectiveness \\\\"
     )
     # Coverage
     print(f"{coverage * 100:.2f}", end=' & ')
@@ -141,14 +143,14 @@ def main(config: dict[str, Any]):
     ), end=' & ')
     # Effectiveness
     print("{:.2f} {{\\small($\\pm${:.2f})}} &".format(
-        (1 - average_effectiveness) * 100, np.std(effectivenesses) * 100
+        average_effectiveness * 100, np.std(effectivenesses) * 100
     ))
 
     # Coverage w/o invalids
     print(f"{coverage_without_invalids * 100:.2f} ", end=' & ')
     # Effectiveness w/o invalids
     print("{:.2f} {{\\small($\\pm{:.2f}$)}} \\\\".format(
-        (1 - average_effectiveness_without_invalids) * 100,
+        average_effectiveness_without_invalids * 100,
         np.std(effectivenesses_without_invalids) * 100,
     ))
 

@@ -2,7 +2,7 @@
   "pretrained": "Salesforce/codet5-base",
   "data_dir": "data/",
   "solution_prefix": "data/solutions/solutions",
-  "incorrect_solution_prefix": "data/solutions/solutions",
+  "incorrect_solution_prefix": "data/solutions/incorrect_solutions",
   "train_data": "labeled/train.jsonl",
   "test_data": "labeled/test.jsonl",
   "unlabeled_train_data": "unlabeled/code_contests_train_python_filtered.jsonl",
@@ -52,7 +52,8 @@
   "validate_testcases": {
     "args": {
       "num_correct_solution_samples": 20,
-      "num_incorrect_solution_samples": 20
+      "num_incorrect_solution_samples": 20,
+      "validity_threshold": 0.9
     }
   },
   "validate_labeling": {

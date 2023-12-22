@@ -165,6 +165,7 @@ def validate_testcase(
             num_solution_sampling=num_correct_solution_samples
         )
 
+        temp_file.seek(0)
         incorrect_solution_outputs = [
             get_stdout(solution, temp_file)
             for solution in incorrect_solutions

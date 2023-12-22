@@ -268,11 +268,11 @@ generate-testcase-gpt-grammar-5-shot-extreme:  ## Generate the testcase with gpt
 ################################################################################
 
 validate_testcase_targets = \
-	$(validate_testcase_model_without_pseudo_labeling_targets) \
-	validate-testcase-finetuning \
+	validate-testcase-codecontests \
+	validate-testcase-fine-tuning \
 	validate-testcase-fuzzing \
 	validate-testcase-large-language-model \
-	$(validate_testcase_larget_language_model_grammar_targets) \
+	validate-testcase-large-language-model-grammar \
 	validate-testcase-model-without-pseudo-labeling
 
 validate-testcase: $(validate_testcase_targets) ## Validate the testcase

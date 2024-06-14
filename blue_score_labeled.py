@@ -10,33 +10,32 @@ import jsonlines
 import numpy as np
 from tqdm import tqdm
 from transformers import RobertaTokenizer
-import sacrebleu  # Import sacrebleu for BLEU score calculation
+import sacrebleu
 
 from data_loader import MyDataset
 from tokenizer import CountingContextFreeGrammarTokenizer as CcfgTokenizer
 
 # Fix random seeds for reproducibility
 SEED = 42
-torch.manual_seed(SEED)  # pytorch random seed
+torch.manual_seed(SEED)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
-np.random.seed(SEED)  # numpy random seed
-random.seed(SEED)  # python random seed
+np.random.seed(SEED)
+random.seed(SEED)
 
 def main(config: dict[str, Any]) -> None:
+    logging.basicConfig(level=logging.INFO)
     data_dir = Path(config['data_dir'])
     test_data_path = data_dir / config['test_data']
     pretrained_model_name = config['pretrained']
     test_config = config['test']
-    logging.info(test_config)
     model_labeled_data_path = Path(test_config['model_labeled_data'])
 
     source_tokenizer = RobertaTokenizer.from_pretrained(pretrained_model_name)
     target_tokenizer = CcfgTokenizer(source_tokenizer)
 
     def normalize_list(str_list: list[str]) -> list[str]:
-        str_list = list(filter(lambda e: len(e) > 0, str_list))
-        return sorted(list(set(str_list)))
+        return sorted(set(str_list))
 
     def stringified_to_grammar(stringified: str):
         production_encoding, constraint_encoding = target_tokenizer.encode_to_splited(stringified)
@@ -44,10 +43,8 @@ def main(config: dict[str, Any]) -> None:
         production_decoding = target_tokenizer.decode(production_encoding)
         constraint_decoding = target_tokenizer.decode(constraint_encoding)
 
-        productions = production_decoding.split(subseparator)
-        productions = list(map(str.strip, productions))
-        constraints = constraint_decoding.split(subseparator)
-        constraints = list(map(str.strip, constraints))
+        productions = list(map(str.strip, production_decoding.split(subseparator)))
+        constraints = list(map(str.strip, constraint_decoding.split(subseparator)))
 
         return {'productions': productions, 'constraints': constraints}
 
@@ -55,8 +52,7 @@ def main(config: dict[str, Any]) -> None:
     with jsonlines.open(model_labeled_data_path) as model_labeled_data:
         for data in model_labeled_data:
             name = data['name']
-            model_labeled_grammar = data['grammar']
-            model_labeled_grammar_dict[name] = model_labeled_grammar
+            model_labeled_grammar_dict[name] = data['grammar']
 
     bleu_scores = []
 
@@ -65,12 +61,8 @@ def main(config: dict[str, Any]) -> None:
         name = data['name']
         model_labeled_grammar = model_labeled_grammar_dict[name]
 
-        model_labeled_grammar['productions'] = [e for e in model_labeled_grammar['productions'] if e]
-        model_labeled_grammar['constraints'] = [e for e in model_labeled_grammar['constraints'] if e]
-
-        if model_labeled_grammar['productions']:
-            model_labeled_grammar_stringified = MyDataset.stringify(model_labeled_grammar)
-            model_labeled_grammar = stringified_to_grammar(model_labeled_grammar_stringified)
+        model_labeled_grammar_stringified = MyDataset.stringify(model_labeled_grammar)
+        model_labeled_grammar = stringified_to_grammar(model_labeled_grammar_stringified)
 
         model_labeled_productions = normalize_list(model_labeled_grammar['productions'])
         model_labeled_constraints = normalize_list(model_labeled_grammar['constraints'])
@@ -80,26 +72,30 @@ def main(config: dict[str, Any]) -> None:
         human_labeled_constraints = normalize_list(human_labeled_grammar["constraints"])
 
         bleu_score_productions = sacrebleu.corpus_bleu(
-            [' '.join(human_labeled_productions)], 
+            [' '.join(human_labeled_productions)],
             [[' '.join(model_labeled_productions)]]
         ).score
         bleu_score_constraints = sacrebleu.corpus_bleu(
-            [' '.join(human_labeled_constraints)], 
+            [' '.join(human_labeled_constraints)],
             [[' '.join(model_labeled_constraints)]]
         ).score
+        bleu_score_grammar = sacrebleu.corpus_bleu(
+            [' '.join(human_labeled_productions + human_labeled_constraints)],
+            [[' '.join(model_labeled_productions + model_labeled_constraints)]]
+        ).score
 
-        bleu_scores.append((bleu_score_productions, bleu_score_constraints))
+        bleu_scores.append((bleu_score_productions, bleu_score_constraints, bleu_score_grammar))
 
     # Calculate average BLEU scores
     average_bleu_productions = sum(score[0] for score in bleu_scores) / len(bleu_scores)
     average_bleu_constraints = sum(score[1] for score in bleu_scores) / len(bleu_scores)
-    print(model_labeled_data_path)
-    print('& Productions & Constraints')
-    print(average_bleu_productions)
+    average_bleu_grammar = sum(score[2] for score in bleu_scores) / len(bleu_scores)
+
+    logging.info(f"Average BLEU Score Productions: {average_bleu_productions}")
+    logging.info(f"Average BLEU Score Constraints: {average_bleu_constraints}")
+    logging.info(f"Average BLEU Score Grammar: {average_bleu_grammar}")
 
 if __name__ == "__main__":
-    # logging.basicConfig(level=logging.DEBUG)
-
     parser = argparse.ArgumentParser()
     parser.add_argument('--model-labeled-data')
     args = parser.parse_args()

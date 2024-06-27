@@ -1,0 +1,10 @@
+1. Place a model to `saved/checkpoint.pth`
+2. Place solutions to `data/solutions/{incorrect_solutions,solutions}/`
+3. Place grammars to:
+   - `data/grammar/{gemini,gpt}/{1,5}-shot/test.jsonl`
+   - `data/grammar/ground-truth/test.jsonl`
+   - `data/testcase/{gemini,gpt}/direct/test.jsonl`
+4. Run `python -m venv .venv`
+5. Run `source .venv/bin/activate`
+6. Run `pip install -r requirements.txt`
+7. Run `make all-extreme`

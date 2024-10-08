@@ -1,0 +1,16 @@
+.venv/
+.coverage*
+raw-data/*.jsonl
+raw-data/solutions
+saved/
+data/*
+
+!data/grammar/
+!data/grammar-candidate/
+
+!data/testcase/
+data/testcase/*
+!data/testcase/code-contest/
+!data/testcase/direct/
+
+__pycache__/

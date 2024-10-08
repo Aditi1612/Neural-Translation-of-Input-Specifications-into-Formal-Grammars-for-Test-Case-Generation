@@ -1,0 +1,18 @@
+Name:  469_A. I Wanna Be the Guy
+Grammar:  {'productions': ['<S>->[n] <n> [p] <s> <T_p> <n> <T_p>', '<T_i>-><T_i-1> <s> a_i', '<T_1>->a_1'], 'constraints': ['1<=n<=100', '0<=p<=n', '1<=a_i<=n']}
+Error:  Invalid indexed nonterminal <T_-1>
+Name:  p03592 CODE FESTIVAL 2017 qual A - fLIP
+Grammar:  {'productions': ['<S>->N <s> M <s> K'], 'constraints': ['1<=N<=1000', '1<=M<=1000', '0<=K<=N*M']}
+Error:  Unbounded variable: K
+Name:  p02976 AtCoder Grand Contest 035 - Even Degrees
+Grammar:  {'productions': ['<S>->N <s> [M] <n> <T_M>', '<T_i>-><T_i-1> <n> A_i <s> B_i', '<T_1>->A_1 <s> B_1'], 'constraints': ['2<=N<=10^5', '(N-1)<=M<=10^5', '1<=A_i<=N', '1<=B_i<=N']}
+Error:  Unbounded variable: M
+Name:  p03168 Educational DP Contest - Coins
+Grammar:  {'productions': ['<S>->[N] <n> <T_N>', '<T_i>-><T_i-1> <s> p_i', '<T_1>->p_1'], 'constraints': ['1<=N<=2999', '0<p_i<1', 'N%2!=0']}
+Error:  empty range for randrange() (1, 1, 0)
+Name:  688_B. Lovely Palindromes
+Grammar:  {'productions': ['<S>->n'], 'constraints': ['1<=n<=10^100000']}
+Error:  Exceeds the limit (4300) for integer string conversion; use sys.set_int_max_str_digits() to increase the limit
+Name:  1371_D. Grid-00100
+Grammar:  {'productions': ['<S>->[t] <n> <T_t>', '<T_i>-><T_i-1> <n> n <s> k', '<T_1>->n <s> k'], 'constraints': ['1<=t<=100', '1<=n<=300', '0<=k<=(n^2)']}
+Error:  Unbounded variable: k

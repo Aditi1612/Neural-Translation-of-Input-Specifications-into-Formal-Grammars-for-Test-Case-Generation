@@ -1,0 +1,144 @@
+data/execution-summary/code-contest/generated/test.jsonl
+elementwise
+total used effectiveness std
+494 488 42.00994182905908 26.759920020575716
+set
+total used effectiveness std num_testcase
+494 488 30.76876788966953 44.275805516611996 82.63855421686748
+
+data/execution-summary/code-contest/private/test.jsonl
+elementwise
+total used effectiveness std
+494 419 51.622056433143136 23.29708150459481
+set
+total used effectiveness std num_testcase
+494 419 92.66280259120356 20.864547588897857 40.14878048780488
+
+data/execution-summary/code-contest/public/test.jsonl
+elementwise
+total used effectiveness std
+494 493 28.19298753984352 24.900251244755847
+set
+total used effectiveness std num_testcase
+494 493 37.57220129431082 29.59605597713777 2.4297352342158858
+
+data/execution-summary/direct/gemini/test.jsonl
+elementwise
+total used effectiveness std
+494 494 31.463789134841768 27.285711775178456
+set
+total used effectiveness std num_testcase
+494 494 45.39931559668402 42.47439669407741 9.688888888888888
+
+data/execution-summary/direct/gpt/test.jsonl
+elementwise
+total used effectiveness std
+494 494 42.502313475997695 28.11967683910851
+set
+total used effectiveness std num_testcase
+494 494 64.92296446243815 39.03506052744839 10.0
+
+data/execution-summary/fuzzing/private/test.jsonl
+elementwise
+total used effectiveness std
+494 419 42.10722809410161 26.16434254343572
+set
+total used effectiveness std num_testcase
+494 419 38.57389097245899 44.970800099447644 10.0
+
+data/execution-summary/fuzzing/private/train.jsonl
+elementwise
+total used effectiveness std
+494 333 36.55555555555556 27.021080760623523
+set
+total used effectiveness std num_testcase
+494 333 27.837837837837835 41.86505000763611 10.0
+
+data/execution-summary/fuzzing/public/test.jsonl
+elementwise
+total used effectiveness std
+494 493 30.79685437393348 22.348800234597928
+set
+total used effectiveness std num_testcase
+494 493 30.930004185582277 36.36190811899211 10.0
+
+data/execution-summary/fuzzing/public/train.jsonl
+elementwise
+total used effectiveness std
+494 494 30.03643724696356 25.843947134699118
+set
+total used effectiveness std num_testcase
+494 494 22.570850202429153 36.15181160430424 10.0
+
+data/execution-summary/grammar/ccfg-t5/beam-1/test.jsonl
+elementwise
+total used effectiveness std
+494 212 37.05275370950688 38.83358003302712
+set
+total used effectiveness std num_testcase
+494 212 48.44863731656184 45.593679207003 37.624
+
+data/execution-summary/grammar/ccfg-t5/beam-10/test.jsonl
+elementwise
+total used effectiveness std
+494 449 50.36374038253325 36.53159685829721
+set
+total used effectiveness std num_testcase
+494 449 65.20168275179412 39.82396361773136 38.502631578947366
+
+data/execution-summary/grammar/ccfg-t5/beam-100/test.jsonl
+elementwise
+total used effectiveness std
+494 472 48.92607129391698 37.281517099189216
+set
+total used effectiveness std num_testcase
+494 472 62.97257532956686 40.64691567515739 38.809399477806785
+
+data/execution-summary/grammar/gemini/1-shot/test.jsonl
+elementwise
+total used effectiveness std
+494 191 22.334171453670297 33.26936755319201
+set
+total used effectiveness std num_testcase
+494 191 30.523560209424083 42.77957897003785 40.7972972972973
+
+data/execution-summary/grammar/gemini/5-shot/test.jsonl
+elementwise
+total used effectiveness std
+494 298 42.19749281582241 35.880291128340225
+set
+total used effectiveness std num_testcase
+494 298 56.744966442953015 42.621426121097706 39.03225806451613
+
+data/execution-summary/grammar/gpt/1-shot/test.jsonl
+elementwise
+total used effectiveness std
+494 412 47.1890936268787 36.12304033789253
+set
+total used effectiveness std num_testcase
+494 412 64.50512405609493 39.8242430953982 39.66285714285714
+
+data/execution-summary/grammar/gpt/5-shot/test.jsonl
+elementwise
+total used effectiveness std
+494 412 52.62128958485771 34.49004680550863
+set
+total used effectiveness std num_testcase
+494 412 72.26739482200647 35.99942822217707 39.73209549071618
+
+data/execution-summary/grammar/ground-truth/test.jsonl
+elementwise
+total used effectiveness std
+494 494 57.7813842905674 32.220671446733505
+set
+total used effectiveness std num_testcase
+494 494 76.75334168755222 30.8718086547098 36.58502024291498
+
+data/execution-summary/grammar/ground-truth/train.jsonl
+elementwise
+total used effectiveness std
+494 459 58.45492918798302 31.353527228541516
+set
+total used effectiveness std num_testcase
+494 459 73.81263616557733 32.946377729106004 22.77188940092166
+

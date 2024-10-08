@@ -1,13 +1,6 @@
 __pycache__/
-
-test_results
-results
-saved
-data/raw
-data/labeled
-data/unlabeled
-data/solutions
+.DS_Store
 .vscode
 .venv
-*.swp
-*.log
+
+saved

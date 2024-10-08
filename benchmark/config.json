@@ -1,0 +1,25 @@
+{
+  "pretrained": "Salesforce/codet5-base",
+  "data_loader": {
+    "args": {
+      "batch_size": 8,
+      "shuffle": true,
+      "num_workers": 4
+    }
+  },
+  "generation_config": {
+    "length_penalty": 1.0,
+    "max_new_tokens": 150,
+    "repetition_penalty": 2.5,
+    "early_stopping": true
+  },
+  "source_encoding": {
+    "args": {
+      "add_special_tokens": false,
+      "max_length": 512,
+      "padding": true,
+      "return_tensors": "pt",
+      "truncation": true
+    }
+  }
+}

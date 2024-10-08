@@ -1,5 +1,14 @@
+DATA:=${DATA_DIR}
+VENV:=.venv
+PYTHON:=$(VENV)/bin/python
+MODEL:=saved/checkpoint.pth
+
 # Prevent build non-existing prerequisites
 .SECONDARY:
+
+data/%.jsonl: raw-data/%.jsonl
+	mkdir -p $(dir $@)
+	ln -fs $(abspath $<) $@
 
 prepare-dataset:  ## Create ${SOLUTIONS_DIR}
 	python scripts/download_dataset.py \

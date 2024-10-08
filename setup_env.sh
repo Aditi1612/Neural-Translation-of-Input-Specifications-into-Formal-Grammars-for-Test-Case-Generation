@@ -1,10 +1,7 @@
-VENV=".venv"
-PYTHON="${VENV}/bin/python"
-
 PYTHONPATH="$(pwd)/src:$(pwd)/scripts"
 export PYTHONPATH
 
-RAW_DATA_DIR="/raw-data"
+RAW_DATA_DIR="./raw-data"
 export RAW_DATA_DIR
 
 INTERMEDIATE_DIR="${RAW_DATA_DIR}/intermediate"
@@ -13,14 +10,14 @@ export INTERMEDIATE_DIR
 # CACHE_DIR="/data.cache"
 # export CACHE_DIR
 
-DATA_DIR="/data"
+DATA_DIR="./data"
 export DATA_DIR
 
 LEVEL_DIR="${RAW_DATA_DIR}/level"
 export LEVEL_DIR
 
 # Path to the correct/incorrect solutions of the code contest
-SOLUTIONS_DIR="${RAW_DATA_DIR}/solutions"
+SOLUTIONS_DIR="${DATA_DIR}/solutions"
 CORRECT_SOLUTIONS_DIR="${SOLUTIONS_DIR}/solutions"
 export CORRECT_SOLUTIONS_DIR
 INCORRECT_SOLUTIONS_DIR="${SOLUTIONS_DIR}/incorrect_solutions"

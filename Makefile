@@ -62,7 +62,7 @@ COVERAGE_RESULT = $(SUFFIXES_TESTCASE:%=$(DATA)/coverage/%)
 include makefiles/coverage_result.mk
 
 all: \
-	$(SUMMARY_RESULT) \
 	$(GENERATION_RESULT) \
-	$(PARSING_RESULT)
+	$(PARSING_RESULT) \
+	$(SUMMARY_RESULT)
 	# $(COVERAGE_RESULT)

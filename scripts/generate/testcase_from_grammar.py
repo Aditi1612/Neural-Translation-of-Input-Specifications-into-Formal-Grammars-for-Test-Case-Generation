@@ -21,27 +21,34 @@ def get_testcase(
     ccfg: Ccfg,
     timeout: int,
     min_degree: int,
-) -> tuple[str, int]:
+    k: int,
+) -> list[tuple[str, int]]:
     """
     throw: Error
     """
 
     if min_degree == -1:
-        return ccfg.generate(degree=-1), -1
+        assert k == 1
+        return [(ccfg.generate(degree=-1), -1)]
 
     @timeout_decorator.timeout(timeout)
     def _generate(degree: int) -> str:
         return ccfg.generate(degree=degree)
 
-    for degree in range(min_degree, 3):
-        try:
-            return _generate(degree), degree
-        except TimeoutError as e:
-            if degree == 2:
-                raise e
-            degree += 1
+    testcases: list[tuple[str, int]] = []
+    degree = min_degree
 
-    assert False
+    for _ in range(k):
+        while True:
+            try:
+                testcases.append((_generate(degree), degree))
+                break
+            except TimeoutError as e:
+                if degree >= 2:
+                    raise e
+                degree += 1
+
+    return testcases
 
 
 def get_testcases(
@@ -59,23 +66,24 @@ def get_testcases(
 
     ccfg = Ccfg(productions, constraints)
 
-    tuples = (
-        [get_testcase(ccfg, timeout, -1)]
-        + [get_testcase(ccfg, timeout, 2) for _ in range(k)]
-        + [get_testcase(ccfg, timeout, 1) for _ in range(k)]
-        + [get_testcase(ccfg, timeout, 0) for _ in range(k)]
-    )
+    try:
+        tuples = get_testcase(ccfg, timeout, -1, 1)
+    except TimeoutError:
+        tuples = []
+
+    tuples += get_testcase(ccfg, timeout, 2, k)
+    tuples += get_testcase(ccfg, timeout, 1, k)
+    tuples += get_testcase(ccfg, timeout, 0, k)
+
     return [t[0] for t in tuples], [t[1] for t in tuples]
 
 
-def main(grammar_path: Path, output_path: Path, timeout: int) -> None:
+def main(grammar_path: Path, output_path: Path, k: int, timeout: int) -> None:
 
     with jsonlines.open(grammar_path, "r") as grammar_dataset:
         with jsonlines.open(output_path, "w") as writer:
             for data in tqdm(grammar_dataset):
                 try:
-                    # k = num_dict[data["name"]]
-                    k = 30
                     pair = get_testcases(data, k, timeout)
                     if pair is None:
                         raise ValueError("Grammar is None")
@@ -100,7 +108,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--grammar-data", type=Path)
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--num", type=int, default=10)
     parser.add_argument("--timeout", type=float, default=10)
     args = parser.parse_args()
 
-    main(args.grammar_data, args.output, args.timeout)
+    main(args.grammar_data, args.output, args.num, args.timeout)

@@ -26,8 +26,8 @@ SUFFIXES_GRAMMAR = \
 	gemini/5-shot/test.jsonl \
 	gpt/1-shot/test.jsonl \
 	gpt/5-shot/test.jsonl \
-	ground-truth/test.jsonl \
-	ground-truth/train.jsonl
+	ground-truth/test.jsonl # \
+	# ground-truth/train.jsonl
 GRAMMAR = $(SUFFIXES_GRAMMAR:%=$(DATA)/grammar/%)
 include makefiles/grammar.mk
 
@@ -40,9 +40,9 @@ SUFFIXES_TESTCASE = \
 	direct/gemini/test.jsonl \
 	direct/gpt/test.jsonl \
 	fuzzing/private/test.jsonl \
-	fuzzing/public/test.jsonl \
-	fuzzing/private/train.jsonl \
-	fuzzing/public/train.jsonl
+	fuzzing/public/test.jsonl # \
+	# fuzzing/private/train.jsonl \
+	# fuzzing/public/train.jsonl
 TESTCASE = $(SUFFIXES_TESTCASE:%=$(DATA)/testcase/%)
 include makefiles/testcase.mk
 

@@ -13,7 +13,7 @@ from counting_context_free_grammar import Discriminator
 
 if __name__ == "__main__":
     ground_truth_dir = Path(os.environ["GROUND_TRUTH_GRAMMAR_DIR"])
-    for filename in ["train.jsonl", "test.jsonl", "new_train.jsonl"]:
+    for filename in ["test.jsonl"]:
         print("filename:", filename)
         for obj in tqdm(jsonlines.open(ground_truth_dir / filename)):
             grammar = obj["grammar"]
@@ -25,10 +25,13 @@ if __name__ == "__main__":
             ccfg = None
             try:
                 ccfg = Ccfg(productions, constraints)
-                testcase = ccfg.generate(degree=2)
+                try:
+                    testcase = ccfg.generate(degree=-1)
+                except Exception as e:  # pylint: disable=broad-except
+                    testcase = ccfg.generate(degree=1)
                 d(productions, constraints, testcase)
             except Exception as e:  # pylint: disable=broad-except
-                print(f"Error: {e}")
+                print(f"{type(e)}: {e}")
                 print(f"productions: {productions}")
                 print(f"constraints: {constraints}")
                 if ccfg is not None:

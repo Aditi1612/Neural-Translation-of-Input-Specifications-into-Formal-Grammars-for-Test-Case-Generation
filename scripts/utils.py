@@ -74,9 +74,6 @@ def get_mode(xs: list[str]) -> tuple[str, int]:
 
 
 def sanitize(xs: Iterable[object], filename: str = "test") -> Iterable[object]:
-    ground_truth_testcase = jsonlines.open(
-        Path(os.environ["GROUND_TRUTH_TESTCASE_DIR"]) / f"{filename}.jsonl", "r"
-    )
     ground_truth_generation_result = jsonlines.open(
         Path(os.environ["GROUND_TRUTH_GENERATION_RESULT"]), "r"
     )
@@ -89,24 +86,22 @@ def sanitize(xs: Iterable[object], filename: str = "test") -> Iterable[object]:
 
     it = zip(
         xs,
-        ground_truth_testcase,
         ground_truth_generation_result,
         ground_truth_parsing_result,
         ground_truth_execution_summary,
     )
     for (
         x,
-        testcase,
         generation_result,
         parsing_result,
         execution_summary,
     ) in it:
-        assert testcase["name"] == generation_result["name"]
-        assert testcase["name"] == parsing_result["name"]
-        assert testcase["name"] == execution_summary["name"]
+        name = generation_result["name"]
+        assert name == parsing_result["name"]
+        assert name == execution_summary["name"]
 
         # Exclude problems without testcase of ground truth grammar
-        if "error" in testcase or len(testcase["testcase"]) == 0:
+        if len(generation_result["results"]) == 0:
             continue
 
         # Exclude problems with wrong generation result

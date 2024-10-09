@@ -30,7 +30,7 @@ PRIVATE_TESTCASE_DIR="${DATA_DIR}/testcase/code-contest/private"
 export PRIVATE_TESTCASE_DIR
 
 # Data related to the ground truth grammars
-GROUND_TRUTH_GRAMMAR_DIR="${DATA_DIR}/grammar/ground-truth"
+GROUND_TRUTH_GRAMMAR_DIR="${RAW_DATA_DIR}/grammar/ground-truth"
 export GROUND_TRUTH_GRAMMAR_DIR
 GROUND_TRUTH_TESTCASE_DIR="${DATA_DIR}/testcase/grammar/ground-truth"
 export GROUND_TRUTH_TESTCASE_DIR

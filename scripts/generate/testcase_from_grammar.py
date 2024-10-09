@@ -1,8 +1,10 @@
+"""Generate testcases from grammar"""
+
 import argparse
 import logging
-import random
 from pathlib import Path
-from typing import Optional
+import random
+from typing import Any, Optional
 
 import jsonlines  # type: ignore
 import timeout_decorator  # type: ignore
@@ -10,8 +12,6 @@ from timeout_decorator.timeout_decorator import TimeoutError  # type: ignore
 from tqdm import tqdm  # type: ignore
 
 from counting_context_free_grammar import CountingContextFreeGrammar as Ccfg
-# from utils import get_testcase_num_dict
-
 
 SEED = 42
 random.seed(SEED)
@@ -20,49 +20,35 @@ random.seed(SEED)
 def get_testcase(
     ccfg: Ccfg,
     timeout: int,
-    mode: str = "extreme",
-) -> tuple[str, str]:
+    min_degree: int,
+) -> tuple[str, int]:
     """
     throw: Error
     """
-    @timeout_decorator.timeout(timeout)
-    def _generate_extreme() -> str:
-        ccfg.extrememode = True
-        ccfg.testmode = False
-        return ccfg.generate()
+
+    if min_degree == -1:
+        return ccfg.generate(degree=-1), -1
 
     @timeout_decorator.timeout(timeout)
-    def _generate_normal() -> str:
-        ccfg.extrememode = True
-        ccfg.testmode = False
-        return ccfg.generate()
+    def _generate(degree: int) -> str:
+        return ccfg.generate(degree=degree)
 
-    @timeout_decorator.timeout(timeout)
-    def _generate_test() -> str:
-        ccfg.extrememode = False
-        ccfg.testmode = True
-        return ccfg.generate()
-
-    if mode == "extreme":
+    for degree in range(min_degree, 3):
         try:
-            return _generate_extreme(), "extreme"
-        except TimeoutError:
-            pass
+            return _generate(degree), degree
+        except TimeoutError as e:
+            if degree == 2:
+                raise e
+            degree += 1
 
-    if mode == "normal" or mode == "extreme":
-        try:
-            return _generate_normal(), "normal"
-        except TimeoutError:
-            pass
-
-    return _generate_test(), "test"
+    assert False
 
 
 def get_testcases(
-    data: dict,
+    data: dict[str, Any],
     k: int,
     timeout: int,
-) -> Optional[tuple[list[str], list[str]]]:
+) -> Optional[tuple[list[str], list[int]]]:
     grammar = data["grammar"]
 
     if grammar is None:
@@ -71,26 +57,18 @@ def get_testcases(
     productions = grammar["productions"]
     constraints = grammar["constraints"]
 
-    ccfg = Ccfg(productions, constraints, extrememode=True)
-
-    num_extreme = k // 3
-    num_normal = k // 3
-    num_test = k - num_extreme - num_normal
+    ccfg = Ccfg(productions, constraints)
 
     tuples = (
-        [get_testcase(ccfg, timeout) for _ in range(num_extreme)]
-        + [get_testcase(ccfg, timeout, mode="normal")
-           for _ in range(num_normal)]
-        + [get_testcase(ccfg, timeout, mode="test") for _ in range(num_test)]
+        [get_testcase(ccfg, timeout, -1)]
+        + [get_testcase(ccfg, timeout, 2) for _ in range(k)]
+        + [get_testcase(ccfg, timeout, 1) for _ in range(k)]
+        + [get_testcase(ccfg, timeout, 0) for _ in range(k)]
     )
     return [t[0] for t in tuples], [t[1] for t in tuples]
 
 
-def main(args: argparse.Namespace):
-    grammar_path = Path(args.grammar_data)
-    output_path = Path(args.output)
-    # name = grammar_path.stem
-    # num_dict = get_testcase_num_dict(name)
+def main(grammar_path: Path, output_path: Path, timeout: int) -> None:
 
     with jsonlines.open(grammar_path, "r") as grammar_dataset:
         with jsonlines.open(output_path, "w") as writer:
@@ -98,19 +76,21 @@ def main(args: argparse.Namespace):
                 try:
                     # k = num_dict[data["name"]]
                     k = 30
-                    pair = get_testcases(data, k, args.timeout)
+                    pair = get_testcases(data, k, timeout)
                     if pair is None:
-                        raise Exception("Grammar is None")
+                        raise ValueError("Grammar is None")
 
                     testcases, methods = pair
-                    data.update({
-                        "testcase": testcases,
-                        "methods": methods,
-                    })
+                    data.update(
+                        {
+                            "testcase": testcases,
+                            "methods": methods,
+                        }
+                    )
                     writer.write(data)
-                except Exception as e:
-                    logging.warn(data["name"])
-                    logging.warn(f"Error: {e}")
+                except Exception as e:  # pylint: disable=broad-except
+                    logging.warning(data["name"])
+                    logging.warning("Error: %s", str(e))
                     data.update({"error": str(e)})
                     writer.write(data)
 
@@ -118,9 +98,9 @@ def main(args: argparse.Namespace):
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     parser = argparse.ArgumentParser()
-    parser.add_argument("--grammar-data")
-    parser.add_argument("--output")
+    parser.add_argument("--grammar-data", type=Path)
+    parser.add_argument("--output", type=Path)
     parser.add_argument("--timeout", type=float, default=10)
     args = parser.parse_args()
 
-    main(args)
+    main(args.grammar_data, args.output, args.timeout)

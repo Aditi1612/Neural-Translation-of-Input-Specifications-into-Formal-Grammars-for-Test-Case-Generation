@@ -689,6 +689,10 @@ class CountingContextFreeGrammar:
             logger.debug("Index: %s", index)
             logger.debug("Lower bound: %s", lower_bound)
             logger.debug("Upper bound: %s", upper_bound)
+
+            if degree == -1:
+                return lower_bound
+
             if lower_bound < 0:
                 return random.randint(lower_bound, upper_bound)
 

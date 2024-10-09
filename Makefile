@@ -6,6 +6,8 @@ MODEL:=saved/checkpoint.pth
 # Prevent build non-existing prerequisites
 .SECONDARY:
 
+default: all
+
 data/%.jsonl: raw-data/%.jsonl
 	mkdir -p $(dir $@)
 	ln -fs $(abspath $<) $@
@@ -15,8 +17,6 @@ prepare-dataset:  ## Create ${SOLUTIONS_DIR}
 	&& python scripts/filter_python_dataset.py \
 	&& python scripts/generate_python3_solutions.py \
 	&& python scripts/filter_labeled_test_dataset.py
-
-default: all
 
 SUFFIXES_GRAMMAR = \
 	ccfg-t5/beam-1/test.jsonl \
@@ -64,5 +64,5 @@ include makefiles/coverage_result.mk
 all: \
 	$(SUMMARY_RESULT) \
 	$(GENERATION_RESULT) \
-	$(PARSING_RESULT) \
-	$(COVERAGE_RESULT)
+	$(PARSING_RESULT)
+	# $(COVERAGE_RESULT)

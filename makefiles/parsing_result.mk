@@ -7,7 +7,7 @@ $(DATA)/parsing-result/%.jsonl: \
 	mkdir -p $(dir $@)
 	$(PYTHON) scripts/generate/generation_result.py \
 		--grammar $< \
-		--testcase "$|/$(not $@)" \
+		--testcase "$|/$(notdir $@)" \
 		--output $@
 
 parsing-result: $(PARSING_RESULT)

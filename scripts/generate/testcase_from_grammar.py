@@ -27,13 +27,13 @@ def get_testcase(
     throw: Error
     """
 
-    if min_degree == -1:
-        assert k == 1
-        return [(ccfg.generate(degree=-1), -1)]
-
     @timeout_decorator.timeout(timeout)
     def _generate(degree: int) -> str:
         return ccfg.generate(degree=degree)
+
+    if min_degree == -1:
+        assert k == 1
+        return [(_generate(-1), -1)]
 
     testcases: list[tuple[str, int]] = []
     degree = min_degree

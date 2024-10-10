@@ -6,7 +6,7 @@ import numpy as np
 from utils import sanitize  # type: ignore[import-untyped]
 
 
-def main(execution_summary_path: Path, generation_path: Path) -> None:
+def main(execution_summary_path: Path, generation_path: Path, degree: int) -> None:
 
     summaries = jsonlines.open(execution_summary_path)
     generation_results = jsonlines.open(generation_path)
@@ -17,7 +17,7 @@ def main(execution_summary_path: Path, generation_path: Path) -> None:
     for summary, generation_result in it:
         count += 1
 
-        assert summary["name"] == generation_result["name"], summary["name"]
+        assert summary["name"] == generation_result["name"]
 
         testcase_summaries = summary["results"]
         testcase_generations = generation_result["results"]
@@ -38,26 +38,12 @@ def main(execution_summary_path: Path, generation_path: Path) -> None:
         total_incorrect_results = [True] * len(
             testcase_summaries[0]["incorrect_results"]
         )
-
-        # Sample at most 10 testcases
         if len(testcase_summaries) == 31:
-            testcase_summaries = (
-                testcase_summaries[0:1]
-                + testcase_summaries[1:4]
-                + testcase_summaries[11:14]
-                + testcase_summaries[21:24]
-            )
+            testcase_summaries = testcase_summaries[1:(degree+1)*10+1]
         elif len(testcase_summaries) == 30:
-            testcase_summaries = (
-                testcase_summaries[0:4]
-                + testcase_summaries[10:13]
-                + testcase_summaries[20:23]
-            )
+            testcase_summaries = testcase_summaries[0:(degree+1)*10]
         else:
-            m = min(10, len(testcase_summaries))
-            testcase_summaries = testcase_summaries[:m]
-
-        assert len(testcase_summaries) <= 10, len(testcase_summaries)
+            assert False
 
         for testcase_summary in testcase_summaries:
             incorrect_results = testcase_summary["incorrect_results"]
@@ -82,6 +68,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--execution-summary", type=Path)
     parser.add_argument("--generation-result", type=Path)
+    parser.add_argument("--degree", type=int)
 
     args = parser.parse_args()
-    main(args.execution_summary, args.generation_result)
+    main(args.execution_summary, args.generation_result, args.degree)

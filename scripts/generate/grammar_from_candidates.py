@@ -9,13 +9,13 @@ from timeout_decorator import timeout  # type: ignore
 from timeout_decorator import TimeoutError
 from tqdm import tqdm  # type: ignore
 
-from counting_context_free_grammar import CountingContextFreeGrammar as Ccfg
-from utils import normalize_grammar
+from counting_context_free_grammar import CountingContextFreeGrammar as Ccfg  # type: ignore
+from utils import normalize_grammar  # type: ignore
 
 
-@timeout(1)
+@timeout(10)  # type: ignore
 def generate(ccfg: Ccfg) -> str:
-    return ccfg.generate()
+    return ccfg.generate(degree=2)  # type: ignore
 
 
 def update(data: dict[str, Any]) -> dict[str, Any]:
@@ -27,6 +27,7 @@ def update(data: dict[str, Any]) -> dict[str, Any]:
         try:
             grammar = {'productions': production, 'constraints': constraint}
             grammar = normalize_grammar(grammar)
+            assert grammar is not None
             production = grammar['productions']
             constraint = grammar['constraints']
             ccfg = Ccfg(production, constraint)

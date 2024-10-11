@@ -1,5 +1,6 @@
 MODEL:=saved/checkpoint.pth
 
+.PRECIOUS: $(DATA)/grammar-candidate/%.jsonl
 $(DATA)/grammar-candidate/ccfg-t5/beam-%/test.jsonl: \
 		$(DATA)/grammar/ground-truth/test.jsonl
 	mkdir -p $(dir $@)

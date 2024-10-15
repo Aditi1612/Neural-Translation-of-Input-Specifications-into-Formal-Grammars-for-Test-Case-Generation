@@ -14,10 +14,12 @@ def main(input_path: Path, output_path: Path, filter_path: Path) -> None:
     output_file = jsonlines.open(output_path, "w")
 
     names = {filter_data["name"] for filter_data in filter_file}
+    filtered = {name: False for name in names}
 
     for input_data in input_file:
-        if input_data["name"] in names:
+        if input_data["name"] in names and not filtered[input_data["name"]]:
             output_file.write(input_data)
+            filtered[input_data["name"]] = True
 
 
 if __name__ == "__main__":

@@ -46,13 +46,15 @@ def main(
 ) -> None:
 
     testcases_file = jsonlines.open(testcase_path)
-    testcases_list = [e.get('testcase', []) for e in testcases_file]
 
     grammar_objects = jsonlines.open(grammar_path)
 
     with jsonlines.open(output_path, 'w') as writer:
-        for grammar_object, testcases in zip(grammar_objects, testcases_list):
+        for grammar_object, testcases_object in zip(grammar_objects, testcases_file):
             name = grammar_object['name']
+            assert name == testcases_object['name']
+
+            testcases = testcases_object['testcases']
             grammar = grammar_object['grammar']
             results = get_syntactic_validiness_list(testcases, grammar)
             writer.write(GenerationResult(name=name, results=results))

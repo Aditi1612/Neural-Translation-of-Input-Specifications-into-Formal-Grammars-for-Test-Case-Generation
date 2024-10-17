@@ -1,8 +1,9 @@
 shopt -s globstar
 
-for file in data/**/*.jsonl; do
+for file in data/**/test.jsonl; do
   target="${file/data/filtered-data}"
-  filter="${GROUND_TRUTH_GRAMMAR_DIR}/$(basename $file)"
+  echo "Filtering $file to $target"
+  filter="./raw-data/grammar/ground-truth/test.jsonl"
   mkdir -p "$(dirname "$target")"
   python scripts/misc/filter_data.py \
     --input "$file" \

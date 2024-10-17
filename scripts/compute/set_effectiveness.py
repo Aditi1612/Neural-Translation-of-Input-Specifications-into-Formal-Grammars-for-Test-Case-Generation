@@ -22,7 +22,7 @@ def main(execution_summary_path: Path, generation_path: Path) -> None:
         testcase_summaries = summary["results"]
         testcase_generations = generation_result["results"]
         validities = [e["parsable"] for e in testcase_generations]
-        assert len(testcase_summaries) == len(validities)
+        assert len(testcase_summaries) == len(validities), summary["name"]
 
         # We consider the effectiveness of failed grammar as 0
         if len(testcase_summaries) == 0:

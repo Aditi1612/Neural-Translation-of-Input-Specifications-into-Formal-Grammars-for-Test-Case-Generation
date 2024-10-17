@@ -7,9 +7,6 @@ export RAW_DATA_DIR
 INTERMEDIATE_DIR="${RAW_DATA_DIR}/intermediate"
 export INTERMEDIATE_DIR
 
-# CACHE_DIR="/data.cache"
-# export CACHE_DIR
-
 DATA_DIR="./data"
 export DATA_DIR
 
@@ -40,3 +37,9 @@ GROUND_TRUTH_PARSING_RESULT="${DATA_DIR}/parsing-result/ground-truth/test.jsonl"
 export GROUND_TRUTH_PARSING_RESULT
 GROUND_TRUTH_EXECUTION_SUMMARY="${DATA_DIR}/execution-summary/grammar/ground-truth/test.jsonl"
 export GROUND_TRUTH_EXECUTION_SUMMARY
+
+# Data related to the dataset testcases
+PUBLIC_GENERATION_RESULT="${DATA_DIR}/generation-result/code-contest/public/test.jsonl"
+export PUBLIC_GENERATION_RESULT
+PRIVATE_GENERATION_RESULT="${DATA_DIR}/generation-result/code-contest/private/test.jsonl"
+export PRIVATE_GENERATION_RESULT

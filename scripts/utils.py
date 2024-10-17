@@ -74,47 +74,66 @@ def get_mode(xs: list[str]) -> tuple[str, int]:
 
 
 def sanitize(xs: Iterable[object], filename: str = "test") -> Iterable[object]:
-    ground_truth_generation_result = jsonlines.open(
+    ground_truth_generation_results = jsonlines.open(
         Path(os.environ["GROUND_TRUTH_GENERATION_RESULT"]), "r"
     )
-    ground_truth_parsing_result = jsonlines.open(
+    public_generation_results = jsonlines.open(
+        Path(os.environ["PUBLIC_GENERATION_RESULT"]), "r"
+    )
+    private_generation_results = jsonlines.open(
+        Path(os.environ["PRIVATE_GENERATION_RESULT"]), "r"
+    )
+    ground_truth_parsing_results = jsonlines.open(
         Path(os.environ["GROUND_TRUTH_PARSING_RESULT"]), "r"
     )
-    ground_truth_execution_summary = jsonlines.open(
+    ground_truth_execution_summaries = jsonlines.open(
         Path(os.environ["GROUND_TRUTH_EXECUTION_SUMMARY"]), "r"
     )
 
     it = zip(
         xs,
-        ground_truth_generation_result,
-        ground_truth_parsing_result,
-        ground_truth_execution_summary,
+        ground_truth_generation_results,
+        public_generation_results,
+        private_generation_results,
+        ground_truth_parsing_results,
+        ground_truth_execution_summaries,
     )
     for (
         x,
-        generation_result,
-        parsing_result,
-        execution_summary,
+        ground_truth_generation_result,
+        public_generation_result,
+        private_generation_result,
+        ground_truth_parsing_result,
+        ground_truth_execution_summary,
     ) in it:
-        name = generation_result["name"]
-        assert name == parsing_result["name"]
-        assert name == execution_summary["name"]
+        name = ground_truth_generation_result["name"]
+        assert name == public_generation_result["name"]
+        assert name == private_generation_result["name"]
+        assert name == ground_truth_parsing_result["name"]
+        assert name == ground_truth_execution_summary["name"]
 
         # Exclude problems without testcase of ground truth grammar
-        if len(generation_result["results"]) == 0:
+        if len(ground_truth_generation_result["results"]) == 0:
             continue
 
         # Exclude problems with wrong generation result
-        if not all(e["parsable"] for e in generation_result["results"]):
-            continue
-
-        # Exclude problems with wrong parsing result
-        if not all(e["parsable"] for e in parsing_result["results"]):
+        flag = False
+        for result in [
+            ground_truth_generation_result["results"],
+            public_generation_result["results"],
+            private_generation_result["results"],
+            ground_truth_parsing_result["results"],
+        ]:
+            if not all(e["parsable"] for e in result):
+                flag = True
+                break
+        if flag:
             continue
 
         # Exclude problems without incorrect solutions
-        assert len(execution_summary["results"]) > 0
-        if len(execution_summary["results"][0]["incorrect_results"]) == 0:
+        summary_results = ground_truth_execution_summary["results"]
+        assert len(summary_results) > 0
+        if len(summary_results[0]["incorrect_results"]) == 0:
             continue
 
         yield x

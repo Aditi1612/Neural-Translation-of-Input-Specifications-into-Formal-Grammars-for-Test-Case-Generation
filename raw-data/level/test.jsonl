@@ -1,430 +1,296 @@
-{"name": "p02936 AtCoder Beginner Contest 138 - Ki", "grammar": ["<S>->[N] <s> [Q] <n> <T_N-1> <n> <L_Q>", "<T_i>-><T_i-1> <n> A_i <s> B_i", "<T_1>->A_1 <s> B_1", "<L_i>-><L_i-1> <n> p_i <s> x_i", "<L_1>->p_1 <s> x_1"], "max_level": 2}
-{"name": "p02696 AtCoder Beginner Contest 165 - Floor Function", "grammar": ["<S>->A <s> B <s> N"], "max_level": 1}
-{"name": "p03013 AtCoder Beginner Contest 129 - Typical Stairs", "grammar": ["<S>->N <s> [M] <n> <T_M>", "<T_i>-><T_i-1> <n> A_i", "<T_1>->A_1"], "max_level": 2}
-{"name": "p02953 AtCoder Beginner Contest 136 - Build Stairs", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <s> H_i", "<T_1>->H_1"], "max_level": 2}
-{"name": "791_A. Bear and Big Brother", "grammar": ["<S>->A <s> B"], "max_level": 1}
-{"name": "p02891 AtCoder Grand Contest 039 - Connection and Disconnection", "grammar": ["<S>->[a-z]{1,100} <n> K"], "max_level": 1}
-{"name": "p02693 AtCoder Beginner Contest 165 - We Love Golf", "grammar": ["<S>->K <n> A <s> B"], "max_level": 1}
-{"name": "p02718 AtCoder Beginner Contest 161 - Popular Vote", "grammar": ["<S>->[N] <s> M <n> <T_N>", "<T_i>-><T_i-1> <s> A_i", "<T_1>->A_1"], "max_level": 2}
-{"name": "443_A. Anton and Letters", "grammar": ["<S>->{ <T_1000> }", "<T_i>-><T_i-1> , <s> [a-z]{1}|<T_1>", "<T_1>->[a-z]{1}"], "max_level": 2}
-{"name": "p03324 AtCoder Beginner Contest 100 - Ringo's Favorite Numbers", "grammar": ["<S>->[012]{1} <s> N"], "max_level": 1}
-{"name": "p02862 AtCoder Beginner Contest 145 - Knight", "grammar": ["<S>->X <s> Y"], "max_level": 1}
-{"name": "p03854 AtCoder Beginner Contest 049 - Daydream", "grammar": ["<S>->[a-z]{1,10^5}"], "max_level": 1}
-{"name": "469_A. I Wanna Be the Guy", "grammar": ["<S>->[n] <n> [p] <s> <T_p> <n> <T_p>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 3}
-{"name": "p03221 AtCoder Beginner Contest 113 - ID", "grammar": ["<S>->N <s> [M] <n> <T_M>", "<T_i>-><T_i-1> <n> P_i <s> Y_i", "<T_1>->P_1 <s> Y_1"], "max_level": 2}
-{"name": "p03309 AtCoder Beginner Contest 102 - Linear Approximation", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <s> A_i", "<T_1>->A_1"], "max_level": 2}
-{"name": "148_A. Insomnia cure", "grammar": ["<S>->k <n> l <n> m <n> n <n> d"], "max_level": 1}
-{"name": "1353_B. Two Arrays And Swaps", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <s> k <n> <L_n> <n> <Z_n>", "<T_1>->[n] <s> k <n> <L_n> <n> <Z_n>", "<L_i>-><L_i-1> <s> a_i", "<L_1>->a_1", "<Z_i>-><Z_i-1> <s> b_i", "<Z_1>->b_1"], "max_level": 5}
-{"name": "492_B. Vanya and Lanterns", "grammar": ["<S>->[n] <s> l <n> <T_n>", "<T_i>-><T_i-1> <s> ai", "<T_1>->ai"], "max_level": 2}
-{"name": "p03076 AtCoder Beginner Contest 123 - Five Dishes", "grammar": ["<S>->A <n> B <n> C <n> D <n> E"], "max_level": 1}
-{"name": "p02612 AtCoder Beginner Contest 173 - Payment", "grammar": ["<S>->N"], "max_level": 1}
-{"name": "p03137 AtCoder Beginner Contest 117 - Streamline", "grammar": ["<S>->N <s> [M] <n> <T_M>", "<T_i>-><T_i-1> <s> X_i", "<T_1>->X_1"], "max_level": 2}
-{"name": "510_A. Fox And Snake", "grammar": ["<S>->n <s> m"], "max_level": 1}
-{"name": "p03032 AtCoder Beginner Contest 128 - equeue", "grammar": ["<S>->[N] <s> K <n> <T_N>", "<T_i>-><T_i-1> <s> V_i", "<T_1>->V_1"], "max_level": 2}
-{"name": "p02973 AtCoder Beginner Contest 134 - Sequence Decomposing", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> A_i", "<T_1>->A_1"], "max_level": 2}
-{"name": "p02675 AtCoder Beginner Contest 168 - ∴ (Therefore)", "grammar": ["<S>->N"], "max_level": 1}
-{"name": "758_A. Holiday Of Equality", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
-{"name": "230_A. Dragons", "grammar": ["<S>->s <s> [n] <n> <T_n>", "<T_i>-><T_i-1> <n> x_i <s> y_i", "<T_1>->x_1 <s> y_1"], "max_level": 2}
-{"name": "1095_A. Repeating Cipher", "grammar": ["<S>->[n] <n> [a-z]{n}"], "max_level": 1}
-{"name": "1358_A. Park Lighting", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> n <s> m", "<T_1>->n <s> m"], "max_level": 2}
-{"name": "p03472 AtCoder Beginner Contest 085 - Katana Thrower", "grammar": ["<S>->[N] <s> H <n> <T_N>", "<T_i>-><T_i-1> <n> a_i <s> b_i", "<T_1>->a_1 <s> b_1"], "max_level": 2}
-{"name": "1352_C. K-th Not Divisible by n", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> n <s> k", "<T_1>->n <s> k"], "max_level": 2}
-{"name": "1180_A. Alex and a Rhombus", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "p02708 AtCoder Beginner Contest 163 - Sum of Large Numbers", "grammar": ["<S>->N <s> K"], "max_level": 1}
-{"name": "p02390 Watch", "grammar": ["<S>->S"], "max_level": 1}
-{"name": "1420_A. Cubes Sorting", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <n> <L_n>", "<T_1>->[n] <n> <L_n>", "<L_i>-><L_i-1> <s> a_i", "<L_1>->a_1"], "max_level": 3}
-{"name": "1436_A. Reorder", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <s> m <n> <L_n>", "<T_1>->[n] <s> m <n> <L_n>", "<L_i>-><L_i-1> <s> a_i", "<L_1>->a_1"], "max_level": 3}
-{"name": "835_A. Key races", "grammar": ["<S>->s <s> v1 <s> v2 <s> t1 <s> t2"], "max_level": 1}
-{"name": "1419_A. Digit Game", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <n> [0-9]{n}", "<T_1>->[n] <n> [0-9]{n}"], "max_level": 2}
-{"name": "p03434 AtCoder Beginner Contest 088 - Card Game for Two", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
-{"name": "1294_B. Collecting Packages", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <n> <L_n>", "<T_1>->[n] <n> <L_n>", "<L_i>-><L_i-1> <n> x_i <s> y_i", "<L_1>->x_1 <s> y_1"], "max_level": 3}
-{"name": "p03994 CODE FESTIVAL 2016 qual A - Next Letter", "grammar": ["<S>->[a-z]{1,10^5} <n> K"], "max_level": 1}
-{"name": "119_A. Epic Game", "grammar": ["<S>->a <s> b <s> n"], "max_level": 1}
-{"name": "p02926 AtCoder Beginner Contest 139 - Engines", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> x_i <s> y_i", "<T_1>->x_1 <s> y_1"], "max_level": 2}
-{"name": "1430_B. Barrels", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <s> k <n> <L_n>", "<T_1>->[n] <s> k <n> <L_n>", "<L_i>-><L_i-1> <s> a_i", "<L_1>->a_1"], "max_level": 3}
-{"name": "p02811 AtCoder Beginner Contest 150 - 500 Yen Coins", "grammar": ["<S>->K <s> X"], "max_level": 1}
-{"name": "p03293 AtCoder Beginner Contest 103 - String Rotation", "grammar": ["<S>->[a-z]{2,100} <n> [a-z]{2,100}"], "max_level": 1}
-{"name": "999_A. Mishka and Contest", "grammar": ["<S>->[n] <s> k <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
-{"name": "1114_A. Got Any Grapes?", "grammar": ["<S>->x <s> y <s> z <n> a <s> b <s> c"], "max_level": 1}
-{"name": "1393_A. Rainbow Dash, Fluttershy and Chess Coloring", "grammar": ["<S>->[T] <n> <T_T>", "<T_i>-><T_i-1> <n> n", "<T_1>->n"], "max_level": 2}
-{"name": "1249_B1. Books Exchange (easy version)", "grammar": ["<S>->[q] <n> <T_q>", "<T_i>-><T_i-1> <n> [n] <n> <L_n>", "<T_1>->[n] <n> <L_n>", "<L_i>-><L_i-1> <s> p_i", "<L_1>->p_1"], "max_level": 3}
-{"name": "1288_A. Deadline", "grammar": ["<S>->[T] <n> <T_T>", "<T_i>-><T_i-1> <n> n <s> d", "<T_1>->n <s> d"], "max_level": 2}
-{"name": "p02594 AtCoder Beginner Contest 174 - Air Conditioner", "grammar": ["<S>->X"], "max_level": 1}
-{"name": "p03105 AtCoder Beginner Contest 120 - Favorite Sound", "grammar": ["<S>->A <s> B <s> C"], "max_level": 1}
-{"name": "1213_B. Bad Prices", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <n> <L_n>", "<T_1>->[n] <n> <L_n>", "<L_i>-><L_i-1> <s> a_i", "<L_1>->a_1"], "max_level": 3}
-{"name": "p02628 AtCoder Beginner Contest 171 - Mix Juice", "grammar": ["<S>->[N] <s> K <n> <T_N>", "<T_i>-><T_i-1> <s> p_i", "<T_1>->p_1"], "max_level": 2}
-{"name": "1257_B. Magic Stick", "grammar": ["<S>->[T] <n> <T_T>", "<T_i>-><T_i-1> <n> x <s> y", "<T_1>->x <s> y"], "max_level": 2}
-{"name": "p02397 Swapping Two Numbers", "grammar": ["<S>-><A_1> <n> <A_1>|<E_1>", "<A_1>->x <s> y <n> <A_1>|<E_1>", "<E_1>->0 <s> 0"], "max_level": 5}
-{"name": "1144_B. Parity Alternated Deletions", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
-{"name": "p02724 AtCoder Beginner Contest 160 - Golden Coins", "grammar": ["<S>->X"], "max_level": 1}
-{"name": "p03592 CODE FESTIVAL 2017 qual A - fLIP", "grammar": ["<S>->N <s> M <s> K"], "max_level": 1}
-{"name": "1230_B. Ania and Minimizing", "grammar": ["<S>->[n] <s> k <n> <A_n>", "<A_i>->[1-9]{1} <B_i-1>", "<A_1>->[1-9]{1}", "<B_i>->[0-9]{1} <B_i-1>", "<B_1>->[0-9]{1}"], "max_level": 2}
-{"name": "p02417 Counting Characters", "grammar": ["<S>->[a-zA-Z]{1,1200}"], "max_level": 1}
-{"name": "598_A. Tricky Sum", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> a_i", "<T_1>->a_1"], "max_level": 2}
-{"name": "p03219 AtCoder Beginner Contest 113 - Discount Fare", "grammar": ["<S>->X <s> Y"], "max_level": 1}
-{"name": "p03327 AtCoder Beginner Contest 099 - ABD", "grammar": ["<S>->N"], "max_level": 1}
-{"name": "p03761 AtCoder Beginner Contest 058 - Dubious Document", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <n> [a-z]{1,50}", "<T_1>->[a-z]{1,50}"], "max_level": 2}
-{"name": "746_A. Compote", "grammar": ["<S>->a <n> b <n> c"], "max_level": 1}
-{"name": "766_B. Mahmoud and a Triangle", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
-{"name": "p02898 AtCoder Beginner Contest 142 - Roller Coaster", "grammar": ["<S>->[N] <s> K <n> <T_N>", "<T_i>-><T_i-1> <s> h_i", "<T_1>->h_1"], "max_level": 2}
-{"name": "621_A. Wet Shark and Odd and Even", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
-{"name": "1166_A. Silent Classroom", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <n> [a-z]{1,20}", "<T_1>->[a-z]{1,20}"], "max_level": 2}
-{"name": "p02801 AtCoder Beginner Contest 151 - Next Alphabet", "grammar": ["<S>->[a-y]{1}"], "max_level": 1}
-{"name": "937_A. Olympiad", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
-{"name": "p03307 AtCoder Beginner Contest 102 - Multiple of 2 and N", "grammar": ["<S>->N"], "max_level": 1}
-{"name": "1324_D. Pair of Topics", "grammar": ["<S>->[n] <n> <T_n> <n> <L_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1", "<L_i>-><L_i-1> <s> b_i", "<L_1>->b_1"], "max_level": 3}
-{"name": "p03346 AtCoder Grand Contest 024 - Backfront", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> p_i", "<T_1>->p_1"], "max_level": 2}
-{"name": "1110_A. Parity", "grammar": ["<S>->b <s> [k] <n> <T_k>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
-{"name": "439_A. Devu, the Singer and Churu, the Joker", "grammar": ["<S>->[n] <s> d <n> <T_n>", "<T_i>-><T_i-1> <s> t_i", "<T_1>->t_1"], "max_level": 2}
-{"name": "903_A. Hungry Student Problem", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <n> x_i", "<T_1>->x_1"], "max_level": 2}
-{"name": "950_A. Left-handers, Right-handers and Ambidexters", "grammar": ["<S>->l <s> r <s> a"], "max_level": 1}
-{"name": "p03125 AtCoder Beginner Contest 118 - B +/- A", "grammar": ["<S>->A <s> B"], "max_level": 1}
-{"name": "p03470 AtCoder Beginner Contest 085 - Kagami Mochi", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> d_i", "<T_1>->d_1"], "max_level": 2}
-{"name": "p03369 AtCoder Beginner Contest 095 - Something on It", "grammar": ["<S>->[ox]{3}"], "max_level": 1}
-{"name": "p02976 AtCoder Grand Contest 035 - Even Degrees", "grammar": ["<S>->N <s> [M] <n> <T_M>", "<T_i>-><T_i-1> <n> A_i <s> B_i", "<T_1>->A_1 <s> B_1"], "max_level": 2}
-{"name": "p03569 CODE FESTIVAL 2017 qual C - Inserting 'x'", "grammar": ["<S>->[a-z]{1,10^5}"], "max_level": 1}
-{"name": "p03288 AtCoder Beginner Contest 104 - Rated for Me", "grammar": ["<S>->R"], "max_level": 1}
-{"name": "p02680 AtCoder Beginner Contest 168 - . (Single Dot)", "grammar": ["<S>->[N] <s> [M] <n> <T_N> <n> <L_M>", "<T_i>-><T_i-1> <n> A_i <s> B_i <s> C_i", "<T_1>->A_1 <s> B_1 <s> C_1", "<L_i>-><L_i-1> <n> D_i <s> E_i <s> F_i", "<L_1>->D_1 <s> E_1 <s> F_1"], "max_level": 2}
-{"name": "p02271 Exhaustive Search", "grammar": ["<S>->[N] <n> <T_N> <n> [q] <n> <L_q>", "<T_i>-><T_i-1> <s> A_i", "<T_1>->A_1", "<L_i>-><L_i-1> <s> M_i", "<L_1>->M_1"], "max_level": 2}
-{"name": "1016_A. Death Note", "grammar": ["<S>->[n] <s> m <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
-{"name": "1391_C. Cyclic Permutations ", "grammar": ["<S>->N"], "max_level": 1}
-{"name": "p04019 AtCoder Grand Contest 003 - Wanna go back home", "grammar": ["<S>->[NWES]{1,1000}"], "max_level": 1}
-{"name": "p03338 AtCoder Beginner Contest 098 - Cut and Count", "grammar": ["<S>->[N] <n> [a-z]{N}"], "max_level": 1}
-{"name": "p03370 AtCoder Beginner Contest 095 - Bitter Alchemy", "grammar": ["<S>->[N] <s> X <n> <T_N>", "<T_i>-><T_i-1> <n> m_i", "<T_1>->m_1"], "max_level": 2}
-{"name": "1060_A. Phone Numbers", "grammar": ["<S>->[n] <n> [0-9]{n}"], "max_level": 1}
-{"name": "1311_C. Perform the Combo", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <s> [m] <n> [a-z]{n} <n> <L_m>", "<T_1>->[n] <s> [m] <n> [a-z]{n} <n> <L_m>", "<L_i>-><L_i-1> <s> p_i", "<L_1>->p_1"], "max_level": 3}
-{"name": "551_A. GukiZ and Contest", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
-{"name": "p03821 AtCoder Grand Contest 009 - Multiple Array", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> A_i <s> B_i", "<T_1>->A_1 <s> B_1"], "max_level": 2}
-{"name": "p03168 Educational DP Contest - Coins", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <s> p_i", "<T_1>->p_1"], "max_level": 2}
-{"name": "p03003 AtCoder Beginner Contest 130 - Common Subsequence", "grammar": ["<S>->[N] <s> [M] <n> <T_N> <n> <L_M>", "<T_i>-><T_i-1> <s> S_i", "<T_1>->S_1", "<L_i>-><L_i-1> <s> T_i", "<L_1>->T_1"], "max_level": 2}
-{"name": "1054_A. Elevator or Stairs?", "grammar": ["<S>->x <s> y <s> z <s> t1 <s> t2 <s> t3"], "max_level": 1}
-{"name": "570_B. Simple Game", "grammar": ["<S>->n <s> m"], "max_level": 1}
-{"name": "688_B. Lovely Palindromes", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "1028_A. Find Square", "grammar": ["<S>->[n] <s> [m] <n> <T_n>", "<T_i>-><T_i-1> <n> [WB]{m}", "<T_1>->[WB]{m}"], "max_level": 2}
-{"name": "1353_D. Constructing the Array", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> a_i", "<T_1>->a_1"], "max_level": 2}
-{"name": "559_B. Equivalent Strings", "grammar": ["<S>->[a-z]{1,200000} <n> [a-z]{1,200000}"], "max_level": 1}
-{"name": "1140_A. Detective Book", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
-{"name": "699_C. Vacations", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
-{"name": "p03337 AtCoder Beginner Contest 098 - Add Sub Mul", "grammar": ["<S>->A <s> B"], "max_level": 1}
-{"name": "1373_D. Maximum Sum on Even Positions", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <n> <L_n>", "<T_1>->[n] <n> <L_n>", "<L_i>-><L_i-1> <s> a_i", "<L_1>->a_1"], "max_level": 3}
-{"name": "p02600 M-SOLUTIONS Programming Contest 2020 - Kyu in AtCoder", "grammar": ["<S>->X"], "max_level": 1}
-{"name": "275_A. Lights Out", "grammar": ["<S>->n <s> n <s> n <n> n <s> n <s> n <n> n <s> n <s> n"], "max_level": 1}
-{"name": "1371_D. Grid-00100", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> n <s> k", "<T_1>->n <s> k"], "max_level": 2}
-{"name": "1242_A. Tile Painting", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "1351_C. Skier", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [SNWE]{1,10^5}", "<T_1>->[SNWE]{1,10^5}"], "max_level": 2}
-{"name": "1101_A. Minimum Integer", "grammar": ["<S>->[q] <n> <T_q>", "<T_i>-><T_i-1> <n> l_i <s> r_i <s> d_i", "<T_1>->l_1 <s> r_1 <s> d_1"], "max_level": 2}
-{"name": "1189_D1. Add on a Tree", "grammar": ["<S>->[n] <n> <T_n-1>", "<T_i>-><T_i-1> <n> u <s> v", "<T_1>->u <s> v"], "max_level": 2}
-{"name": "168_A. Wizards and Demonstration", "grammar": ["<S>->n <s> x <s> y"], "max_level": 1}
-{"name": "379_A. New Year Candles", "grammar": ["<S>->a <s> b"], "max_level": 1}
-{"name": "39_H. Multiplication Table", "grammar": ["<S>->k"], "max_level": 1}
-{"name": "44_B. Cola", "grammar": ["<S>->n <s> a <s> b <s> c"], "max_level": 1}
-{"name": "545_C. Woodcutters", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <n> xi <s> hi", "<T_1>->xi <s> hi"], "max_level": 2}
-{"name": "101_C. Vectors", "grammar": ["<S>->x1 <s> y1 <n> x2 <s> y2 <n> x3 <s> y3"], "max_level": 1}
-{"name": "151_C. Win or Freeze", "grammar": ["<S>->q"], "max_level": 1}
-{"name": "195_A. Let's Watch Football", "grammar": ["<S>->a <s> b <s> c"], "max_level": 1}
-{"name": "478_A. Initial Bet", "grammar": ["<S>->c1 <s> c2 <s> c3 <s> c4 <s> c5"], "max_level": 1}
-{"name": "526_A. King of Thieves", "grammar": ["<S>->[n] <n> [*.]{n}"], "max_level": 1}
-{"name": "716_D. Complete The Graph", "grammar": ["<S>->n <s> [m] <s> L <s> s <s> t <n> <T_m>", "<T_i>-><T_i-1> <n> ui <s> vi <s> wi", "<T_1>->ui <s> vi <s> wi"], "max_level": 2}
-{"name": "805_A. Fake NP", "grammar": ["<S>->l <s> r"], "max_level": 1}
-{"name": "1129_A2. Toy Train", "grammar": ["<S>->n <s> [m] <n> <T_m>", "<T_i>-><T_i-1> <n> a_i <s> b_i", "<T_1>->a_1 <s> b_1"], "max_level": 2}
-{"name": "1208_A. XORinacci", "grammar": ["<S>->[T] <n> <T_T>", "<T_i>-><T_i-1> <n> a <s> b <s> n", "<T_1>->a <s> b <s> n"], "max_level": 2}
-{"name": "1227_A. Math Problem", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <n> <L_n>", "<T_1>->[n] <n> <L_n>", "<L_i>-><L_i-1> <n> l_i <s> r_i", "<L_1>->l_i <s> r_i"], "max_level": 3}
-{"name": "1374_B. Multiply by 2, divide by 6", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> n", "<T_1>->n"], "max_level": 2}
-{"name": "1466_C. Canine poetry", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [a-z]{1,100000}", "<T_1>->[a-z]{1,100000}"], "max_level": 2}
-{"name": "209_B. Pixels", "grammar": ["<S>->a <s> b <s> c"], "max_level": 1}
-{"name": "235_A. LCM Challenge", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "306_C. White, Black and White Again", "grammar": ["<S>->n <s> w <s> b"], "max_level": 1}
-{"name": "425_A. Sereja and Swaps", "grammar": ["<S>->[n] <s> k <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
-{"name": "730_G. Car Repair Shop", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <n> si <s> di", "<T_1>->si <s> di"], "max_level": 2}
-{"name": "893_A. Chess For Three", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <n> ai", "<T_1>->ai"], "max_level": 2}
-{"name": "p01970 The Diversity of Prime Factorization", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <s> q_i", "<T_1>->q_1"], "max_level": 2}
-{"name": "p02257 Prime Numbers", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> a_i", "<T_1>->a_1"], "max_level": 2}
-{"name": "1096_E. The Top Scorer", "grammar": ["<S>->p <s> s <s> r"], "max_level": 1}
-{"name": "442_C. Artem and Array ", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> ai", "<T_1>->ai"], "max_level": 2}
-{"name": "630_A. Again Twenty Five!", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "1366_A. Shovels and Swords", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> a <s> b", "<T_1>->a <s> b"], "max_level": 2}
-{"name": "1451_D. Circle Game", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> d <s> k", "<T_1>->d <s> k"], "max_level": 2}
-{"name": "223_C. Partial Sums", "grammar": ["<S>->[n] <s> [k] <n> <T_n>", "<T_i>-><T_i-1> <s> ai", "<T_1>->ai"], "max_level": 2}
-{"name": "343_B. Alternating Current", "grammar": ["<S>->[+-]{1,100000}"], "max_level": 1}
-{"name": "483_B. Friends and Presents", "grammar": ["<S>->cnt1 <s> cnt2 <s> x <s> y"], "max_level": 1}
-{"name": "835_A. Key races", "grammar": ["<S>->s <s> v1 <s> v2 <s> t1 <s> t2"], "max_level": 1}
-{"name": "1036_B. Diagonal Walking v.2", "grammar": ["<S>->[q] <n> <T_q>", "<T_i>-><T_i-1> <n> n_i <s> m_i <s> k_i", "<T_1>->n_i <s> m_i <s> k_i"], "max_level": 2}
-{"name": "1373_B. 01 Game", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [01]{1,100}", "<T_1>->[01]{1,100}"], "max_level": 2}
-{"name": "166_A. Rank List", "grammar": ["<S>->[n] <s> k <n> <T_n>", "<T_i>-><T_i-1> <n> pi <s> ti", "<T_1>->pi <s> ti"], "max_level": 2}
-{"name": "56_E. Domino Principle", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <n> xi <s> hi", "<T_1>->xi <s> hi"], "max_level": 2}
-{"name": "633_A. Ebony and Ivory", "grammar": ["<S>->a <s> b <s> c"], "max_level": 1}
-{"name": "103_C. Russian Roulette", "grammar": ["<S>->n <s> k <s> [p] <n> <T_p>", "<T_i>-><T_i-1> <n> x_i", "<T_1>->x_1"], "max_level": 2}
-{"name": "1062_D. Fun with Integers", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "1084_C. The Fair Nut and String", "grammar": ["<S>->[a-z]{1,100000}"], "max_level": 1}
-{"name": "1131_E. String Multiplication", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <n> [a-z]{1,100000}", "<T_1>->[a-z]{1,100000}"], "max_level": 2}
-{"name": "1230_A. Dawid and Bags of Candies", "grammar": ["<S>->a_1 <s> a_2 <s> a_3 <s> a_4"], "max_level": 1}
-{"name": "139_D. Digits Permutations", "grammar": ["<S>->[0-9]{1,10^5}"], "max_level": 1}
-{"name": "239_A. Two Bags of Potatoes", "grammar": ["<S>->y <s> k <s> n"], "max_level": 1}
-{"name": "690_A1. Collective Mindsets (easy)", "grammar": ["<S>->N"], "max_level": 1}
-{"name": "1076_B. Divisor Subtraction", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "121_C. Lucky Permutation", "grammar": ["<S>->n <s> k"], "max_level": 1}
-{"name": "1305_B. Kuroni and Simple Strings", "grammar": ["<S>->[()]{1,1000}"], "max_level": 1}
-{"name": "136_B. Ternary Logic", "grammar": ["<S>->a <s> c"], "max_level": 1}
-{"name": "393_C. Blocked Points", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "513_A. Game", "grammar": ["<S>->n1 <s> n2 <s> k1 <s> k2"], "max_level": 1}
-{"name": "538_B. Quasi Binary", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "680_D. Bear and Tower of Cubes", "grammar": ["<S>->m"], "max_level": 1}
-{"name": "110_B. Lucky String", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "117_B. Very Interesting Game", "grammar": ["<S>->a <s> b <s> mod"], "max_level": 1}
-{"name": "127_E. E-reader Display", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <n> [01]{n}", "<T_1>->[01]{n}"], "max_level": 2}
-{"name": "365_A. Good Number", "grammar": ["<S>->[n] <s> k <n> <T_n>", "<T_i>-><T_i-1> <n> a_i", "<T_1>->a_i"], "max_level": 2}
-{"name": "625_A. Guest From the Past", "grammar": ["<S>->n <n> a <n> b <n> c"], "max_level": 1}
-{"name": "12_B. Correct Solution?", "grammar": ["<S>->n <n> m"], "max_level": 1}
-{"name": "221_C. Little Elephant and Problem", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
-{"name": "p02174 Power Subsequences", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <s> x_i", "<T_1>->x_1"], "max_level": 2}
-{"name": "1159_A. A pile of stones", "grammar": ["<S>->[n] <n> [+-]{n}"], "max_level": 1}
-{"name": "1181_A. Chunga-Changa", "grammar": ["<S>->x <s> y <s> z"], "max_level": 1}
-{"name": "125_A. Measuring Lengths in Baden", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "40_C. Berland Square", "grammar": ["<S>->N <s> x <s> M <s> y"], "max_level": 1}
-{"name": "742_A. Arpa’s hard exam and Mehrdad’s naive cheat", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "87_C. Interesting Game", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "1191_A. Tokitsukaze and Enhancement", "grammar": ["<S>->x"], "max_level": 1}
-{"name": "1251_C. Minimize The Integer", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> a", "<T_1>->a"], "max_level": 2}
-{"name": "287_B. Pipeline", "grammar": ["<S>->n <s> k"], "max_level": 1}
-{"name": "733_A. Grasshopper And the String", "grammar": ["<S>->[A-Z]{1,100}"], "max_level": 1}
-{"name": "1091_C. New Year and the Sphere Transmission", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "1180_A. Alex and a Rhombus", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "1239_A. Ivan the Fool and the Probability Theory", "grammar": ["<S>->n <s> m"], "max_level": 1}
-{"name": "199_C. About Bacteria", "grammar": ["<S>->k <s> b <s> n <s> t"], "max_level": 1}
-{"name": "342_C. Cupboard and Balloons", "grammar": ["<S>->r <s> h"], "max_level": 1}
-{"name": "675_A. Infinite Sequence", "grammar": ["<S>->a <s> b <s> c"], "max_level": 1}
-{"name": "9_A. Die Roll", "grammar": ["<S>->Y <s> W"], "max_level": 1}
-{"name": "626_C. Block Towers", "grammar": ["<S>->n <s> m"], "max_level": 1}
-{"name": "87_A. Trains", "grammar": ["<S>->a <s> b"], "max_level": 1}
 {"name": "1008_A. Romaji", "grammar": ["<S>->[a-z]{1,100}"], "max_level": 1}
-{"name": "1480_A. Yet Another String Game", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [a-z]{1,50}", "<T_1>->[a-z]{1,50}"], "max_level": 2}
-{"name": "1506_G. Maximize the Remaining String", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [a-z]{1,200000}", "<T_1>->[a-z]{1,200000}"], "max_level": 2}
-{"name": "161_C. Abracadabra", "grammar": ["<S>->l1 <s> r1 <s> l2 <s> r2"], "max_level": 1}
-{"name": "204_A. Little Elephant and Interval", "grammar": ["<S>->l <s> r"], "max_level": 1}
-{"name": "680_A. Bear and Five Cards", "grammar": ["<S>->t1 <s> t2 <s> t3 <s> t4 <s> t5"], "max_level": 1}
+{"name": "1016_A. Death Note", "grammar": ["<S>->[n] <s> m <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
+{"name": "101_C. Vectors", "grammar": ["<S>->x1 <s> y1 <n> x2 <s> y2 <n> x3 <s> y3"], "max_level": 1}
+{"name": "1028_A. Find Square", "grammar": ["<S>->[n] <s> [m] <n> <T_n>", "<T_i>-><T_i-1> <n> [WB]{m}", "<T_1>->[WB]{m}"], "max_level": 2}
+{"name": "1036_B. Diagonal Walking v.2", "grammar": ["<S>->[q] <n> <T_q>", "<T_i>-><T_i-1> <n> n_i <s> m_i <s> k_i", "<T_1>->n_i <s> m_i <s> k_i"], "max_level": 2}
 {"name": "1037_A. Packets", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "124_C. Prime Permutation", "grammar": ["<S>->[a-z]{1,1000}"], "max_level": 1}
-{"name": "1490_C. Sum of Cubes", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> x", "<T_1>->x"], "max_level": 2}
-{"name": "571_A. Lengthening Sticks", "grammar": ["<S>->a <s> b <s> c <s> l"], "max_level": 1}
-{"name": "709_D. Recover the String", "grammar": ["<S>->a00 <s> a01 <s> a10 <s> a11"], "max_level": 1}
-{"name": "867_C. Ordering Pizza", "grammar": ["<S>->[N] <s> S <n> <T_N>", "<T_i>-><T_i-1> <n> si <s> ai <s> bi", "<T_1>->si <s> ai <s> bi"], "max_level": 2}
-{"name": "1362_A. Johnny and Ancient Computer", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> a <s> b", "<T_1>->a <s> b"], "max_level": 2}
-{"name": "1471_A. Strange Partition", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <s> x <n> <L_n>", "<T_1>->[n] <s> x <n> <L_n>", "<L_i>-><L_i-1> <s> a_i", "<L_1>->a_1"], "max_level": 3}
-{"name": "1498_A. GCD Sum", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> n", "<T_1>->n"], "max_level": 2}
-{"name": "478_C. Table Decorations", "grammar": ["<S>->r <s> g <s> b"], "max_level": 1}
-{"name": "5_C. Longest Regular Bracket Sequence", "grammar": ["<S>->[()]{1,10^6}"], "max_level": 1}
-{"name": "622_A. Infinite Sequence", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "784_D. Touchy-Feely Palindromes", "grammar": ["<S>->[0-9]{1,10}"], "max_level": 1}
-{"name": "805_C. Find Amir", "grammar": ["<S>->N"], "max_level": 1}
-{"name": "997_B. Roman Digits", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "111_D. Petya and Coloring", "grammar": ["<S>->n <s> m <s> k"], "max_level": 1}
-{"name": "1223_A. CME", "grammar": ["<S>->[q] <n> <T_q>", "<T_i>-><T_i-1> <n> n", "<T_1>->n"], "max_level": 2}
-{"name": "1267_B. Balls of Buma", "grammar": ["<S>->[A-Z]{1,300000}"], "max_level": 1}
-{"name": "32_D. Constellation", "grammar": ["<S>->[n] <s> m <s> k <n> <T_n>", "<T_i>-><T_i-1> <n> [*.]{m}", "<T_1>->[*.]{m}"], "max_level": 2}
-{"name": "420_A. Start Up", "grammar": ["<S>->[A-Z]{1,105}"], "max_level": 1}
-{"name": "74_C. Chessboard Billiard", "grammar": ["<S>->n <s> m"], "max_level": 1}
-{"name": "798_A. Mike and palindrome", "grammar": ["<S>->[a-zA-Z]{1,15}"], "max_level": 1}
-{"name": "934_D. A Determined Cleanup", "grammar": ["<S>->p <s> k"], "max_level": 1}
-{"name": "1146_B. Hate \"A\"", "grammar": ["<S>->[a-z]{1,100000}"], "max_level": 1}
-{"name": "374_A. Inna and Pink Pony", "grammar": ["<S>->n <s> m <s> i <s> j <s> a <s> b"], "max_level": 1}
-{"name": "933_B. A Determined Cleanup", "grammar": ["<S>->p <s> k"], "max_level": 1}
-{"name": "987_B. High School: Become Human", "grammar": ["<S>->x <s> y"], "max_level": 1}
-{"name": "p01498 King Slime", "grammar": ["<S>->[N] <s> W <s> H <n> <T_N>", "<T_i>-><T_i-1> <n> xi <s> yi", "<T_1>->xi <s> yi"], "max_level": 2}
-{"name": "1401_A. Distance and Axis", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> n <s> k", "<T_1>->n <s> k"], "max_level": 2}
-{"name": "146_D. Lucky Number 2", "grammar": ["<S>->a1 <s> a2 <s> a3 <s> a4"], "max_level": 1}
-{"name": "404_D. Minesweeper 1D", "grammar": ["<S>->[*?0-2]{1,10^6}"], "max_level": 1}
-{"name": "550_A. Two Substrings", "grammar": ["<S>->[A-Z]{1,10^5}"], "max_level": 1}
-{"name": "690_F1. Tree of Life (easy)", "grammar": ["<S>->[n] <n> <T_n-1>", "<T_i>-><T_i-1> <n> a <s> b", "<T_1>->a <s> b"], "max_level": 2}
-{"name": "804_A. Find Amir", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "488_A. Giga Tower", "grammar": ["<S>->a"], "max_level": 1}
-{"name": "560_B. Gerald is into Art", "grammar": ["<S>->a1 <s> b1 <n> a2 <s> b2 <n> a3 <s> b3"], "max_level": 1}
-{"name": "656_C. Without Text", "grammar": ["<S>->[0-9A-Za-z.]{1,50}"], "max_level": 1}
-{"name": "886_B. Vlad and Cafes", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> ai", "<T_1>->ai"], "max_level": 2}
-{"name": "909_B. Segments", "grammar": ["<S>->N"], "max_level": 1}
-{"name": "476_A. Dreamoon and Stairs", "grammar": ["<S>->n <s> m"], "max_level": 1}
-{"name": "599_A. Patrick and Shopping", "grammar": ["<S>->d1 <s> d2 <s> d3"], "max_level": 1}
-{"name": "77_E. Martian Food", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> R <s> r <s> k", "<T_1>->R <s> r <s> k"], "max_level": 2}
-{"name": "p03975 Kyoto University Programming Contest 2016 - A Barricade", "grammar": ["<S>->[N] <s> A <s> B <n> <T_N>", "<T_i>-><T_i-1> <n> t_i", "<T_1>->t_1"], "max_level": 2}
-{"name": "1185_A. Ropewalkers", "grammar": ["<S>->a <s> b <s> c <s> d"], "max_level": 1}
-{"name": "1203_E. Boxers", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
-{"name": "1220_C. Substring Game in the Lesson", "grammar": ["<S>->[a-z]{1,500000}"], "max_level": 1}
-{"name": "1485_A. Add and Divide", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> a <s> b", "<T_1>->a <s> b"], "max_level": 2}
-{"name": "1535_C. Unstable String", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [01?]{1,200000}", "<T_1>->[01?]{1,200000}"], "max_level": 2}
-{"name": "255_B. Code Parsing", "grammar": ["<S>->[xy]{1,1000000}"], "max_level": 1}
-{"name": "373_A. Collecting Beats is Fun", "grammar": ["<S>->k <n> <T_4>", "<T_i>-><T_i-1> <n> [1-9.]{4}", "<T_1>->[1-9.]{4}"], "max_level": 2}
-{"name": "727_A. Transformation: from A to B", "grammar": ["<S>->a <s> b"], "max_level": 1}
-{"name": "841_B. Godsend", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
-{"name": "959_E. Mahmoud and Ehab and the xor-MST", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "1163_C1. Power Transmission (Easy Edition)", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <n> x_i <s> y_i", "<T_1>->x_1 <s> y_1"], "max_level": 2}
-{"name": "1328_A. Divisibility Problem", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> a <s> b", "<T_1>->a <s> b"], "max_level": 2}
-{"name": "510_B. Fox And Two Dots", "grammar": ["<S>->[n] <s> [m] <n> <T_n>", "<T_i>-><T_i-1> <n> [A-Z]{m}", "<T_1>->[A-Z]{m}"], "max_level": 2}
-{"name": "535_C. Tavas and Karafs", "grammar": ["<S>->A <s> B <s> [n] <n> <T_n>", "<T_i>-><T_i-1> <n> l <s> t <s> m", "<T_1>->l <s> t <s> m"], "max_level": 2}
-{"name": "1068_B. LCM", "grammar": ["<S>->b"], "max_level": 1}
-{"name": "221_A. Little Elephant and Function", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "554_A. Kyoya and Photobooks", "grammar": ["<S>->[a-z]{1,20}"], "max_level": 1}
-{"name": "624_B. Making a String", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
-{"name": "1141_A. Game 23", "grammar": ["<S>->n <s> m"], "max_level": 1}
-{"name": "1217_C. The Number Of Good Substrings", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [01]{1,200000}", "<T_1>->[01]{1,200000}"], "max_level": 2}
-{"name": "142_A. Help Farmer", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "1526_D. Kill Anton", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [ANOT]{1,100000}", "<T_1>->[ANOT]{1,100000}"], "max_level": 2}
-{"name": "439_B. Devu, the Dumb Guy", "grammar": ["<S>->[n] <s> x <n> <T_n>", "<T_i>-><T_i-1> <s> c_i", "<T_1>->c_1"], "max_level": 2}
 {"name": "1038_D. Slime", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_i"], "max_level": 2}
-{"name": "1102_A. Integer Sequence Dividing", "grammar": ["<S>->n <n>"], "max_level": 1}
-{"name": "118_D. Caesar's Legions", "grammar": ["<S>->n1 <s> n2 <s> k1 <s> k2"], "max_level": 1}
-{"name": "285_D. Permutation Sum", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "44_I. Toys", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "710_E. Generate a String", "grammar": ["<S>->n <s> x <s> y"], "max_level": 1}
-{"name": "822_A. I'm bored with life", "grammar": ["<S>->A <s> B"], "max_level": 1}
-{"name": "p02127 AABABCAC", "grammar": ["<S>->[a-zA-Z]{1,100000} <n> [a-zA-Z]{1,100000}"], "max_level": 1}
-{"name": "110_C. Lucky Sum of Digits", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "854_B. Maxim Buys an Apartment", "grammar": ["<S>->n <s> k"], "max_level": 1}
-{"name": "99_C. Help Victoria the Wise", "grammar": ["<S>->[ROYGBV]{6}"], "max_level": 1}
-{"name": "p02320 Knapsack Problem with Limitations", "grammar": ["<S>->[N] <s> W <n> <T_N>", "<T_i>-><T_i-1> <n> vi <s> wi <s> mi", "<T_1>->vi <s> wi <s> mi"], "max_level": 2}
-{"name": "1204_D1. Kirk and a Binary String (easy version)", "grammar": ["<S>->[01]{1,2000}"], "max_level": 1}
-{"name": "65_A. Harry Potter and Three Spells", "grammar": ["<S>->a <s> b <s> c <s> d <s> e <s> f"], "max_level": 1}
-{"name": "797_A. k-Factorization", "grammar": ["<S>->n <s> k"], "max_level": 1}
-{"name": "933_C. A Colourful Prospect", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> x <s> y <s> r", "<T_1>->x <s> y <s> r"], "max_level": 2}
-{"name": "p01499 Rabbit Game Playing", "grammar": ["<S>->[N] <s> T <n> <T_N>", "<T_i>-><T_i-1> <n> Di", "<T_1>->Di"], "max_level": 2}
-{"name": "634_B. XOR Equation", "grammar": ["<S>->s <s> x"], "max_level": 1}
-{"name": "p02259 Bubble Sort", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <s> A_i", "<T_1>->A_1"], "max_level": 2}
+{"name": "103_C. Russian Roulette", "grammar": ["<S>->n <s> k <s> [p] <n> <T_p>", "<T_i>-><T_i-1> <n> x_i", "<T_1>->x_1"], "max_level": 2}
 {"name": "1047_D. Little C Loves 3 II", "grammar": ["<S>->n <s> m"], "max_level": 1}
-{"name": "1409_B. Minimum Product", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> a <s> b <s> x <s> y <s> n", "<T_1>->a <s> b <s> x <s> y <s> n"], "max_level": 2}
-{"name": "628_A. Tennis Tournament", "grammar": ["<S>->n <s> b <s> p"], "max_level": 1}
-{"name": "791_A. Bear and Big Brother", "grammar": ["<S>->a <s> b"], "max_level": 1}
-{"name": "405_A. Gravity Flip", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
-{"name": "736_B. Taxes", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "760_B. Frodo and pillows", "grammar": ["<S>->n <s> m <s> k"], "max_level": 1}
-{"name": "p00357 Trampoline", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> d_i", "<T_1>->d_1"], "max_level": 2}
-{"name": "1352_C. K-th Not Divisible by n", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> n <s> k", "<T_1>->n <s> k"], "max_level": 2}
-{"name": "864_C. Bus", "grammar": ["<S>->a <s> b <s> f <s> k"], "max_level": 1}
-{"name": "171_D. Broken checker", "grammar": ["<S>->N"], "max_level": 1}
-{"name": "402_A. Nuts", "grammar": ["<S>->k <s> a <s> b <s> v"], "max_level": 1}
-{"name": "597_A. Divisibility", "grammar": ["<S>->k <s> a <s> b"], "max_level": 1}
-{"name": "690_A2. Collective Mindsets (medium)", "grammar": ["<S>->N"], "max_level": 1}
-{"name": "779_B. Weird Rounding", "grammar": ["<S>->n <s> k"], "max_level": 1}
-{"name": "825_F. String Compression", "grammar": ["<S>->[a-z]{1,8000}"], "max_level": 1}
-{"name": "1225_C. p-binary", "grammar": ["<S>->n <s> p"], "max_level": 1}
-{"name": "570_B. Simple Game", "grammar": ["<S>->n <s> m"], "max_level": 1}
-{"name": "81_A. Plug-in", "grammar": ["<S>->[a-z]{1,200000}"], "max_level": 1}
-{"name": "98_B. Help King", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "1070_A. Find a Number", "grammar": ["<S>->d <s> s"], "max_level": 1}
-{"name": "1199_C. MP3", "grammar": ["<S>->[n] <s> [I] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
-{"name": "14_E. Camels", "grammar": ["<S>->n <s> t"], "max_level": 1}
-{"name": "626_B. Cards", "grammar": ["<S>->[n] <n> [BGR]{n}"], "max_level": 1}
-{"name": "765_B. Code obfuscation", "grammar": ["<S>->[a-z]{1,500}"], "max_level": 1}
-{"name": "1424_G. Years", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <n> b <s> d", "<T_1>->b <s> d"], "max_level": 2}
-{"name": "1445_C. Division", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> p_i <s> q_i", "<T_1>->p_1 <s> q_1"], "max_level": 2}
-{"name": "1519_B. The Cake Is a Lie", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> n <s> m <s> k", "<T_1>->n <s> m <s> k"], "max_level": 2}
-{"name": "577_A. Multiplication Table", "grammar": ["<S>->n <s> x"], "max_level": 1}
-{"name": "599_D. Spongebob and Squares", "grammar": ["<S>->x"], "max_level": 1}
-{"name": "690_E2. Photographs (II)", "grammar": ["<S>->h <s> w <s> k"], "max_level": 1}
-{"name": "735_D. Taxes", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "1073_E. Segment Sum", "grammar": ["<S>->l <s> r <s> k"], "max_level": 1}
-{"name": "1143_B. Nirvana", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "227_C. Flying Saucer Segments", "grammar": ["<S>->n <s> m"], "max_level": 1}
-{"name": "322_B. Ciel and Flowers", "grammar": ["<S>->r <s> g <s> b"], "max_level": 1}
-{"name": "510_A. Fox And Snake", "grammar": ["<S>->n <s> m"], "max_level": 1}
-{"name": "119_C. Education Reform", "grammar": ["<S> -> n <s> m <s> k <n> <T_m>", "<T_i> -> ai <s> bi <s> ci <n> <T_i-1>", "<T_1> -> ai <s> bi <s> ci"], "max_level": 2}
-{"name": "460_B. Little Dima and Equation", "grammar": ["<S> -> a <s> b <s> c"], "max_level": 1}
-{"name": "627_A. XOR Equation", "grammar": ["<S>->s <s> x"], "max_level": 1}
-{"name": "651_A. Joysticks", "grammar": ["<S>->a1 <s> a2"], "max_level": 1}
-{"name": "1020_C. Elections", "grammar": ["<S>->[n] <s> [m] <n> <T_n>", "<T_i>-><T_i-1> <n> p_i <s> c_i", "<T_1>->p_i <s> c_i"], "max_level": 2}
-{"name": "1178_C. Tiles", "grammar": ["<S>->w <s> h"], "max_level": 1}
-{"name": "196_A. Lexicographically Maximum Subsequence", "grammar": ["<S>->[a-z]{1,105}"], "max_level": 1}
-{"name": "479_A. Expression", "grammar": ["<S>->a <n> b <n> c"], "max_level": 1}
-{"name": "501_A. Contest", "grammar": ["<S>->a <s> b <s> c <s> d"], "max_level": 1}
-{"name": "552_B. Vanya and Books", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "600_A. Extract Numbers", "grammar": ["<S>->[.0-9a-zA-Z,;]{1,105}"], "max_level": 1}
-{"name": "876_C. Classroom Watch", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "922_B. Magic Forest", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "1455_E. Four Points", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> x <s> y <n> x <s> y <n> x <s> y <n> x <s> y", "<T_1>->x <s> y <n> x <s> y <n> x <s> y <n> x <s> y"], "max_level": 2}
-{"name": "180_C. Letter", "grammar": ["<S>->[a-zA-Z]{1,105}"], "max_level": 1}
-{"name": "702_D. Road to Post Office", "grammar": ["<S>->d <s> k <s> a <s> b <s> t"], "max_level": 1}
-{"name": "122_E. Lucky Permutation", "grammar": ["<S>->n <s> k"], "max_level": 1}
-{"name": "1543_A. Exciting Bets", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> a <s> b", "<T_1>->a <s> b"], "max_level": 2}
-{"name": "618_A. Slime Combining", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "666_A. Reberland Linguistics", "grammar": ["<S>->[a-z]{5,104}"], "max_level": 1}
-{"name": "p01855 Checkered Pattern", "grammar": ["<S>->[T] <n> <T_T>", "<T_i>->h_i <s> w_i <n> <T_i-1>", "<T_1>->h_1 <s> w_1"], "max_level": 2}
 {"name": "1054_A. Elevator or Stairs?", "grammar": ["<S>->x <s> y <s> z <s> t1 <s> t2 <s> t3"], "max_level": 1}
-{"name": "1202_F. You Are Given Some Letters...", "grammar": ["<S>->a <s> b"], "max_level": 1}
-{"name": "1508_B. Almost Sorted", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> n <s> k", "<T_1>->n <s> k"], "max_level": 2}
-{"name": "538_A. Cutting Banner", "grammar": ["<S>->[A-Z]{1,100}"], "max_level": 1}
-{"name": "630_D. Hexagons!", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "76_E. Points", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> X <s> Y", "<T_1>->X <s> Y"], "max_level": 2}
-{"name": "887_A. Div. 64", "grammar": ["<S>->[01]{1,100}"], "max_level": 1}
-{"name": "90_A. Cableway", "grammar": ["<S>->r <s> g <s> b"], "max_level": 1}
-{"name": "985_D. Sand Fortress", "grammar": ["<S>->n <s> H"], "max_level": 1}
-{"name": "114_D. Petr#", "grammar": ["<S>->[a-z]{1,2000} <n> [a-z]{1,2000} <n> [a-z]{1,2000}"], "max_level": 1}
-{"name": "118_A. String Task", "grammar": ["<S>->[a-zA-Z]{1,100}"], "max_level": 1}
-{"name": "1227_F2. Wrong Answer on test 233 (Hard Version)", "grammar": ["<S>->[n] <s> k <n> <T_n>", "<T_i>-><T_i-1> <s> h_i", "<T_1>->h_1"], "max_level": 2}
-{"name": "1312_D. Count the Arrays", "grammar": ["<S>->n <s> m"], "max_level": 1}
-{"name": "236_C. LCM Challenge", "grammar": ["<S>->N"], "max_level": 1}
-{"name": "615_E. Hexagons", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "776_E. The Holmes Children", "grammar": ["<S>->n <s> k"], "max_level": 1}
-{"name": "801_A. Vicious Keyboard", "grammar": ["<S>->[VK]{1,100}"], "max_level": 1}
-{"name": "847_C. Sum of Nestings", "grammar": ["<S>->n <s> k"], "max_level": 1}
-{"name": "964_A. Splits", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "p00500 Unique number", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> I1 <s> I2 <s> I3", "<T_1>->I1 <s> I2 <s> I3"], "max_level": 2}
-{"name": "1351_A. A+B (Trial Problem)", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> a <s> b", "<T_1>->a <s> b"], "max_level": 2}
-{"name": "27_E. Number With The Given Amount Of Divisors", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "397_A. On Segment's Own Points", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <n> li <s> ri", "<T_1>->li <s> ri"], "max_level": 2}
-{"name": "41_B. Martian Dollar", "grammar": ["<S>->[n] <s> b <n> <T_n>", "<T_i>->a_i <s> <T_i-1>", "<T_1>->a_1"], "max_level": 2}
-{"name": "514_A. Chewbaсca and Number", "grammar": ["<S>->x"], "max_level": 1}
-{"name": "630_R. Game", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "797_C. Minimal string", "grammar": ["<S>->[a-z]{1,105}"], "max_level": 1}
-{"name": "1064_A. Make a triangle!", "grammar": ["<S>->a <s> b <s> c"], "max_level": 1}
-{"name": "131_A. cAPS lOCK", "grammar": ["<S>->[a-zA-Z]{1,100}"], "max_level": 1}
-{"name": "289_C. Polo the Penguin and Strings", "grammar": ["<S>->n <s> k"], "max_level": 1}
-{"name": "430_E. Guess the Tree", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> ci", "<T_1>->ci"], "max_level": 2}
-{"name": "669_A. Little Artem and Presents", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "758_F. Geometrical Progression", "grammar": ["<S>->n <s> l <s> r"], "max_level": 1}
-{"name": "803_C. Maximal GCD", "grammar": ["<S>->n <s> k"], "max_level": 1}
-{"name": "p02287 Complete Binary Tree", "grammar": ["<S>->[H] <n> <T_H>", "<T_i>-><T_i-1> <s> L_i", "<T_1>->L_1"], "max_level": 2}
-{"name": "1208_B. Uniqueness", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
-{"name": "70_A. Cookies", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "893_B. Beautiful Divisors", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "p00491 Pasta", "grammar": ["<S>->N <s> [K] <n> <T_K>", "<T_i>-><T_i-1> <n> A_i <s> B_i", "<T_1>->A_1 <s> B_1"], "max_level": 2}
-{"name": "p02258 Maximum Profit", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <n> R_i", "<T_1>->R_1"], "max_level": 2}
-{"name": "118_B. Present from Lena", "grammar": ["<S>->[2-9]{1}"], "max_level": 1}
-{"name": "1514_B. AND 0, Sum Big", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> n <s> k", "<T_1>->n <s> k"], "max_level": 2}
-{"name": "471_C. MUH and House of Cards", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "664_A. Complicated GCD", "grammar": ["<S>->a <s> b"], "max_level": 1}
-{"name": "847_D. Dog Show", "grammar": ["<S>->[n] <s> T <n> <T_n>", "<T_i>-><T_i-1> <s> ti", "<T_1>->ti"], "max_level": 2}
-{"name": "868_F. Yet Another Minimization Problem", "grammar": ["<S>->[n] <s> [k] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
-{"name": "964_B. Messages", "grammar": ["<S>->[n] <s> A <s> B <s> C <s> T <n> <T_n>", "<T_i>-><T_i-1> <s> t_i", "<T_1>->t_1"], "max_level": 2}
-{"name": "991_C. Candies", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "1255_A. Changing Volume", "grammar": ["<S>->[T] <n> <T_T>", "<T_i>-><T_i-1> <n> a <s> b", "<T_1>->a <s> b"], "max_level": 2}
-{"name": "600_C. Make Palindrome", "grammar": ["<S>->[a-z]{1,200000}"], "max_level": 1}
-{"name": "762_A. k-th divisor", "grammar": ["<S>->n <s> k"], "max_level": 1}
-{"name": "807_B. T-Shirt Hunt", "grammar": ["<S>->p <s> x <s> y"], "max_level": 1}
-{"name": "1246_A. p-binary", "grammar": ["<S>->n <s> p"], "max_level": 1}
-{"name": "1370_D. Odd-Even Subsequence", "grammar": ["<S>->[n] <s> k <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
-{"name": "255_D. Mr. Bender and Square", "grammar": ["<S>->n <s> x <s> y <s> c"], "max_level": 1}
-{"name": "328_A. IQ Test", "grammar": ["<S>->i <s> i <s> i <s> i"], "max_level": 1}
-{"name": "418_A. Football", "grammar": ["<S>->n <s> k"], "max_level": 1}
-{"name": "682_A. Alyona and Numbers", "grammar": ["<S>->n <s> m"], "max_level": 1}
-{"name": "888_C. K-Dominant Character", "grammar": ["<S>->[a-z]{1,100000}"], "max_level": 1}
-{"name": "104_A. Blackjack", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "1409_D. Decrease the Sum of Digits", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> n <s> s", "<T_1>->n <s> s"], "max_level": 2}
-{"name": "201_A. Clear Symmetry", "grammar": ["<S>->x"], "max_level": 1}
-{"name": "225_E. Unsolvable", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "858_C. Did you mean...", "grammar": ["<S>-> [a-z]{1,3000}"], "max_level": 1}
-{"name": "109_A. Lucky Sum of Digits", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "1395_A. Boboniu Likes to Color Balls", "grammar": ["<S>->[T] <n> <T_T>", "<T_i>->r <s> g <s> b <s> w <n> <T_i-1>", "<T_1>->r <s> g <s> b <s> w"], "max_level": 2}
-{"name": "258_A. Little Elephant and Bits", "grammar": ["<S>->[0-1]{1,10^4}"], "max_level": 1}
-{"name": "281_A. Word Capitalization", "grammar": ["<S>->[a-zA-Z]{1,10^3}"], "max_level": 1}
-{"name": "447_A. DZY Loves Hash", "grammar": ["<S>->p <s> [n] <n> <T_n>", "<T_i>-><T_i-1> <n> xi", "<T_1>->xi"], "max_level": 2}
-{"name": "569_D. Symmetric and Transitive", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "935_A. Fafa and his Company", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "1168_A. Increasing by Modulo", "grammar": ["<S>->[n] <s> m <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
-{"name": "1288_C. Two Arrays", "grammar": ["<S>->n <s> m"], "max_level": 1}
-{"name": "1437_A. Marketing Scheme", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> l <s> r", "<T_1>->l <s> r"], "max_level": 2}
-{"name": "1461_E. Water Level", "grammar": ["<S>->k <s> l <s> r <s> t <s> x <s> y"], "max_level": 1}
-{"name": "32_C. Flea", "grammar": ["<S>->n <s> m <s> s"], "max_level": 1}
-{"name": "569_A. Music", "grammar": ["<S>->T <s> S <s> q"], "max_level": 1}
-{"name": "p00015 National Budget", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> [0-9]{1,100} <n> [0-9]{1,100}", "<T_1>->[0-9]{1,100} <n> [0-9]{1,100}"], "max_level": 2}
-{"name": "p00298 Mighty Man", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> ci <s> wi", "<T_1>->ci <s> wi"], "max_level": 2}
-{"name": "1025_C. Plasticine zebra", "grammar": ["<S>->[bw]{1,100000}"], "max_level": 1}
-{"name": "110_A. Nearly Lucky Number", "grammar": ["<S>->n"], "max_level": 1}
-{"name": "1353_D. Constructing the Array", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> n", "<T_1>->n"], "max_level": 2}
+{"name": "1060_A. Phone Numbers", "grammar": ["<S>->[n] <n> [0-9]{n}"], "max_level": 1}
+{"name": "1062_D. Fun with Integers", "grammar": ["<S>->n"], "max_level": 1}
+{"name": "1068_B. LCM", "grammar": ["<S>->b"], "max_level": 1}
+{"name": "1076_B. Divisor Subtraction", "grammar": ["<S>->n"], "max_level": 1}
+{"name": "1084_C. The Fair Nut and String", "grammar": ["<S>->[a-z]{1,100000}"], "max_level": 1}
+{"name": "1091_C. New Year and the Sphere Transmission", "grammar": ["<S>->n"], "max_level": 1}
+{"name": "1095_A. Repeating Cipher", "grammar": ["<S>->[n] <n> [a-z]{n}"], "max_level": 1}
+{"name": "1096_E. The Top Scorer", "grammar": ["<S>->p <s> s <s> r"], "max_level": 1}
+{"name": "1101_A. Minimum Integer", "grammar": ["<S>->[q] <n> <T_q>", "<T_i>-><T_i-1> <n> l_i <s> r_i <s> d_i", "<T_1>->l_1 <s> r_1 <s> d_1"], "max_level": 2}
+{"name": "1102_A. Integer Sequence Dividing", "grammar": ["<S>->n <n>"], "max_level": 1}
+{"name": "110_B. Lucky String", "grammar": ["<S>->n"], "max_level": 1}
+{"name": "110_C. Lucky Sum of Digits", "grammar": ["<S>->n"], "max_level": 1}
+{"name": "1110_A. Parity", "grammar": ["<S>->b <s> [k] <n> <T_k>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
+{"name": "1114_A. Got Any Grapes?", "grammar": ["<S>->x <s> y <s> z <n> a <s> b <s> c"], "max_level": 1}
+{"name": "111_D. Petya and Coloring", "grammar": ["<S>->n <s> m <s> k"], "max_level": 1}
+{"name": "1129_A2. Toy Train", "grammar": ["<S>->n <s> [m] <n> <T_m>", "<T_i>-><T_i-1> <n> a_i <s> b_i", "<T_1>->a_1 <s> b_1"], "max_level": 2}
+{"name": "1131_E. String Multiplication", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <n> [a-z]{1,100000}", "<T_1>->[a-z]{1,100000}"], "max_level": 2}
+{"name": "1140_A. Detective Book", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
+{"name": "1141_A. Game 23", "grammar": ["<S>->n <s> m"], "max_level": 1}
+{"name": "1144_B. Parity Alternated Deletions", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
+{"name": "1146_B. Hate \"A\"", "grammar": ["<S>->[a-z]{1,100000}"], "max_level": 1}
+{"name": "1159_A. A pile of stones", "grammar": ["<S>->[n] <n> [+-]{n}"], "max_level": 1}
+{"name": "1163_C1. Power Transmission (Easy Edition)", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <n> x_i <s> y_i", "<T_1>->x_1 <s> y_1"], "max_level": 2}
+{"name": "1166_A. Silent Classroom", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <n> [a-z]{1,20}", "<T_1>->[a-z]{1,20}"], "max_level": 2}
+{"name": "117_B. Very Interesting Game", "grammar": ["<S>->a <s> b <s> mod"], "max_level": 1}
+{"name": "1180_A. Alex and a Rhombus", "grammar": ["<S>->n"], "max_level": 1}
+{"name": "1181_A. Chunga-Changa", "grammar": ["<S>->x <s> y <s> z"], "max_level": 1}
+{"name": "1185_A. Ropewalkers", "grammar": ["<S>->a <s> b <s> c <s> d"], "max_level": 1}
+{"name": "1189_D1. Add on a Tree", "grammar": ["<S>->[n] <n> <T_n-1>", "<T_i>-><T_i-1> <n> u <s> v", "<T_1>->u <s> v"], "max_level": 2}
+{"name": "118_D. Caesar's Legions", "grammar": ["<S>->n1 <s> n2 <s> k1 <s> k2"], "max_level": 1}
+{"name": "1191_A. Tokitsukaze and Enhancement", "grammar": ["<S>->x"], "max_level": 1}
+{"name": "119_A. Epic Game", "grammar": ["<S>->a <s> b <s> n"], "max_level": 1}
+{"name": "1203_E. Boxers", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
+{"name": "1204_D1. Kirk and a Binary String (easy version)", "grammar": ["<S>->[01]{1,2000}"], "max_level": 1}
+{"name": "1208_A. XORinacci", "grammar": ["<S>->[T] <n> <T_T>", "<T_i>-><T_i-1> <n> a <s> b <s> n", "<T_1>->a <s> b <s> n"], "max_level": 2}
+{"name": "1213_B. Bad Prices", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <n> <L_n>", "<T_1>->[n] <n> <L_n>", "<L_i>-><L_i-1> <s> a_i", "<L_1>->a_1"], "max_level": 3}
+{"name": "1217_C. The Number Of Good Substrings", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [01]{1,200000}", "<T_1>->[01]{1,200000}"], "max_level": 2}
+{"name": "121_C. Lucky Permutation", "grammar": ["<S>->n <s> k"], "max_level": 1}
+{"name": "1220_C. Substring Game in the Lesson", "grammar": ["<S>->[a-z]{1,500000}"], "max_level": 1}
+{"name": "1223_A. CME", "grammar": ["<S>->[q] <n> <T_q>", "<T_i>-><T_i-1> <n> n", "<T_1>->n"], "max_level": 2}
+{"name": "1227_A. Math Problem", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <n> <L_n>", "<T_1>->[n] <n> <L_n>", "<L_i>-><L_i-1> <n> l_i <s> r_i", "<L_1>->l_i <s> r_i"], "max_level": 3}
+{"name": "1230_A. Dawid and Bags of Candies", "grammar": ["<S>->a_1 <s> a_2 <s> a_3 <s> a_4"], "max_level": 1}
+{"name": "1230_B. Ania and Minimizing", "grammar": ["<S>->[n] <s> k <n> <A_n>", "<A_i>->[1-9]{1} <B_i-1>", "<A_1>->[1-9]{1}", "<B_i>->[0-9]{1} <B_i-1>", "<B_1>->[0-9]{1}"], "max_level": 2}
+{"name": "1239_A. Ivan the Fool and the Probability Theory", "grammar": ["<S>->n <s> m"], "max_level": 1}
 {"name": "1242_A. Tile Painting", "grammar": ["<S>->n"], "max_level": 1}
+{"name": "1249_B1. Books Exchange (easy version)", "grammar": ["<S>->[q] <n> <T_q>", "<T_i>-><T_i-1> <n> [n] <n> <L_n>", "<T_1>->[n] <n> <L_n>", "<L_i>-><L_i-1> <s> p_i", "<L_1>->p_1"], "max_level": 3}
+{"name": "124_C. Prime Permutation", "grammar": ["<S>->[a-z]{1,1000}"], "max_level": 1}
+{"name": "1251_C. Minimize The Integer", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> a", "<T_1>->a"], "max_level": 2}
+{"name": "1257_B. Magic Stick", "grammar": ["<S>->[T] <n> <T_T>", "<T_i>-><T_i-1> <n> x <s> y", "<T_1>->x <s> y"], "max_level": 2}
+{"name": "125_A. Measuring Lengths in Baden", "grammar": ["<S>->n"], "max_level": 1}
+{"name": "1267_B. Balls of Buma", "grammar": ["<S>->[A-Z]{1,300000}"], "max_level": 1}
+{"name": "127_E. E-reader Display", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <n> [01]{n}", "<T_1>->[01]{n}"], "max_level": 2}
+{"name": "1288_A. Deadline", "grammar": ["<S>->[T] <n> <T_T>", "<T_i>-><T_i-1> <n> n <s> d", "<T_1>->n <s> d"], "max_level": 2}
+{"name": "1294_B. Collecting Packages", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <n> <L_n>", "<T_1>->[n] <n> <L_n>", "<L_i>-><L_i-1> <n> x_i <s> y_i", "<L_1>->x_1 <s> y_1"], "max_level": 3}
+{"name": "12_B. Correct Solution?", "grammar": ["<S>->n <n> m"], "max_level": 1}
+{"name": "1305_B. Kuroni and Simple Strings", "grammar": ["<S>->[()]{1,1000}"], "max_level": 1}
+{"name": "1311_C. Perform the Combo", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <s> [m] <n> [a-z]{n} <n> <L_m>", "<T_1>->[n] <s> [m] <n> [a-z]{n} <n> <L_m>", "<L_i>-><L_i-1> <s> p_i", "<L_1>->p_1"], "max_level": 3}
+{"name": "1324_D. Pair of Topics", "grammar": ["<S>->[n] <n> <T_n> <n> <L_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1", "<L_i>-><L_i-1> <s> b_i", "<L_1>->b_1"], "max_level": 3}
+{"name": "1328_A. Divisibility Problem", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> a <s> b", "<T_1>->a <s> b"], "max_level": 2}
+{"name": "1351_C. Skier", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [SNWE]{1,10^5}", "<T_1>->[SNWE]{1,10^5}"], "max_level": 2}
+{"name": "1352_C. K-th Not Divisible by n", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> n <s> k", "<T_1>->n <s> k"], "max_level": 2}
+{"name": "1353_B. Two Arrays And Swaps", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <s> k <n> <L_n> <n> <Z_n>", "<T_1>->[n] <s> k <n> <L_n> <n> <Z_n>", "<L_i>-><L_i-1> <s> a_i", "<L_1>->a_1", "<Z_i>-><Z_i-1> <s> b_i", "<Z_1>->b_1"], "max_level": 5}
+{"name": "1353_D. Constructing the Array", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> a_i", "<T_1>->a_1"], "max_level": 2}
+{"name": "1358_A. Park Lighting", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> n <s> m", "<T_1>->n <s> m"], "max_level": 2}
+{"name": "1362_A. Johnny and Ancient Computer", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> a <s> b", "<T_1>->a <s> b"], "max_level": 2}
+{"name": "1366_A. Shovels and Swords", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> a <s> b", "<T_1>->a <s> b"], "max_level": 2}
+{"name": "136_B. Ternary Logic", "grammar": ["<S>->a <s> c"], "max_level": 1}
+{"name": "1371_D. Grid-00100", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> n <s> k", "<T_1>->n <s> k"], "max_level": 2}
+{"name": "1373_B. 01 Game", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [01]{1,100}", "<T_1>->[01]{1,100}"], "max_level": 2}
+{"name": "1373_D. Maximum Sum on Even Positions", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <n> <L_n>", "<T_1>->[n] <n> <L_n>", "<L_i>-><L_i-1> <s> a_i", "<L_1>->a_1"], "max_level": 3}
+{"name": "1374_B. Multiply by 2, divide by 6", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> n", "<T_1>->n"], "max_level": 2}
+{"name": "1391_C. Cyclic Permutations ", "grammar": ["<S>->N"], "max_level": 1}
+{"name": "1393_A. Rainbow Dash, Fluttershy and Chess Coloring", "grammar": ["<S>->[T] <n> <T_T>", "<T_i>-><T_i-1> <n> n", "<T_1>->n"], "max_level": 2}
+{"name": "139_D. Digits Permutations", "grammar": ["<S>->[0-9]{1,10^5}"], "max_level": 1}
+{"name": "1401_A. Distance and Axis", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> n <s> k", "<T_1>->n <s> k"], "max_level": 2}
+{"name": "1409_B. Minimum Product", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> a <s> b <s> x <s> y <s> n", "<T_1>->a <s> b <s> x <s> y <s> n"], "max_level": 2}
+{"name": "1419_A. Digit Game", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <n> [0-9]{n}", "<T_1>->[n] <n> [0-9]{n}"], "max_level": 2}
+{"name": "1420_A. Cubes Sorting", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <n> <L_n>", "<T_1>->[n] <n> <L_n>", "<L_i>-><L_i-1> <s> a_i", "<L_1>->a_1"], "max_level": 3}
+{"name": "142_A. Help Farmer", "grammar": ["<S>->n"], "max_level": 1}
+{"name": "1430_B. Barrels", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <s> k <n> <L_n>", "<T_1>->[n] <s> k <n> <L_n>", "<L_i>-><L_i-1> <s> a_i", "<L_1>->a_1"], "max_level": 3}
+{"name": "1436_A. Reorder", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <s> m <n> <L_n>", "<T_1>->[n] <s> m <n> <L_n>", "<L_i>-><L_i-1> <s> a_i", "<L_1>->a_1"], "max_level": 3}
+{"name": "1451_D. Circle Game", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> d <s> k", "<T_1>->d <s> k"], "max_level": 2}
+{"name": "1466_C. Canine poetry", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [a-z]{1,100000}", "<T_1>->[a-z]{1,100000}"], "max_level": 2}
+{"name": "146_D. Lucky Number 2", "grammar": ["<S>->a1 <s> a2 <s> a3 <s> a4"], "max_level": 1}
+{"name": "1471_A. Strange Partition", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [n] <s> x <n> <L_n>", "<T_1>->[n] <s> x <n> <L_n>", "<L_i>-><L_i-1> <s> a_i", "<L_1>->a_1"], "max_level": 3}
+{"name": "1480_A. Yet Another String Game", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [a-z]{1,50}", "<T_1>->[a-z]{1,50}"], "max_level": 2}
+{"name": "1485_A. Add and Divide", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> a <s> b", "<T_1>->a <s> b"], "max_level": 2}
+{"name": "148_A. Insomnia cure", "grammar": ["<S>->k <n> l <n> m <n> n <n> d"], "max_level": 1}
+{"name": "1490_C. Sum of Cubes", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> x", "<T_1>->x"], "max_level": 2}
+{"name": "1498_A. GCD Sum", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> n", "<T_1>->n"], "max_level": 2}
+{"name": "1506_G. Maximize the Remaining String", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [a-z]{1,200000}", "<T_1>->[a-z]{1,200000}"], "max_level": 2}
+{"name": "151_C. Win or Freeze", "grammar": ["<S>->q"], "max_level": 1}
+{"name": "1526_D. Kill Anton", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [ANOT]{1,100000}", "<T_1>->[ANOT]{1,100000}"], "max_level": 2}
+{"name": "1535_C. Unstable String", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> [01?]{1,200000}", "<T_1>->[01?]{1,200000}"], "max_level": 2}
+{"name": "161_C. Abracadabra", "grammar": ["<S>->l1 <s> r1 <s> l2 <s> r2"], "max_level": 1}
+{"name": "166_A. Rank List", "grammar": ["<S>->[n] <s> k <n> <T_n>", "<T_i>-><T_i-1> <n> pi <s> ti", "<T_1>->pi <s> ti"], "max_level": 2}
+{"name": "168_A. Wizards and Demonstration", "grammar": ["<S>->n <s> x <s> y"], "max_level": 1}
+{"name": "171_D. Broken checker", "grammar": ["<S>->N"], "max_level": 1}
+{"name": "195_A. Let's Watch Football", "grammar": ["<S>->a <s> b <s> c"], "max_level": 1}
+{"name": "199_C. About Bacteria", "grammar": ["<S>->k <s> b <s> n <s> t"], "max_level": 1}
+{"name": "204_A. Little Elephant and Interval", "grammar": ["<S>->l <s> r"], "max_level": 1}
+{"name": "209_B. Pixels", "grammar": ["<S>->a <s> b <s> c"], "max_level": 1}
+{"name": "221_A. Little Elephant and Function", "grammar": ["<S>->n"], "max_level": 1}
+{"name": "221_C. Little Elephant and Problem", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
+{"name": "223_C. Partial Sums", "grammar": ["<S>->[n] <s> [k] <n> <T_n>", "<T_i>-><T_i-1> <s> ai", "<T_1>->ai"], "max_level": 2}
+{"name": "230_A. Dragons", "grammar": ["<S>->s <s> [n] <n> <T_n>", "<T_i>-><T_i-1> <n> x_i <s> y_i", "<T_1>->x_1 <s> y_1"], "max_level": 2}
+{"name": "235_A. LCM Challenge", "grammar": ["<S>->n"], "max_level": 1}
+{"name": "239_A. Two Bags of Potatoes", "grammar": ["<S>->y <s> k <s> n"], "max_level": 1}
+{"name": "255_B. Code Parsing", "grammar": ["<S>->[xy]{1,1000000}"], "max_level": 1}
+{"name": "275_A. Lights Out", "grammar": ["<S>->n <s> n <s> n <n> n <s> n <s> n <n> n <s> n <s> n"], "max_level": 1}
+{"name": "285_D. Permutation Sum", "grammar": ["<S>->n"], "max_level": 1}
+{"name": "287_B. Pipeline", "grammar": ["<S>->n <s> k"], "max_level": 1}
+{"name": "306_C. White, Black and White Again", "grammar": ["<S>->n <s> w <s> b"], "max_level": 1}
+{"name": "32_D. Constellation", "grammar": ["<S>->[n] <s> m <s> k <n> <T_n>", "<T_i>-><T_i-1> <n> [*.]{m}", "<T_1>->[*.]{m}"], "max_level": 2}
+{"name": "342_C. Cupboard and Balloons", "grammar": ["<S>->r <s> h"], "max_level": 1}
+{"name": "343_B. Alternating Current", "grammar": ["<S>->[+-]{1,100000}"], "max_level": 1}
+{"name": "365_A. Good Number", "grammar": ["<S>->[n] <s> k <n> <T_n>", "<T_i>-><T_i-1> <n> a_i", "<T_1>->a_i"], "max_level": 2}
+{"name": "373_A. Collecting Beats is Fun", "grammar": ["<S>->k <n> <T_4>", "<T_i>-><T_i-1> <n> [1-9.]{4}", "<T_1>->[1-9.]{4}"], "max_level": 2}
+{"name": "374_A. Inna and Pink Pony", "grammar": ["<S>->n <s> m <s> i <s> j <s> a <s> b"], "max_level": 1}
+{"name": "379_A. New Year Candles", "grammar": ["<S>->a <s> b"], "max_level": 1}
+{"name": "393_C. Blocked Points", "grammar": ["<S>->n"], "max_level": 1}
+{"name": "39_H. Multiplication Table", "grammar": ["<S>->k"], "max_level": 1}
+{"name": "404_D. Minesweeper 1D", "grammar": ["<S>->[*?0-2]{1,10^6}"], "max_level": 1}
+{"name": "405_A. Gravity Flip", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
+{"name": "40_C. Berland Square", "grammar": ["<S>->N <s> x <s> M <s> y"], "max_level": 1}
+{"name": "420_A. Start Up", "grammar": ["<S>->[A-Z]{1,105}"], "max_level": 1}
+{"name": "425_A. Sereja and Swaps", "grammar": ["<S>->[n] <s> k <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
+{"name": "439_A. Devu, the Singer and Churu, the Joker", "grammar": ["<S>->[n] <s> d <n> <T_n>", "<T_i>-><T_i-1> <s> t_i", "<T_1>->t_1"], "max_level": 2}
+{"name": "439_B. Devu, the Dumb Guy", "grammar": ["<S>->[n] <s> x <n> <T_n>", "<T_i>-><T_i-1> <s> c_i", "<T_1>->c_1"], "max_level": 2}
+{"name": "442_C. Artem and Array ", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> ai", "<T_1>->ai"], "max_level": 2}
+{"name": "443_A. Anton and Letters", "grammar": ["<S>->{ <T_1000> }", "<T_i>-><T_i-1> , <s> [a-z]{1}|<T_1>", "<T_1>->[a-z]{1}"], "max_level": 2}
+{"name": "44_B. Cola", "grammar": ["<S>->n <s> a <s> b <s> c"], "max_level": 1}
+{"name": "44_I. Toys", "grammar": ["<S>->n"], "max_level": 1}
+{"name": "469_A. I Wanna Be the Guy", "grammar": ["<S>->[n] <n> [p] <s> <T_p> <n> <T_p>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 3}
+{"name": "476_A. Dreamoon and Stairs", "grammar": ["<S>->n <s> m"], "max_level": 1}
+{"name": "478_A. Initial Bet", "grammar": ["<S>->c1 <s> c2 <s> c3 <s> c4 <s> c5"], "max_level": 1}
+{"name": "478_C. Table Decorations", "grammar": ["<S>->r <s> g <s> b"], "max_level": 1}
+{"name": "483_B. Friends and Presents", "grammar": ["<S>->cnt1 <s> cnt2 <s> x <s> y"], "max_level": 1}
+{"name": "488_A. Giga Tower", "grammar": ["<S>->a"], "max_level": 1}
+{"name": "492_B. Vanya and Lanterns", "grammar": ["<S>->[n] <s> l <n> <T_n>", "<T_i>-><T_i-1> <s> ai", "<T_1>->ai"], "max_level": 2}
+{"name": "510_A. Fox And Snake", "grammar": ["<S>->n <s> m"], "max_level": 1}
+{"name": "510_B. Fox And Two Dots", "grammar": ["<S>->[n] <s> [m] <n> <T_n>", "<T_i>-><T_i-1> <n> [A-Z]{m}", "<T_1>->[A-Z]{m}"], "max_level": 2}
+{"name": "513_A. Game", "grammar": ["<S>->n1 <s> n2 <s> k1 <s> k2"], "max_level": 1}
+{"name": "526_A. King of Thieves", "grammar": ["<S>->[n] <n> [*.]{n}"], "max_level": 1}
+{"name": "535_C. Tavas and Karafs", "grammar": ["<S>->A <s> B <s> [n] <n> <T_n>", "<T_i>-><T_i-1> <n> l <s> t <s> m", "<T_1>->l <s> t <s> m"], "max_level": 2}
+{"name": "538_B. Quasi Binary", "grammar": ["<S>->n"], "max_level": 1}
+{"name": "545_C. Woodcutters", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <n> xi <s> hi", "<T_1>->xi <s> hi"], "max_level": 2}
+{"name": "550_A. Two Substrings", "grammar": ["<S>->[A-Z]{1,10^5}"], "max_level": 1}
+{"name": "551_A. GukiZ and Contest", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
+{"name": "554_A. Kyoya and Photobooks", "grammar": ["<S>->[a-z]{1,20}"], "max_level": 1}
+{"name": "559_B. Equivalent Strings", "grammar": ["<S>->[a-z]{1,200000} <n> [a-z]{1,200000}"], "max_level": 1}
+{"name": "560_B. Gerald is into Art", "grammar": ["<S>->a1 <s> b1 <n> a2 <s> b2 <n> a3 <s> b3"], "max_level": 1}
+{"name": "56_E. Domino Principle", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <n> xi <s> hi", "<T_1>->xi <s> hi"], "max_level": 2}
+{"name": "570_B. Simple Game", "grammar": ["<S>->n <s> m"], "max_level": 1}
+{"name": "571_A. Lengthening Sticks", "grammar": ["<S>->a <s> b <s> c <s> l"], "max_level": 1}
+{"name": "598_A. Tricky Sum", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> a_i", "<T_1>->a_1"], "max_level": 2}
+{"name": "599_A. Patrick and Shopping", "grammar": ["<S>->d1 <s> d2 <s> d3"], "max_level": 1}
+{"name": "5_C. Longest Regular Bracket Sequence", "grammar": ["<S>->[()]{1,10^6}"], "max_level": 1}
+{"name": "621_A. Wet Shark and Odd and Even", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
+{"name": "622_A. Infinite Sequence", "grammar": ["<S>->n"], "max_level": 1}
+{"name": "624_B. Making a String", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
+{"name": "625_A. Guest From the Past", "grammar": ["<S>->n <n> a <n> b <n> c"], "max_level": 1}
+{"name": "626_C. Block Towers", "grammar": ["<S>->n <s> m"], "max_level": 1}
+{"name": "628_A. Tennis Tournament", "grammar": ["<S>->n <s> b <s> p"], "max_level": 1}
+{"name": "630_A. Again Twenty Five!", "grammar": ["<S>->n"], "max_level": 1}
+{"name": "633_A. Ebony and Ivory", "grammar": ["<S>->a <s> b <s> c"], "max_level": 1}
+{"name": "634_B. XOR Equation", "grammar": ["<S>->s <s> x"], "max_level": 1}
+{"name": "656_C. Without Text", "grammar": ["<S>->[0-9A-Za-z.]{1,50}"], "max_level": 1}
+{"name": "65_A. Harry Potter and Three Spells", "grammar": ["<S>->a <s> b <s> c <s> d <s> e <s> f"], "max_level": 1}
+{"name": "675_A. Infinite Sequence", "grammar": ["<S>->a <s> b <s> c"], "max_level": 1}
+{"name": "680_A. Bear and Five Cards", "grammar": ["<S>->t1 <s> t2 <s> t3 <s> t4 <s> t5"], "max_level": 1}
+{"name": "680_D. Bear and Tower of Cubes", "grammar": ["<S>->m"], "max_level": 1}
+{"name": "688_B. Lovely Palindromes", "grammar": ["<S>->n"], "max_level": 1}
+{"name": "690_A1. Collective Mindsets (easy)", "grammar": ["<S>->N"], "max_level": 1}
+{"name": "690_F1. Tree of Life (easy)", "grammar": ["<S>->[n] <n> <T_n-1>", "<T_i>-><T_i-1> <n> a <s> b", "<T_1>->a <s> b"], "max_level": 2}
+{"name": "699_C. Vacations", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
+{"name": "709_D. Recover the String", "grammar": ["<S>->a00 <s> a01 <s> a10 <s> a11"], "max_level": 1}
+{"name": "710_E. Generate a String", "grammar": ["<S>->n <s> x <s> y"], "max_level": 1}
+{"name": "716_D. Complete The Graph", "grammar": ["<S>->n <s> [m] <s> L <s> s <s> t <n> <T_m>", "<T_i>-><T_i-1> <n> ui <s> vi <s> wi", "<T_1>->ui <s> vi <s> wi"], "max_level": 2}
+{"name": "727_A. Transformation: from A to B", "grammar": ["<S>->a <s> b"], "max_level": 1}
+{"name": "730_G. Car Repair Shop", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <n> si <s> di", "<T_1>->si <s> di"], "max_level": 2}
+{"name": "733_A. Grasshopper And the String", "grammar": ["<S>->[A-Z]{1,100}"], "max_level": 1}
+{"name": "736_B. Taxes", "grammar": ["<S>->n"], "max_level": 1}
+{"name": "742_A. Arpa’s hard exam and Mehrdad’s naive cheat", "grammar": ["<S>->n"], "max_level": 1}
+{"name": "746_A. Compote", "grammar": ["<S>->a <n> b <n> c"], "max_level": 1}
+{"name": "74_C. Chessboard Billiard", "grammar": ["<S>->n <s> m"], "max_level": 1}
+{"name": "758_A. Holiday Of Equality", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
+{"name": "760_B. Frodo and pillows", "grammar": ["<S>->n <s> m <s> k"], "max_level": 1}
+{"name": "766_B. Mahmoud and a Triangle", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
+{"name": "77_E. Martian Food", "grammar": ["<S>->[t] <n> <T_t>", "<T_i>-><T_i-1> <n> R <s> r <s> k", "<T_1>->R <s> r <s> k"], "max_level": 2}
+{"name": "784_D. Touchy-Feely Palindromes", "grammar": ["<S>->[0-9]{1,10}"], "max_level": 1}
+{"name": "791_A. Bear and Big Brother", "grammar": ["<S>->A <s> B"], "max_level": 1}
+{"name": "797_A. k-Factorization", "grammar": ["<S>->n <s> k"], "max_level": 1}
+{"name": "798_A. Mike and palindrome", "grammar": ["<S>->[a-zA-Z]{1,15}"], "max_level": 1}
+{"name": "804_A. Find Amir", "grammar": ["<S>->n"], "max_level": 1}
+{"name": "805_A. Fake NP", "grammar": ["<S>->l <s> r"], "max_level": 1}
+{"name": "805_C. Find Amir", "grammar": ["<S>->N"], "max_level": 1}
+{"name": "822_A. I'm bored with life", "grammar": ["<S>->A <s> B"], "max_level": 1}
+{"name": "835_A. Key races", "grammar": ["<S>->s <s> v1 <s> v2 <s> t1 <s> t2"], "max_level": 1}
+{"name": "841_B. Godsend", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
+{"name": "854_B. Maxim Buys an Apartment", "grammar": ["<S>->n <s> k"], "max_level": 1}
+{"name": "864_C. Bus", "grammar": ["<S>->a <s> b <s> f <s> k"], "max_level": 1}
+{"name": "867_C. Ordering Pizza", "grammar": ["<S>->[N] <s> S <n> <T_N>", "<T_i>-><T_i-1> <n> si <s> ai <s> bi", "<T_1>->si <s> ai <s> bi"], "max_level": 2}
+{"name": "87_A. Trains", "grammar": ["<S>->a <s> b"], "max_level": 1}
+{"name": "87_C. Interesting Game", "grammar": ["<S>->n"], "max_level": 1}
+{"name": "886_B. Vlad and Cafes", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> ai", "<T_1>->ai"], "max_level": 2}
+{"name": "893_A. Chess For Three", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <n> ai", "<T_1>->ai"], "max_level": 2}
+{"name": "903_A. Hungry Student Problem", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <n> x_i", "<T_1>->x_1"], "max_level": 2}
+{"name": "909_B. Segments", "grammar": ["<S>->N"], "max_level": 1}
+{"name": "933_B. A Determined Cleanup", "grammar": ["<S>->p <s> k"], "max_level": 1}
+{"name": "933_C. A Colourful Prospect", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> x <s> y <s> r", "<T_1>->x <s> y <s> r"], "max_level": 2}
+{"name": "934_D. A Determined Cleanup", "grammar": ["<S>->p <s> k"], "max_level": 1}
+{"name": "937_A. Olympiad", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
+{"name": "950_A. Left-handers, Right-handers and Ambidexters", "grammar": ["<S>->l <s> r <s> a"], "max_level": 1}
+{"name": "959_E. Mahmoud and Ehab and the xor-MST", "grammar": ["<S>->n"], "max_level": 1}
+{"name": "987_B. High School: Become Human", "grammar": ["<S>->x <s> y"], "max_level": 1}
+{"name": "997_B. Roman Digits", "grammar": ["<S>->n"], "max_level": 1}
+{"name": "999_A. Mishka and Contest", "grammar": ["<S>->[n] <s> k <n> <T_n>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
+{"name": "99_C. Help Victoria the Wise", "grammar": ["<S>->[ROYGBV]{6}"], "max_level": 1}
+{"name": "9_A. Die Roll", "grammar": ["<S>->Y <s> W"], "max_level": 1}
+{"name": "p00357 Trampoline", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> d_i", "<T_1>->d_1"], "max_level": 2}
+{"name": "p01498 King Slime", "grammar": ["<S>->[N] <s> W <s> H <n> <T_N>", "<T_i>-><T_i-1> <n> xi <s> yi", "<T_1>->xi <s> yi"], "max_level": 2}
+{"name": "p01499 Rabbit Game Playing", "grammar": ["<S>->[N] <s> T <n> <T_N>", "<T_i>-><T_i-1> <n> Di", "<T_1>->Di"], "max_level": 2}
+{"name": "p01970 The Diversity of Prime Factorization", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <s> q_i", "<T_1>->q_1"], "max_level": 2}
+{"name": "p02127 AABABCAC", "grammar": ["<S>->[a-zA-Z]{1,100000} <n> [a-zA-Z]{1,100000}"], "max_level": 1}
+{"name": "p02174 Power Subsequences", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <s> x_i", "<T_1>->x_1"], "max_level": 2}
+{"name": "p02257 Prime Numbers", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> a_i", "<T_1>->a_1"], "max_level": 2}
+{"name": "p02259 Bubble Sort", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <s> A_i", "<T_1>->A_1"], "max_level": 2}
+{"name": "p02271 Exhaustive Search", "grammar": ["<S>->[N] <n> <T_N> <n> [q] <n> <L_q>", "<T_i>-><T_i-1> <s> A_i", "<T_1>->A_1", "<L_i>-><L_i-1> <s> M_i", "<L_1>->M_1"], "max_level": 2}
+{"name": "p02320 Knapsack Problem with Limitations", "grammar": ["<S>->[N] <s> W <n> <T_N>", "<T_i>-><T_i-1> <n> vi <s> wi <s> mi", "<T_1>->vi <s> wi <s> mi"], "max_level": 2}
+{"name": "p02390 Watch", "grammar": ["<S>->S"], "max_level": 1}
+{"name": "p02397 Swapping Two Numbers", "grammar": ["<S>-><A_1> <n> <A_1>|<E_1>", "<A_1>->x <s> y <n> <A_1>|<E_1>", "<E_1>->0 <s> 0"], "max_level": 5}
+{"name": "p02417 Counting Characters", "grammar": ["<S>->[a-zA-Z]{1,1200}"], "max_level": 1}
+{"name": "p02594 AtCoder Beginner Contest 174 - Air Conditioner", "grammar": ["<S>->X"], "max_level": 1}
+{"name": "p02600 M-SOLUTIONS Programming Contest 2020 - Kyu in AtCoder", "grammar": ["<S>->X"], "max_level": 1}
+{"name": "p02612 AtCoder Beginner Contest 173 - Payment", "grammar": ["<S>->N"], "max_level": 1}
+{"name": "p02628 AtCoder Beginner Contest 171 - Mix Juice", "grammar": ["<S>->[N] <s> K <n> <T_N>", "<T_i>-><T_i-1> <s> p_i", "<T_1>->p_1"], "max_level": 2}
+{"name": "p02675 AtCoder Beginner Contest 168 - ∴ (Therefore)", "grammar": ["<S>->N"], "max_level": 1}
+{"name": "p02680 AtCoder Beginner Contest 168 - . (Single Dot)", "grammar": ["<S>->[N] <s> [M] <n> <T_N> <n> <L_M>", "<T_i>-><T_i-1> <n> A_i <s> B_i <s> C_i", "<T_1>->A_1 <s> B_1 <s> C_1", "<L_i>-><L_i-1> <n> D_i <s> E_i <s> F_i", "<L_1>->D_1 <s> E_1 <s> F_1"], "max_level": 2}
+{"name": "p02693 AtCoder Beginner Contest 165 - We Love Golf", "grammar": ["<S>->K <n> A <s> B"], "max_level": 1}
+{"name": "p02696 AtCoder Beginner Contest 165 - Floor Function", "grammar": ["<S>->A <s> B <s> N"], "max_level": 1}
+{"name": "p02708 AtCoder Beginner Contest 163 - Sum of Large Numbers", "grammar": ["<S>->N <s> K"], "max_level": 1}
+{"name": "p02718 AtCoder Beginner Contest 161 - Popular Vote", "grammar": ["<S>->[N] <s> M <n> <T_N>", "<T_i>-><T_i-1> <s> A_i", "<T_1>->A_1"], "max_level": 2}
+{"name": "p02724 AtCoder Beginner Contest 160 - Golden Coins", "grammar": ["<S>->X"], "max_level": 1}
+{"name": "p02801 AtCoder Beginner Contest 151 - Next Alphabet", "grammar": ["<S>->[a-y]{1}"], "max_level": 1}
+{"name": "p02811 AtCoder Beginner Contest 150 - 500 Yen Coins", "grammar": ["<S>->K <s> X"], "max_level": 1}
+{"name": "p02862 AtCoder Beginner Contest 145 - Knight", "grammar": ["<S>->X <s> Y"], "max_level": 1}
+{"name": "p02891 AtCoder Grand Contest 039 - Connection and Disconnection", "grammar": ["<S>->[a-z]{1,100} <n> K"], "max_level": 1}
+{"name": "p02898 AtCoder Beginner Contest 142 - Roller Coaster", "grammar": ["<S>->[N] <s> K <n> <T_N>", "<T_i>-><T_i-1> <s> h_i", "<T_1>->h_1"], "max_level": 2}
+{"name": "p02926 AtCoder Beginner Contest 139 - Engines", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> x_i <s> y_i", "<T_1>->x_1 <s> y_1"], "max_level": 2}
+{"name": "p02936 AtCoder Beginner Contest 138 - Ki", "grammar": ["<S>->[N] <s> [Q] <n> <T_N-1> <n> <L_Q>", "<T_i>-><T_i-1> <n> A_i <s> B_i", "<T_1>->A_1 <s> B_1", "<L_i>-><L_i-1> <n> p_i <s> x_i", "<L_1>->p_1 <s> x_1"], "max_level": 2}
+{"name": "p02953 AtCoder Beginner Contest 136 - Build Stairs", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <s> H_i", "<T_1>->H_1"], "max_level": 2}
+{"name": "p02973 AtCoder Beginner Contest 134 - Sequence Decomposing", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> A_i", "<T_1>->A_1"], "max_level": 2}
+{"name": "p02976 AtCoder Grand Contest 035 - Even Degrees", "grammar": ["<S>->N <s> [M] <n> <T_M>", "<T_i>-><T_i-1> <n> A_i <s> B_i", "<T_1>->A_1 <s> B_1"], "max_level": 2}
+{"name": "p03003 AtCoder Beginner Contest 130 - Common Subsequence", "grammar": ["<S>->[N] <s> [M] <n> <T_N> <n> <L_M>", "<T_i>-><T_i-1> <s> S_i", "<T_1>->S_1", "<L_i>-><L_i-1> <s> T_i", "<L_1>->T_1"], "max_level": 2}
+{"name": "p03013 AtCoder Beginner Contest 129 - Typical Stairs", "grammar": ["<S>->N <s> [M] <n> <T_M>", "<T_i>-><T_i-1> <n> A_i", "<T_1>->A_1"], "max_level": 2}
+{"name": "p03032 AtCoder Beginner Contest 128 - equeue", "grammar": ["<S>->[N] <s> K <n> <T_N>", "<T_i>-><T_i-1> <s> V_i", "<T_1>->V_1"], "max_level": 2}
+{"name": "p03076 AtCoder Beginner Contest 123 - Five Dishes", "grammar": ["<S>->A <n> B <n> C <n> D <n> E"], "max_level": 1}
+{"name": "p03105 AtCoder Beginner Contest 120 - Favorite Sound", "grammar": ["<S>->A <s> B <s> C"], "max_level": 1}
+{"name": "p03125 AtCoder Beginner Contest 118 - B +/- A", "grammar": ["<S>->A <s> B"], "max_level": 1}
+{"name": "p03137 AtCoder Beginner Contest 117 - Streamline", "grammar": ["<S>->N <s> [M] <n> <T_M>", "<T_i>-><T_i-1> <s> X_i", "<T_1>->X_1"], "max_level": 2}
+{"name": "p03168 Educational DP Contest - Coins", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <s> p_i", "<T_1>->p_1"], "max_level": 2}
+{"name": "p03219 AtCoder Beginner Contest 113 - Discount Fare", "grammar": ["<S>->X <s> Y"], "max_level": 1}
+{"name": "p03221 AtCoder Beginner Contest 113 - ID", "grammar": ["<S>->N <s> [M] <n> <T_M>", "<T_i>-><T_i-1> <n> P_i <s> Y_i", "<T_1>->P_1 <s> Y_1"], "max_level": 2}
+{"name": "p03288 AtCoder Beginner Contest 104 - Rated for Me", "grammar": ["<S>->R"], "max_level": 1}
+{"name": "p03293 AtCoder Beginner Contest 103 - String Rotation", "grammar": ["<S>->[a-z]{2,100} <n> [a-z]{2,100}"], "max_level": 1}
+{"name": "p03307 AtCoder Beginner Contest 102 - Multiple of 2 and N", "grammar": ["<S>->N"], "max_level": 1}
+{"name": "p03309 AtCoder Beginner Contest 102 - Linear Approximation", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <s> A_i", "<T_1>->A_1"], "max_level": 2}
+{"name": "p03324 AtCoder Beginner Contest 100 - Ringo's Favorite Numbers", "grammar": ["<S>->[012]{1} <s> N"], "max_level": 1}
+{"name": "p03327 AtCoder Beginner Contest 099 - ABD", "grammar": ["<S>->N"], "max_level": 1}
+{"name": "p03337 AtCoder Beginner Contest 098 - Add Sub Mul", "grammar": ["<S>->A <s> B"], "max_level": 1}
+{"name": "p03338 AtCoder Beginner Contest 098 - Cut and Count", "grammar": ["<S>->[N] <n> [a-z]{N}"], "max_level": 1}
+{"name": "p03346 AtCoder Grand Contest 024 - Backfront", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> p_i", "<T_1>->p_1"], "max_level": 2}
+{"name": "p03369 AtCoder Beginner Contest 095 - Something on It", "grammar": ["<S>->[ox]{3}"], "max_level": 1}
+{"name": "p03370 AtCoder Beginner Contest 095 - Bitter Alchemy", "grammar": ["<S>->[N] <s> X <n> <T_N>", "<T_i>-><T_i-1> <n> m_i", "<T_1>->m_1"], "max_level": 2}
+{"name": "p03434 AtCoder Beginner Contest 088 - Card Game for Two", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <s> a_i", "<T_1>->a_1"], "max_level": 2}
+{"name": "p03470 AtCoder Beginner Contest 085 - Kagami Mochi", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> d_i", "<T_1>->d_1"], "max_level": 2}
+{"name": "p03472 AtCoder Beginner Contest 085 - Katana Thrower", "grammar": ["<S>->[N] <s> H <n> <T_N>", "<T_i>-><T_i-1> <n> a_i <s> b_i", "<T_1>->a_1 <s> b_1"], "max_level": 2}
+{"name": "p03569 CODE FESTIVAL 2017 qual C - Inserting 'x'", "grammar": ["<S>->[a-z]{1,10^5}"], "max_level": 1}
+{"name": "p03592 CODE FESTIVAL 2017 qual A - fLIP", "grammar": ["<S>->N <s> M <s> K"], "max_level": 1}
+{"name": "p03761 AtCoder Beginner Contest 058 - Dubious Document", "grammar": ["<S>->[n] <n> <T_n>", "<T_i>-><T_i-1> <n> [a-z]{1,50}", "<T_1>->[a-z]{1,50}"], "max_level": 2}
+{"name": "p03821 AtCoder Grand Contest 009 - Multiple Array", "grammar": ["<S>->[N] <n> <T_N>", "<T_i>-><T_i-1> <n> A_i <s> B_i", "<T_1>->A_1 <s> B_1"], "max_level": 2}
+{"name": "p03854 AtCoder Beginner Contest 049 - Daydream", "grammar": ["<S>->[a-z]{1,10^5}"], "max_level": 1}
+{"name": "p03975 Kyoto University Programming Contest 2016 - A Barricade", "grammar": ["<S>->[N] <s> A <s> B <n> <T_N>", "<T_i>-><T_i-1> <n> t_i", "<T_1>->t_1"], "max_level": 2}
+{"name": "p03994 CODE FESTIVAL 2016 qual A - Next Letter", "grammar": ["<S>->[a-z]{1,10^5} <n> K"], "max_level": 1}
+{"name": "p04019 AtCoder Grand Contest 003 - Wanna go back home", "grammar": ["<S>->[NWES]{1,1000}"], "max_level": 1}

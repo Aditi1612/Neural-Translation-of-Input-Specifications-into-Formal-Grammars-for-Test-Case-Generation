@@ -1,6 +1,6 @@
 import argparse
 import logging
-# from itertools import product
+from itertools import product
 from pathlib import Path
 from typing import (Any, )
 
@@ -21,9 +21,11 @@ def generate(ccfg: Ccfg) -> str:
 def update(data: dict[str, Any]) -> dict[str, Any]:
     grammar_candidates = data['grammar_candidates']
     productions = grammar_candidates['productions']
-    constratins = grammar_candidates['constraints']
+    constraints = grammar_candidates['constraints']
     grammar = None
-    for production, constraint in zip(productions, constratins):
+    for production, constraint in product(productions, constraints):
+        if len(production) == 0:
+            continue
         try:
             grammar = {'productions': production, 'constraints': constraint}
             grammar = normalize_grammar(grammar)

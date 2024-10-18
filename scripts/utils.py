@@ -4,13 +4,18 @@ import itertools
 import os
 from pathlib import Path
 import random
-from typing import Iterable, Optional, TypedDict, TypeVar
+from typing import Iterable, Optional, TypedDict, TypeVar, Any
 
 import jsonlines
-from transformers import RobertaTokenizer
+from transformers import RobertaTokenizer  # type: ignore
 
-from data_loader import MyDataset  # type: ignore[import-untyped]
-from tokenizer import CountingContextFreeGrammarTokenizer as CcfgTokenizer  # type: ignore[import-untyped]
+from data_loader import MyDataset  # type: ignore
+from tokenizer import CountingContextFreeGrammarTokenizer as CcfgTokenizer  # type: ignore
+
+
+_model_name = "Salesforce/codet5-base"
+_source_tokenizer = RobertaTokenizer.from_pretrained(_model_name)
+_target_tokenizer = CcfgTokenizer(_source_tokenizer)
 
 T = TypeVar("T")
 
@@ -36,10 +41,6 @@ def stringified_to_grammar(
 
 
 def normalize_grammar(grammar: dict[str, list[str]]) -> dict[str, list[str]]:
-    _model_name = "Salesforce/codet5-base"
-    _source_tokenizer = RobertaTokenizer.from_pretrained(_model_name)
-    _target_tokenizer = CcfgTokenizer(_source_tokenizer)
-
     stringified = MyDataset.stringify(grammar)
     grammar = stringified_to_grammar(stringified, _target_tokenizer)
     grammar["constraints"] = normalize_constraints(grammar["constraints"])
@@ -47,9 +48,6 @@ def normalize_grammar(grammar: dict[str, list[str]]) -> dict[str, list[str]]:
 
 
 def normalize_productions(productions: list[str]) -> list[str]:
-    _model_name = "Salesforce/codet5-base"
-    _source_tokenizer = RobertaTokenizer.from_pretrained(_model_name)
-    _target_tokenizer = CcfgTokenizer(_source_tokenizer)
     stringified = MyDataset.stringify(
         {"productions": productions, "constraints": []}
     )
@@ -73,7 +71,7 @@ def get_mode(xs: list[str]) -> tuple[str, int]:
     return mode, num_of_mode
 
 
-def sanitize(xs: Iterable[object], filename: str = "test") -> Iterable[object]:
+def sanitize(xs: Iterable[T], filename: str = "test") -> Iterable[T]:
     ground_truth_generation_results = jsonlines.open(
         Path(os.environ["GROUND_TRUTH_GENERATION_RESULT"]), "r"
     )
@@ -191,6 +189,37 @@ def get_testcase_num_dict(filename: str) -> dict[str, int]:
     return testcase_num_dict
 
 
+def split_with_level(xs: Iterable[T], filename: str) -> dict[int, list[T]]:
+    levels: Iterable[dict[str, Any]] = jsonlines.open(
+        Path(os.environ["LEVEL_DIR"]) / f"{filename}.jsonl"
+    )
+    levels = list(sanitize(levels))
+    xs = list(xs)
+    assert len(levels) == len(xs)
+
+    level_to_xs: dict[int, list[T]] = {level: [] for level in range(1, 6)}
+    for x, level_data in zip(xs, levels):
+        level = level_data["max_level"]
+        level_to_xs[level].append(x)
+
+    return level_to_xs
+
+
+class Grammar(TypedDict):
+    productions: list[str]
+    constraints: list[str]
+
+
+class GrammarData(TypedDict):
+    """GrammarData is a dictionary that contains the grammar information of a
+    single problem.
+    """
+
+    name: str
+    description: str
+    grammar: Grammar
+
+
 class GenerationResultPerTestcase(TypedDict):
     """GenerationResultPerTestcase is a dictionary that contains the results of
     generation for a single testcase.
@@ -207,6 +236,9 @@ class GenerationResult(TypedDict):
 
     name: str
     results: list[GenerationResultPerTestcase]
+
+
+ParsingResult = GenerationResult
 
 
 class ExecutionResultPerTestcase(TypedDict):

@@ -1,45 +1,60 @@
 import argparse
-from typing import Optional
+from pathlib import Path
+from typing import Iterable
+from statistics import mean
 
-import jsonlines  # type: ignore[import-error]
-from utils import get_filter_list  # type: ignore[import-untyped]
+import jsonlines  # type: ignore
+from utils import sanitize  # type: ignore
+from utils import GenerationResult, ParsingResult
 
 
 def main(
-    parsing_path: str,
-    generation_path: str,
-    filter_path_1: Optional[str],
-    filter_path_2: Optional[str],
+    generation_dataset: Iterable[GenerationResult],
+    parsing_dataset: Iterable[ParsingResult],
 ) -> None:
 
-    parsing_results = list(jsonlines.open(parsing_path))
-    generation_results = list(jsonlines.open(generation_path))
+    # Number of grammars that succeed to generate test cases
+    generalities = []
+    validities = []
 
-    num = len(parsing_results)
-    filter_list = get_filter_list(filter_path_1, filter_path_2, num)
-    parsing_results = [e for e, f in zip(parsing_results, filter_list) if f]
-    generation_results = [
-        e for e, f in zip(generation_results, filter_list) if f
-    ]
+    for generation_data, parsing_data in sanitize(
+        zip(generation_dataset, parsing_dataset)
+    ):
+        parsing_results = parsing_data["results"]
+        generation_results = generation_data["results"]
 
-    generality_list = [
-        sum(p) / len(p)
-        for (g, p) in zip(generation_results, parsing_results)
-        if len(g) > 0
-    ]
-    count = len(generality_list)
-    print(f"Total: {count}")
-    print(f"Generality: {sum(generality_list)/count * 100}")
+        assert parsing_results
+        if not generation_results:
+            generalities.append(0)
+            validities.append(0)
+            continue
+
+        # Generality is the ratio of candidate-parsable ground-truth test cases
+        validity = mean([e["parsable"] for e in generation_results])
+        generality = mean([e["parsable"] for e in parsing_results])
+
+        validities.append(validity)
+        generalities.append(generality)
+
+    assert generalities
+    assert len(generalities) == len(validities)
+
+    total = len(generalities)
+    element_generality = mean(generalities)
+    set_generality = mean([e == 1 for e in generalities])
+    correctness = mean(
+        [e1 == 1 and e2 == 1 for e1, e2 in zip(generalities, validities)]
+    )
+
+    print("total element-generality set-generality correctness")
+    print(
+        total, element_generality * 100, set_generality * 100, correctness * 100
+    )
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("parsing_result")
-    parser.add_argument("generation_result")
-    parser.add_argument("--filter1")
-    parser.add_argument("--filter2")
+    parser.add_argument("--generation-result", type=jsonlines.open)
+    parser.add_argument("--parsing-result", type=jsonlines.open)
     args = parser.parse_args()
-
-    main(
-        args.parsing_result, args.generation_result, args.filter1, args.filter2
-    )
+    main(args.generation_result, args.parsing_result)

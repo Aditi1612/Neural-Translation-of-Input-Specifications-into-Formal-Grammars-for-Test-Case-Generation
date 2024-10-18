@@ -1,40 +1,76 @@
 import argparse
 from pathlib import Path
+from typing import Iterable, Optional
+from statistics import mean
 
 import jsonlines  # type: ignore
-from utils import sanitize  # type: ignore[import-untyped]
+from utils import sanitize  # type: ignore
+from utils import GenerationResult
+from utils import split_with_level
 
 
-def main(generation_path: Path) -> None:
-    generation_results = jsonlines.open(generation_path)
+def main(generation_path: Path, use_level: bool) -> None:
+    generation_dataset = jsonlines.open(generation_path)
 
     # Number of grammars that succeed to generate test cases
-    count = 0
+    well_definednesses = []
     validities = []
-    for generation_result in sanitize(generation_results):
-        count += 1
-        testcase_results = generation_result["results"]
-        if len(testcase_results) == 0:
-            continue
-        num_parsable = sum(e["parsable"] for e in testcase_results)
 
-        validity = num_parsable / len(testcase_results)
+    for generation_data in sanitize(generation_dataset):
+        generation_results = generation_data["results"]
+        if not generation_results:
+            well_definednesses.append(0)
+            validities.append(0)
+            continue
+
+        well_definednesses.append(1)
+        # Validity is the ratio of the number of parsable test cases to the number of test cases
+        validity = mean([e["parsable"] for e in generation_results])
         validities.append(validity)
 
-    if len(validities) == 0:
-        print("Error")
-        return
+    assert validities
 
-    elementwise_validity = sum(validities) / len(validities)
-    set_validity = sum(e == 1 for e in validities) / len(validities)
-    print("total used element-wise set")
-    print(
-        count, len(validities), elementwise_validity * 100, set_validity * 100
-    )
+    if not use_level:
+        element_validity = mean(validities) * 100
+        set_validity = mean([e == 1 for e in validities]) * 100
+        assert len(validities) == len(well_definednesses)
+
+        print("total well-defined element-validity set-validity")
+        print(
+            len(validities),
+            sum(well_definednesses),
+            element_validity,
+            set_validity,
+        )
+    else:
+        level_name = generation_path.stem
+        level_to_well_definednesses = split_with_level(
+            well_definednesses, level_name
+        )
+        level_to_validities = split_with_level(validities, "test")
+        for level in range(1, 6):
+            well_definednesses = level_to_well_definednesses[level]
+            validities = level_to_validities[level]
+            assert len(validities) == len(well_definednesses)
+
+            if not validities:
+                continue
+
+            element_validity = mean(validities) * 100
+            set_validity = mean([e == 1 for e in validities]) * 100
+            print("level total well-defined element-validity set-validity")
+            print(
+                level,
+                len(validities),
+                sum(well_definednesses),
+                element_validity,
+                set_validity,
+            )
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--generation-result", type=Path)
+    parser.add_argument("--level", action="store_true")
     args = parser.parse_args()
-    main(args.generation_result)
+    main(args.generation_result, args.level)

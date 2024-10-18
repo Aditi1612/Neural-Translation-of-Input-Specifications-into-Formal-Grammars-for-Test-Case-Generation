@@ -2,10 +2,12 @@ import argparse
 from typing import Optional
 
 import jsonlines
-from utils import get_filter_list  # type: ignore[import-untyped]
+from utils import get_filter_list  # type: ignore
 from utils import normalize_constraints
 from utils import normalize_grammar
 from utils import normalize_productions
+
+assert False, "Deprecated"
 
 
 def main(

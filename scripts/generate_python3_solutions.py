@@ -15,28 +15,30 @@ class LanguageType(IntEnum):
 
 
 def main():
-    dataset_dir = Path('data/unlabeled/')
+    dataset_dir = Path("data/unlabeled/")
 
     os.makedirs(dataset_dir, exist_ok=True)
 
-    for dataset_type in ['train', 'test', 'valid']:
+    for dataset_type in ["train", "test", "valid"]:
         python_dataset_path = (
-            dataset_dir / f'code_contests_{dataset_type}_python.jsonl')
+            dataset_dir / f"code_contests_{dataset_type}_python.jsonl"
+        )
 
-        with jsonlines.open(python_dataset_path, 'r') as python_dataset:
+        with jsonlines.open(python_dataset_path, "r") as python_dataset:
             for data in tqdm(python_dataset):
 
-                name = data['name']
+                name = data["name"]
 
-                for solution_type in ['solutions', 'incorrect_solutions']:
+                for solution_type in ["solutions", "incorrect_solutions"]:
 
-                    solutions = data[solution_type]['solution']
+                    solutions = data[solution_type]["solution"]
                     solutions_dir = Path(
-                        f'data/solutions/{solution_type}/{name}')
+                        f"data/solutions/{solution_type}/{name}"
+                    )
                     os.makedirs(solutions_dir, exist_ok=True)
                     for idx, solution in enumerate(solutions):
-                        solution_path = solutions_dir / f'{idx}.py'
-                        with open(solution_path, 'w') as f:
+                        solution_path = solutions_dir / f"{idx}.py"
+                        with open(solution_path, "w") as f:
                             f.write(solution)
 
 

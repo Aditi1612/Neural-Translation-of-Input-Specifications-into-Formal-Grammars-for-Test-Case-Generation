@@ -14,7 +14,7 @@ def main():
         jsonlines.open(generation_result_filename),
         jsonlines.open(parsing_result_filename),
         jsonlines.open(grammar_filename),
-        jsonlines.open(testcase_filename)
+        jsonlines.open(testcase_filename),
     )
     for generation_obj, parsing_obj, grammar_obj, testcase_obj in it:
         grammar = grammar_obj["grammar"]
@@ -34,10 +34,10 @@ def main():
         for generation_result, parsing_result, testcase in it2:
             parsable = True
             error = None
-            if not generation_result['parsable']:
+            if not generation_result["parsable"]:
                 parsable = False
                 error = generation_result["error"]
-            elif not parsing_result['parsable']:
+            elif not parsing_result["parsable"]:
                 parsable = False
                 error = parsing_result["error"]
 

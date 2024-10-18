@@ -16,7 +16,6 @@ if __name__ == "__main__":
     public_testcase_dir = Path(os.environ["PUBLIC_TESTCASE_DIR"])
     private_testcase_dir = Path(os.environ["PRIVATE_TESTCASE_DIR"])
 
-
     for filename in ["test.jsonl"]:
         ground_truth_file = jsonlines.open(ground_truth_dir / filename)
         public_testcase_file = jsonlines.open(public_testcase_dir / filename)

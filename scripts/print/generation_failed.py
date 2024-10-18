@@ -5,10 +5,7 @@ import jsonlines
 filename = os.environ["GROUND_TRUTH_TESTCASE"]
 grammar_filename = os.environ["GROUND_TRUTH_GRAMMAR"]
 
-pairs = zip(
-    jsonlines.open(filename),
-    jsonlines.open(grammar_filename)
-)
+pairs = zip(jsonlines.open(filename), jsonlines.open(grammar_filename))
 
 for testcase_result, grammar_object in pairs:
     grammar = grammar_object["grammar"]

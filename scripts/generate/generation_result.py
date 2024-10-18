@@ -20,8 +20,8 @@ def check_syntactic_validness(
         grammar: dict[str, list[str]],
     ) -> bool:
         d = Discriminator()
-        productions = grammar['productions']
-        constraints = grammar['constraints']
+        productions = grammar["productions"]
+        constraints = grammar["constraints"]
         return d(productions, constraints, testcase)
 
     try:
@@ -46,23 +46,23 @@ def main(
 ) -> None:
 
     testcases_file = jsonlines.open(testcase_path)
-    testcases_list = [e.get('testcase', []) for e in testcases_file]
+    testcases_list = [e.get("testcase", []) for e in testcases_file]
 
     grammar_objects = jsonlines.open(grammar_path)
 
-    with jsonlines.open(output_path, 'w') as writer:
+    with jsonlines.open(output_path, "w") as writer:
         for grammar_object, testcases in zip(grammar_objects, testcases_list):
-            name = grammar_object['name']
-            grammar = grammar_object['grammar']
+            name = grammar_object["name"]
+            grammar = grammar_object["grammar"]
             results = get_syntactic_validiness_list(testcases, grammar)
             writer.write(GenerationResult(name=name, results=results))
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--testcase', type=Path)
-    parser.add_argument('--grammar', type=Path)
-    parser.add_argument('--output', type=Path)
+    parser.add_argument("--testcase", type=Path)
+    parser.add_argument("--grammar", type=Path)
+    parser.add_argument("--output", type=Path)
     args = parser.parse_args()
 
     main(args.testcase, args.grammar, args.output)

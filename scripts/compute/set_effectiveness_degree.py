@@ -6,7 +6,9 @@ import numpy as np
 from utils import sanitize  # type: ignore[import-untyped]
 
 
-def main(execution_summary_path: Path, generation_path: Path, degree: int) -> None:
+def main(
+    execution_summary_path: Path, generation_path: Path, degree: int
+) -> None:
 
     summaries = jsonlines.open(execution_summary_path)
     generation_results = jsonlines.open(generation_path)
@@ -39,9 +41,9 @@ def main(execution_summary_path: Path, generation_path: Path, degree: int) -> No
             testcase_summaries[0]["incorrect_results"]
         )
         if len(testcase_summaries) == 31:
-            testcase_summaries = testcase_summaries[1:(degree+1)*10+1]
+            testcase_summaries = testcase_summaries[1 : (degree + 1) * 10 + 1]
         elif len(testcase_summaries) == 30:
-            testcase_summaries = testcase_summaries[0:(degree+1)*10]
+            testcase_summaries = testcase_summaries[0 : (degree + 1) * 10]
         else:
             assert False
 

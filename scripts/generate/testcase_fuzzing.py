@@ -9,12 +9,9 @@ import jsonlines
 from tqdm import tqdm
 
 
-class Fuzzer():
+class Fuzzer:
     def __init__(
-        self,
-        fuzzing_rate=0.3,
-        numeric_addition_bound=1,
-        num_of_result=10
+        self, fuzzing_rate=0.3, numeric_addition_bound=1, num_of_result=10
     ):
         self.fuzzing_rate = fuzzing_rate
         self.numeric_addition_bound = numeric_addition_bound
@@ -24,63 +21,65 @@ class Fuzzer():
         res = []
         for idx, test_case in enumerate(test_cases):
             test_case = test_case.rstrip()
-            tokens_origin = re.split(r'[ \n\{\},]', test_case)
-            spliters = re.findall(r'[ \n\{\},]', test_case)
+            tokens_origin = re.split(r"[ \n\{\},]", test_case)
+            spliters = re.findall(r"[ \n\{\},]", test_case)
             num_of_tokens = len(tokens_origin)
-            num_of_sample = math.ceil(num_of_tokens*self.fuzzing_rate)
-            weight = [1]*len(tokens_origin)
+            num_of_sample = math.ceil(num_of_tokens * self.fuzzing_rate)
+            weight = [1] * len(tokens_origin)
 
             weight[0] = (
-                0 if (
-                    re.fullmatch(r'[0-9]*', tokens_origin[0])
+                0
+                if (
+                    re.fullmatch(r"[0-9]*", tokens_origin[0])
                     and num_of_tokens > 1
-                ) else 1
+                )
+                else 1
             )
 
             mutateds = []
             for _ in range(self.num_of_result):
                 tokens = tokens_origin[:]
                 targets = random.choices(
-                    range(num_of_tokens), weights=weight, k=num_of_sample)
-                mutated = ''
+                    range(num_of_tokens), weights=weight, k=num_of_sample
+                )
+                mutated = ""
                 for target_idx in targets:
                     target = tokens[target_idx]
                     if not target:
                         continue
-                    if re.fullmatch(r'[-+]?[0-9]+', target):
+                    if re.fullmatch(r"[-+]?[0-9]+", target):
                         addition_value: Union[int, float] = 0
                         while not addition_value:
                             addition_value = random.randint(
                                 self.numeric_addition_bound * -1,
-                                self.numeric_addition_bound
+                                self.numeric_addition_bound,
                             )
                         tokens[target_idx] = str(int(target) + addition_value)
-                    elif re.fullmatch(r'[-+]?([0-9]+\.[0-9]+|[0-9]+)', target):
+                    elif re.fullmatch(r"[-+]?([0-9]+\.[0-9]+|[0-9]+)", target):
                         addition_value = 0.0
                         while not addition_value:
                             addition_value = random.uniform(
                                 self.numeric_addition_bound * -1,
-                                self.numeric_addition_bound
+                                self.numeric_addition_bound,
                             )
-                        tokens[target_idx] = str(
-                            float(target) + addition_value)
-                    elif re.fullmatch(r'[a-zA-Z]*', target):
+                        tokens[target_idx] = str(float(target) + addition_value)
+                    elif re.fullmatch(r"[a-zA-Z]*", target):
                         str_list = list(self.get_str_list(target))
 
                         remove_index = random.choice(range(len(target)))
                         str_list.remove(target[remove_index])
                         target = list(target)
                         target[remove_index] = random.choice(str_list)
-                        tokens[target_idx] = ''.join(target)
+                        tokens[target_idx] = "".join(target)
                     else:
                         change = list(target)
                         while (
-                            ''.join(change) == target
+                            "".join(change) == target
                             and len(target) > 1
                             and len(set(change)) > 1
                         ):
                             random.shuffle(change)
-                        tokens[target_idx] = ''.join(change)
+                        tokens[target_idx] = "".join(change)
 
                 mutated += tokens[0]
                 for token, spliter in zip(tokens[1:], spliters):
@@ -116,7 +115,8 @@ def main(args: argparse.Namespace):
     with jsonlines.open(input_path, "r") as input_dataset:
         with jsonlines.open(output_path, "w") as writer:
             writer.write_all(
-                map(lambda e: update(fuzzer, e), tqdm(input_dataset)))
+                map(lambda e: update(fuzzer, e), tqdm(input_dataset))
+            )
 
 
 if __name__ == "__main__":

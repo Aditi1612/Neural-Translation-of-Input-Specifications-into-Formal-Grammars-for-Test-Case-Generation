@@ -20,8 +20,12 @@ def main(testcase_path: Path) -> None:
     ):
         name = target_object["name"]
         description = target_object["description"]
-        assert name == public_object["name"], f"{name} != {public_object['name']}"
-        assert name == private_object["name"], f"{name} != {private_object['name']}"
+        assert (
+            name == public_object["name"]
+        ), f"{name} != {public_object['name']}"
+        assert (
+            name == private_object["name"]
+        ), f"{name} != {private_object['name']}"
 
         source_testcases = (
             public_object["testcase"] + private_object["testcase"]

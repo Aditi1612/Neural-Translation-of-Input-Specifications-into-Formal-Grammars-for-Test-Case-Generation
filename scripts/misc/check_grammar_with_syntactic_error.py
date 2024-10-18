@@ -9,9 +9,10 @@ from counting_context_free_grammar import CountingContextFreeGrammar as Ccfg
 from counting_context_free_grammar import Discriminator
 
 
-
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Check grammar with syntactic error.")
+    parser = argparse.ArgumentParser(
+        description="Check grammar with syntactic error."
+    )
     parser.add_argument("input_file", help="Input file")
     args = parser.parse_args()
 

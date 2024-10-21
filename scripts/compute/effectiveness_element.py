@@ -36,16 +36,18 @@ def main(
             effectiveness_list.append(0.0)
             continue
 
+        # We consider the effectiveness of invalid test case as 0
+        if not all(validities):
+            effectiveness_list.append(0)
+            continue
+
         # Calculate the effectiveness of each test case
         testcase_effectivenesses = []
         for testcase_summary, valid in zip(summary_results, validities):
             incorrect_results = testcase_summary["incorrect_results"]
             assert len(incorrect_results) > 0
+            assert valid
 
-            # We consider the effectiveness of an invalid test case as 0
-            if not valid:
-                testcase_effectivenesses.append(0)
-                continue
             testcase_effectiveness = 1 - sum(incorrect_results) / len(
                 incorrect_results
             )

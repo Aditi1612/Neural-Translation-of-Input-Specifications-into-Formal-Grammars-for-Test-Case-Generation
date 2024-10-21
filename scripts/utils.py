@@ -2,8 +2,11 @@
 
 import itertools
 import os
-from pathlib import Path
+import warnings
+
+warnings.filterwarnings("ignore", module="urllib3")
 import random
+from pathlib import Path
 from typing import Iterable, Optional, TypedDict, TypeVar, Any
 
 import jsonlines
@@ -13,11 +16,19 @@ from data_loader import MyDataset  # type: ignore
 from tokenizer import CountingContextFreeGrammarTokenizer as CcfgTokenizer  # type: ignore
 
 
-_model_name = "Salesforce/codet5-base"
-_source_tokenizer = RobertaTokenizer.from_pretrained(_model_name)
-_target_tokenizer = CcfgTokenizer(_source_tokenizer)
+_target_tokenizer = None
+
 
 T = TypeVar("T")
+
+
+def _initialize_target_tokenizer() -> None:
+    global _target_tokenizer
+    if _target_tokenizer is not None:
+        return
+    _model_name = "Salesforce/codet5-base"
+    _source_tokenizer = RobertaTokenizer.from_pretrained(_model_name)
+    _target_tokenizer = CcfgTokenizer(_source_tokenizer)
 
 
 def stringified_to_grammar(
@@ -41,6 +52,7 @@ def stringified_to_grammar(
 
 
 def normalize_grammar(grammar: dict[str, list[str]]) -> dict[str, list[str]]:
+    _initialize_target_tokenizer()
     stringified = MyDataset.stringify(grammar)
     grammar = stringified_to_grammar(stringified, _target_tokenizer)
     grammar["constraints"] = normalize_constraints(grammar["constraints"])
@@ -48,6 +60,7 @@ def normalize_grammar(grammar: dict[str, list[str]]) -> dict[str, list[str]]:
 
 
 def normalize_productions(productions: list[str]) -> list[str]:
+    _initialize_target_tokenizer()
     stringified = MyDataset.stringify(
         {"productions": productions, "constraints": []}
     )

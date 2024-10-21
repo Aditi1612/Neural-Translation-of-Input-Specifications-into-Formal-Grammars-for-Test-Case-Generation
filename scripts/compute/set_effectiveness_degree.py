@@ -3,7 +3,7 @@ from pathlib import Path
 
 import jsonlines  # type: ignore
 import numpy as np
-from utils import sanitize  # type: ignore[import-untyped]
+from utils import sanitize  # type: ignore
 
 
 def main(

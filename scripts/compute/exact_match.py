@@ -30,6 +30,9 @@ def main(grammar_path: Path) -> None:
     for grammar_data, reference_data in sanitize(
         zip(grammar_dataset, reference_dataset)
     ):
+        name = grammar_data["name"]
+        assert name == reference_data["name"]
+
         grammar = grammar_data["grammar"]
         reference = reference_data["grammar"]
 
@@ -60,7 +63,7 @@ def main(grammar_path: Path) -> None:
     constraint = mean(constraint_matched_list)
     both = mean(both_matched_list)
     print("total production constraint both")
-    print(f"{total}, {production * 100}, {constraint * 100}, {both * 100}")
+    print(f"{total} {production * 100} {constraint * 100} {both * 100}")
 
 
 if __name__ == "__main__":
